@@ -17,7 +17,7 @@ const NUCLEI = ["S", "N", "NUCLEO", "SINGOLO"];
 
 const emptyBen = {
   cognome: "", nome: "", tipo_permesso: "", nucleo_singolo: "S", n_componenti_nucleo: 1,
-  area_intervento: "", comune: "", note: "", data_uscita_sai: "", stato: "In Corso",
+  area_intervento: "", comune: "", budget_alloggio: "", note: "", data_uscita_sai: "", stato: "In Corso",
   competenze: "", nazionalita: "", livello_italiano: "", telefono: "", email: ""
 };
 
@@ -60,7 +60,8 @@ export default function BeneficiariPage() {
     setForm({
       cognome: ben.cognome || "", nome: ben.nome || "", tipo_permesso: ben.tipo_permesso || "",
       nucleo_singolo: ben.nucleo_singolo || "S", n_componenti_nucleo: ben.n_componenti_nucleo || 1,
-      area_intervento: ben.area_intervento || "", comune: ben.comune || "", note: ben.note || "",
+      area_intervento: ben.area_intervento || "", comune: ben.comune || "",
+      budget_alloggio: ben.budget_alloggio || "", note: ben.note || "",
       data_uscita_sai: ben.data_uscita_sai ? ben.data_uscita_sai.split("T")[0] : "",
       stato: ben.stato || "In Corso", competenze: ben.competenze || "", nazionalita: ben.nazionalita || "",
       livello_italiano: ben.livello_italiano || "", telefono: ben.telefono || "", email: ben.email || ""
@@ -174,6 +175,9 @@ export default function BeneficiariPage() {
                 </select></div>
               <div><label className="text-xs font-medium text-gray-500">Comune</label>
                 <ComuneAutocomplete value={form.comune} onChange={v => setForm({...form, comune: v})} /></div>
+              <div><label className="text-xs font-medium text-gray-500">Budget Alloggio (€/mese)</label>
+                <Input type="number" min={0} step={50} value={form.budget_alloggio}
+                  onChange={e => setForm({...form, budget_alloggio: e.target.value})} placeholder="es. 400" /></div>
               <div><label className="text-xs font-medium text-gray-500">Data Uscita SAI</label>
                 <Input type="date" value={form.data_uscita_sai} onChange={e => setForm({...form, data_uscita_sai: e.target.value})} /></div>
               <div><label className="text-xs font-medium text-gray-500">Stato</label>

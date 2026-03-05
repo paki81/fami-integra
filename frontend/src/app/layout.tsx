@@ -5,6 +5,15 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "FAMI INTEGRA - Centro Sportello",
   description: "Piattaforma di gestione FAMI per matching beneficiari, alloggi e opportunità lavorative",
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/favicon-96x96.png", sizes: "96x96", type: "image/png" },
+    ],
+    apple: "/apple-touch-icon.png",
+  },
+  manifest: "/site.webmanifest",
 };
 
 export default function RootLayout({

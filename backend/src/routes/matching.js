@@ -12,7 +12,7 @@ router.get('/suggerisci-alloggi/:idBeneficiario', authenticate, async (req, res)
     if (!benRows.length) return res.status(404).json({ error: 'Beneficiario non trovato' });
 
     const [alloggi] = await pool.query("SELECT * FROM alloggi WHERE stato = 'Disponibile'");
-    const suggerimenti = suggerisciAlloggi(benRows[0], alloggi);
+    const suggerimenti = await suggerisciAlloggi(benRows[0], alloggi);
     res.json({ beneficiario: benRows[0], suggerimenti });
   } catch (err) {
     console.error(err);
@@ -27,7 +27,7 @@ router.get('/suggerisci-aziende/:idBeneficiario', authenticate, async (req, res)
     if (!benRows.length) return res.status(404).json({ error: 'Beneficiario non trovato' });
 
     const [aziende] = await pool.query("SELECT * FROM aziende WHERE disponibile = 'S'");
-    const suggerimenti = suggerisciAziende(benRows[0], aziende);
+    const suggerimenti = await suggerisciAziende(benRows[0], aziende);
     res.json({ beneficiario: benRows[0], suggerimenti });
   } catch (err) {
     console.error(err);

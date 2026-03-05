@@ -76,7 +76,7 @@ router.post('/', authenticate, authorize('superadmin', 'admin', 'tutor', 'counse
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
-    const fields = ['cognome', 'nome', 'tipo_permesso', 'nucleo_singolo', 'n_componenti_nucleo', 'area_intervento', 'comune', 'note', 'data_uscita_sai', 'stato', 'competenze', 'nazionalita', 'livello_italiano', 'telefono', 'email', 'assegnato_a'];
+    const fields = ['cognome', 'nome', 'tipo_permesso', 'nucleo_singolo', 'n_componenti_nucleo', 'area_intervento', 'comune', 'latitudine', 'longitudine', 'budget_alloggio', 'note', 'data_uscita_sai', 'stato', 'competenze', 'nazionalita', 'livello_italiano', 'telefono', 'email', 'assegnato_a'];
     const values = fields.map(f => req.body[f] !== undefined ? req.body[f] : null);
     const placeholders = fields.map(() => '?').join(', ');
 
@@ -103,7 +103,7 @@ router.put('/:id', authenticate, authorize('superadmin', 'admin', 'tutor', 'coun
       return res.status(403).json({ error: 'Non puoi modificare questo beneficiario' });
     }
 
-    const fields = ['cognome', 'nome', 'tipo_permesso', 'nucleo_singolo', 'n_componenti_nucleo', 'area_intervento', 'comune', 'note', 'data_uscita_sai', 'stato', 'competenze', 'nazionalita', 'livello_italiano', 'telefono', 'email', 'assegnato_a'];
+    const fields = ['cognome', 'nome', 'tipo_permesso', 'nucleo_singolo', 'n_componenti_nucleo', 'area_intervento', 'comune', 'latitudine', 'longitudine', 'budget_alloggio', 'note', 'data_uscita_sai', 'stato', 'competenze', 'nazionalita', 'livello_italiano', 'telefono', 'email', 'assegnato_a'];
     const updates = [];
     const values = [];
 
@@ -112,7 +112,7 @@ router.put('/:id', authenticate, authorize('superadmin', 'admin', 'tutor', 'coun
         updates.push(`${f} = ?`);
         let val = req.body[f];
         // Converti stringhe vuote in NULL per campi data e numerici
-        if (val === '' && ['data_uscita_sai', 'n_componenti_nucleo', 'assegnato_a'].includes(f)) val = null;
+        if (val === '' && ['data_uscita_sai', 'n_componenti_nucleo', 'assegnato_a', 'latitudine', 'longitudine', 'budget_alloggio'].includes(f)) val = null;
         values.push(val);
       }
     });

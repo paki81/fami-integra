@@ -227,7 +227,11 @@ export default function MatchingPage() {
                             </div>
                             <p className="text-xs text-gray-500 mt-1">
                               {s.alloggio.comune} · {s.alloggio.indirizzo} · {s.alloggio.n_vani} vani · {formatCurrency(s.alloggio.canone_mensile)}
+                              {s.distanzaKm != null && <span className="text-purple-600 ml-1">{s.distanzaKm} km{s.durataMin ? ` (~${s.durataMin} min)` : ""}</span>}
                               {s.stessoComune && <span className="text-green-600 ml-1">✓ Stesso comune</span>}
+                              {s.canoneOk === true && <span className="text-green-600 ml-1">✓ Nel budget</span>}
+                              {s.canoneOk === "parziale" && <span className="text-amber-600 ml-1">⚠ Leggermente sopra budget</span>}
+                              {s.canoneOk === false && <span className="text-red-500 ml-1">✗ Fuori budget</span>}
                             </p>
                           </div>
                           <Button size="sm" onClick={() => creaMatchAlloggio(s.alloggio.id)}>
@@ -261,6 +265,7 @@ export default function MatchingPage() {
                             </div>
                             <p className="text-xs text-gray-500 mt-1">
                               {s.azienda.comune} · {s.azienda.mansione_profilo} · {s.azienda.tipo_contratto}
+                              {s.distanzaKm != null && <span className="text-purple-600 ml-1">{s.distanzaKm} km{s.durataMin ? ` (~${s.durataMin} min)` : ""}</span>}
                               {s.stessoComune && <span className="text-green-600 ml-1">✓ Stesso comune</span>}
                               {s.azienda.tirocinio === "S" && <span className="text-blue-600 ml-1">✓ Tirocinio</span>}
                             </p>
