@@ -9,6 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Search, Edit, Trash2, ChevronLeft, ChevronRight, X, Save, Map, List, MapPin } from "lucide-react";
+import ComuneAutocomplete from "@/components/ComuneAutocomplete";
+import { toast } from "sonner";
 
 const MappaLeaflet = dynamic(() => import("@/components/MappaLeaflet"), { ssr: false });
 
@@ -35,11 +37,11 @@ export default function AziendePage() {
   const [editId, setEditId] = useState<number | null>(null);
   const [form, setForm] = useState({ ...emptyAzienda });
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
   const [viewTab, setViewTab] = useState<"lista" | "mappa">("lista");
   const [mapMarkers, setMapMarkers] = useState<any[]>([]);
   const [loadingMap, setLoadingMap] = useState(false);
   const [geocodingMsg, setGeocodingMsg] = useState("");
+  const [mapClickResult, setMapClickResult] = useState<{lat:number,lng:number,indirizzo:string,comune:string,cap:string}|null>(null);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -72,12 +74,12 @@ export default function AziendePage() {
   };
 
   const handleGeocodeAll = async () => {
-    setGeocodingMsg("Geocodifica in corso...");
+    toast.info("Geocodifica in corso...");
     try {
       const res = await geocodingApi.geocodeTutteAziende();
-      setGeocodingMsg(res.data.message);
+      toast.success(res.data.message);
       loadMapData();
-    } catch (err: any) { setGeocodingMsg("Errore: " + (err.response?.data?.error || "Errore")); }
+    } catch (err: any) { toast.error("Errore durante la geocodifica degli indirizzi"); }
   };
 
   useEffect(() => { if (viewTab === "mappa") loadMapData(); }, [viewTab]);
@@ -94,23 +96,58 @@ export default function AziendePage() {
     setShowForm(true);
   };
 
-  const handleNew = () => { setEditId(null); setForm({ ...emptyAzienda }); setShowForm(true); };
+  const handleNew = () => { setEditId(null); setForm({ ...emptyAzienda }); setMapClickResult(null); setShowForm(true); };
+
+  const handleMapClick = (result: {lat:number,lng:number,indirizzo:string,comune:string,cap:string}) => {
+    setMapClickResult(result);
+    if (!showForm) {
+      setEditId(null);
+      setForm({ ...emptyAzienda, indirizzo: result.indirizzo, comune: result.comune });
+      setShowForm(true);
+      toast.info("Indirizzo dalla mappa inserito nel form");
+    }
+  };
+
+  const applyMapAddress = () => {
+    if (!mapClickResult) return;
+    setForm(f => ({ ...f, indirizzo: mapClickResult.indirizzo, comune: mapClickResult.comune }));
+    toast.success("Indirizzo aggiornato dal punto sulla mappa");
+    setMapClickResult(null);
+  };
 
   const handleSave = async () => {
-    setError("");
-    if (!form.id_azienda || !form.nome_azienda) { setError("ID Azienda e Nome obbligatori"); return; }
+    if (!form.id_azienda || !form.nome_azienda) { toast.error("Inserisci ID Azienda e Nome per continuare"); return; }
     setSaving(true);
     try {
-      if (editId) { await aziendeApi.update(editId, form); }
-      else { await aziendeApi.create(form); }
+      if (editId) {
+        await aziendeApi.update(editId, form);
+        toast.success("Azienda aggiornata con successo");
+      } else {
+        await aziendeApi.create(form);
+        toast.success("Nuova azienda creata con successo");
+      }
       setShowForm(false); fetchData();
-    } catch (err: any) { setError(err.response?.data?.error || "Errore nel salvataggio"); }
+    } catch (err: any) {
+      const msg = err.response?.data?.error;
+      if (msg?.includes("DUP") || msg?.includes("già esistente")) toast.error("Esiste già un'azienda con questo ID");
+      else if (msg?.includes("Incorrect")) toast.error("Controlla che le date e i numeri siano corretti");
+      else toast.error(msg || "Si è verificato un errore durante il salvataggio");
+    }
     setSaving(false);
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm("Eliminare questa azienda?")) return;
-    try { await aziendeApi.delete(id); fetchData(); } catch (err) { console.error(err); }
+    toast("Vuoi eliminare questa azienda?", {
+      action: { label: "Elimina", onClick: async () => {
+        try {
+          await aziendeApi.delete(id);
+          toast.success("Azienda eliminata");
+          fetchData();
+        } catch { toast.error("Impossibile eliminare l'azienda. Potrebbe essere collegata ad altri dati."); }
+      }},
+      cancel: { label: "Annulla", onClick: () => {} },
+      duration: 8000,
+    });
   };
 
   return (
@@ -163,7 +200,6 @@ export default function AziendePage() {
             </div>
           </CardHeader>
           <CardContent>
-            {error && <div className="bg-red-50 text-red-700 px-4 py-2 rounded-lg text-sm mb-4 border border-red-200">{error}</div>}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               <div><label className="text-xs font-medium text-gray-500">ID Azienda *</label>
                 <Input value={form.id_azienda} onChange={e => setForm({...form, id_azienda: e.target.value})} placeholder="es. AZ001" disabled={!!editId} /></div>
@@ -182,7 +218,7 @@ export default function AziendePage() {
               <div><label className="text-xs font-medium text-gray-500">Indirizzo</label>
                 <Input value={form.indirizzo} onChange={e => setForm({...form, indirizzo: e.target.value})} /></div>
               <div><label className="text-xs font-medium text-gray-500">Comune</label>
-                <Input value={form.comune} onChange={e => setForm({...form, comune: e.target.value})} /></div>
+                <ComuneAutocomplete value={form.comune} onChange={v => setForm({...form, comune: v})} /></div>
               <div><label className="text-xs font-medium text-gray-500">Referente</label>
                 <Input value={form.referente} onChange={e => setForm({...form, referente: e.target.value})} /></div>
               <div><label className="text-xs font-medium text-gray-500">Telefono</label>
@@ -223,19 +259,27 @@ export default function AziendePage() {
                 </Button>
               )}
             </div>
-            {geocodingMsg && <p className={`text-xs mt-2 ${geocodingMsg.includes("Errore") ? "text-red-600" : "text-green-600"}`}>{geocodingMsg}</p>}
           </CardHeader>
           <CardContent>
             {loadingMap ? (
               <div className="h-[500px] flex items-center justify-center text-gray-400">Caricamento mappa...</div>
-            ) : mapMarkers.length === 0 ? (
-              <div className="h-[300px] flex flex-col items-center justify-center text-gray-400">
-                <MapPin size={40} className="mb-2 opacity-30" />
-                <p className="text-sm">Nessuna azienda geocodificata</p>
-                <p className="text-xs mt-1">Clicca &quot;Geocodifica tutte&quot; per ottenere le coordinate dagli indirizzi</p>
-              </div>
             ) : (
-              <MappaLeaflet markers={mapMarkers} height="500px" />
+              <>
+                {canEdit && <p className="text-xs text-gray-400 mb-2">Clicca sulla mappa per ottenere un indirizzo e creare una nuova azienda</p>}
+                <MappaLeaflet markers={mapMarkers} height="500px" onMapClick={canEdit ? handleMapClick : undefined} />
+                {mapClickResult && (
+                  <div className="mt-2 flex items-center gap-3 p-3 bg-purple-50 border border-purple-200 rounded-lg">
+                    <MapPin size={16} className="text-purple-600 shrink-0" />
+                    <div className="flex-1 text-sm">
+                      <span className="font-medium">{mapClickResult.indirizzo || 'Indirizzo non trovato'}</span>
+                      {mapClickResult.comune && <span className="text-gray-500"> \u2014 {mapClickResult.comune} {mapClickResult.cap}</span>}
+                    </div>
+                    <Button size="sm" onClick={applyMapAddress}>
+                      <MapPin size={14} className="mr-1" />Usa indirizzo
+                    </Button>
+                  </div>
+                )}
+              </>
             )}
           </CardContent>
         </Card>

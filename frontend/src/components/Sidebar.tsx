@@ -6,7 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard, Users, Home, Building2, GitMerge,
-  FileText, Settings, LogOut, Menu, X, Upload, Shield
+  FileText, Settings, LogOut, Menu, X, Upload, Shield, MapPin
 } from "lucide-react";
 import { useState } from "react";
 
@@ -15,6 +15,7 @@ const navItems = [
   { href: "/beneficiari", label: "Beneficiari", icon: Users, roles: ["superadmin", "admin", "tutor", "counselor", "viewer"] },
   { href: "/alloggi", label: "Alloggi", icon: Home, roles: ["superadmin", "admin", "tutor", "viewer"] },
   { href: "/aziende", label: "Aziende", icon: Building2, roles: ["superadmin", "admin", "counselor", "viewer"] },
+  { href: "/comuni", label: "Comuni", icon: MapPin, roles: ["superadmin", "admin", "tutor", "counselor", "viewer"] },
   { href: "/matching", label: "Abbinamento", icon: GitMerge, roles: ["superadmin", "admin", "tutor", "counselor"] },
   { href: "/report", label: "Report", icon: FileText, roles: ["superadmin", "admin", "tutor", "counselor", "viewer"] },
   { href: "/import", label: "Import/Export", icon: Upload, roles: ["superadmin", "admin"] },

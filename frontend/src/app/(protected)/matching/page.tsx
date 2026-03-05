@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { formatDate, formatCurrency, getScoreColor, getStatoColor } from "@/lib/utils";
 import { GitMerge, Home, Building2, Search, Check, ChevronLeft, ChevronRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
 
 export default function MatchingPage() {
   const { user } = useAuth();
@@ -21,7 +22,6 @@ export default function MatchingPage() {
   const [matchLavoro, setMatchLavoro] = useState<any[]>([]);
   const [tab, setTab] = useState<"cerca" | "alloggi" | "lavoro">("cerca");
   const [search, setSearch] = useState("");
-  const [msg, setMsg] = useState("");
 
   useEffect(() => {
     beneficiariApi.list({ limit: 100, stato: "In Corso" }).then(r => setBeneficiari(r.data.data)).catch(console.error);
@@ -32,7 +32,6 @@ export default function MatchingPage() {
   const handleSelectBen = async (ben: any) => {
     setSelectedBen(ben);
     setLoadingSug(true);
-    setMsg("");
     try {
       const [resA, resAz] = await Promise.all([
         matchingApi.suggerisciAlloggi(ben.id),
@@ -53,9 +52,13 @@ export default function MatchingPage() {
         composizione_nucleo: `${selectedBen.nucleo_singolo} (${selectedBen.n_componenti_nucleo})`,
         comune_preferenza: selectedBen.comune
       });
-      setMsg("Abbinamento alloggio creato con successo!");
+      toast.success("Abbinamento alloggio creato con successo");
       matchingApi.listaMatchAlloggi({ limit: 50 }).then(r => setMatchAlloggi(r.data.data));
-    } catch (err: any) { setMsg("Errore: " + (err.response?.data?.error || "Errore")); }
+    } catch (err: any) {
+      const msg = err.response?.data?.error;
+      if (msg?.includes("già") || msg?.includes("DUP")) toast.error("Questo abbinamento esiste già");
+      else toast.error(msg || "Si è verificato un errore durante l'abbinamento");
+    }
   };
 
   const creaMatchLavoro = async (aziendaId: number) => {
@@ -65,9 +68,13 @@ export default function MatchingPage() {
         id_beneficiario: selectedBen.id,
         id_azienda: aziendaId
       });
-      setMsg("Abbinamento lavoro creato con successo!");
+      toast.success("Abbinamento lavoro creato con successo");
       matchingApi.listaMatchLavoro({ limit: 50 }).then(r => setMatchLavoro(r.data.data));
-    } catch (err: any) { setMsg("Errore: " + (err.response?.data?.error || "Errore")); }
+    } catch (err: any) {
+      const msg = err.response?.data?.error;
+      if (msg?.includes("già") || msg?.includes("DUP")) toast.error("Questo abbinamento esiste già");
+      else toast.error(msg || "Si è verificato un errore durante l'abbinamento");
+    }
   };
 
   const filteredBen = beneficiari.filter(b =>
@@ -80,12 +87,6 @@ export default function MatchingPage() {
         <h1 className="text-2xl font-bold text-gray-900">Abbinamento</h1>
         <p className="text-sm text-gray-500">Trova alloggi e lavoro per i beneficiari</p>
       </div>
-
-      {msg && (
-        <div className={`px-4 py-3 rounded-lg text-sm border ${msg.includes("Errore") ? "bg-red-50 text-red-700 border-red-200" : "bg-green-50 text-green-700 border-green-200"}`}>
-          {msg}
-        </div>
-      )}
 
       {/* Tabs */}
       <div className="flex gap-2 border-b border-gray-200 pb-2">

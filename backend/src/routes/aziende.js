@@ -4,6 +4,17 @@ const { body, validationResult } = require('express-validator');
 const pool = require('../models/db');
 const { authenticate, authorize } = require('../middleware/auth');
 const { logAudit } = require('../utils/auditLog');
+const { geocodeAddress } = require('../utils/geocoder');
+
+async function autoGeocode(id, indirizzo, comune) {
+  if (!indirizzo || !comune) return;
+  try {
+    const result = await geocodeAddress(indirizzo, comune);
+    if (result) {
+      await pool.query('UPDATE aziende SET latitudine = ?, longitudine = ? WHERE id = ?', [result.lat, result.lng, id]);
+    }
+  } catch (err) { console.error('Geocoding auto azienda:', err.message); }
+}
 
 router.get('/', authenticate, async (req, res) => {
   try {
@@ -61,11 +72,17 @@ router.post('/', authenticate, authorize('superadmin', 'admin', 'counselor'), [
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
     const fields = ['id_azienda', 'nome_azienda', 'settore', 'mansione_profilo', 'tipo_contratto', 'orario', 'indirizzo', 'comune', 'referente', 'telefono', 'email', 'data_primo_contatto', 'esito_contatto', 'disponibile', 'tirocinio', 'note'];
-    const values = fields.map(f => req.body[f] !== undefined ? req.body[f] : null);
+    const dateFields = ['data_primo_contatto'];
+    const values = fields.map(f => {
+      let v = req.body[f] !== undefined ? req.body[f] : null;
+      if (v === '' && dateFields.includes(f)) v = null;
+      return v;
+    });
     const [result] = await pool.query(`INSERT INTO aziende (${fields.join(', ')}) VALUES (${fields.map(() => '?').join(', ')})`, values);
 
     const [newRow] = await pool.query('SELECT * FROM aziende WHERE id = ?', [result.insertId]);
     await logAudit(req.user, 'CREATE', 'aziende', result.insertId, null, newRow[0], req.ip);
+    autoGeocode(result.insertId, req.body.indirizzo, req.body.comune);
     res.status(201).json(newRow[0]);
   } catch (err) {
     if (err.code === 'ER_DUP_ENTRY') return res.status(400).json({ error: 'ID Azienda già esistente' });
@@ -81,13 +98,26 @@ router.put('/:id', authenticate, authorize('superadmin', 'admin', 'counselor'), 
 
     const fields = ['id_azienda', 'nome_azienda', 'settore', 'mansione_profilo', 'tipo_contratto', 'orario', 'indirizzo', 'comune', 'referente', 'telefono', 'email', 'data_primo_contatto', 'esito_contatto', 'disponibile', 'tirocinio', 'note'];
     const updates = [], values = [];
-    fields.forEach(f => { if (req.body[f] !== undefined) { updates.push(`${f} = ?`); values.push(req.body[f]); } });
+    const dateFields = ['data_primo_contatto'];
+    fields.forEach(f => {
+      if (req.body[f] !== undefined) {
+        updates.push(`${f} = ?`);
+        let v = req.body[f];
+        if (v === '' && dateFields.includes(f)) v = null;
+        values.push(v);
+      }
+    });
     if (!updates.length) return res.status(400).json({ error: 'Nessun campo da aggiornare' });
 
     values.push(req.params.id);
     await pool.query(`UPDATE aziende SET ${updates.join(', ')} WHERE id = ?`, values);
     const [updated] = await pool.query('SELECT * FROM aziende WHERE id = ?', [req.params.id]);
     await logAudit(req.user, 'UPDATE', 'aziende', req.params.id, old[0], updated[0], req.ip);
+    const newIndirizzo = req.body.indirizzo !== undefined ? req.body.indirizzo : old[0].indirizzo;
+    const newComune = req.body.comune !== undefined ? req.body.comune : old[0].comune;
+    if (req.body.indirizzo !== undefined || req.body.comune !== undefined) {
+      autoGeocode(req.params.id, newIndirizzo, newComune);
+    }
     res.json(updated[0]);
   } catch (err) {
     console.error(err);

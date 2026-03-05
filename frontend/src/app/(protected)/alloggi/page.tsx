@@ -11,6 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import { formatDate, formatCurrency, getStatoColor } from "@/lib/utils";
 import { Plus, Search, Edit, Trash2, ChevronLeft, ChevronRight, X, Save, Map, List, MapPin, Image as ImageIcon } from "lucide-react";
 import GalleriaFoto from "@/components/GalleriaFoto";
+import ComuneAutocomplete from "@/components/ComuneAutocomplete";
+import { toast } from "sonner";
 
 const MappaLeaflet = dynamic(() => import("@/components/MappaLeaflet"), { ssr: false });
 
@@ -39,12 +41,12 @@ export default function AlloggiPage() {
   const [editId, setEditId] = useState<number | null>(null);
   const [form, setForm] = useState({ ...emptyAlloggio });
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
   const [viewTab, setViewTab] = useState<"lista" | "mappa">("lista");
   const [mapMarkers, setMapMarkers] = useState<any[]>([]);
   const [loadingMap, setLoadingMap] = useState(false);
   const [geocodingMsg, setGeocodingMsg] = useState("");
   const [selectedAlloggio, setSelectedAlloggio] = useState<any>(null);
+  const [mapClickResult, setMapClickResult] = useState<{lat:number,lng:number,indirizzo:string,comune:string,cap:string}|null>(null);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -77,12 +79,12 @@ export default function AlloggiPage() {
   };
 
   const handleGeocodeAll = async () => {
-    setGeocodingMsg("Geocodifica in corso...");
+    toast.info("Geocodifica in corso...");
     try {
       const res = await geocodingApi.geocodeTuttiAlloggi();
-      setGeocodingMsg(res.data.message);
+      toast.success(res.data.message);
       loadMapData();
-    } catch (err: any) { setGeocodingMsg("Errore: " + (err.response?.data?.error || "Errore")); }
+    } catch (err: any) { toast.error("Errore durante la geocodifica degli indirizzi"); }
   };
 
   useEffect(() => { if (viewTab === "mappa") loadMapData(); }, [viewTab]);
@@ -101,24 +103,59 @@ export default function AlloggiPage() {
     setShowForm(true);
   };
 
-  const handleNew = () => { setEditId(null); setForm({ ...emptyAlloggio }); setShowForm(true); };
+  const handleNew = () => { setEditId(null); setForm({ ...emptyAlloggio }); setMapClickResult(null); setShowForm(true); };
+
+  const handleMapClick = (result: {lat:number,lng:number,indirizzo:string,comune:string,cap:string}) => {
+    setMapClickResult(result);
+    if (!showForm) {
+      setEditId(null);
+      setForm({ ...emptyAlloggio, indirizzo: result.indirizzo, comune: result.comune });
+      setShowForm(true);
+      toast.info("Indirizzo dalla mappa inserito nel form");
+    }
+  };
+
+  const applyMapAddress = () => {
+    if (!mapClickResult) return;
+    setForm(f => ({ ...f, indirizzo: mapClickResult.indirizzo, comune: mapClickResult.comune }));
+    toast.success("Indirizzo aggiornato dal punto sulla mappa");
+    setMapClickResult(null);
+  };
 
   const handleSave = async () => {
-    setError("");
-    if (!form.id_alloggio) { setError("ID Alloggio obbligatorio"); return; }
+    if (!form.id_alloggio) { toast.error("Inserisci l'ID Alloggio per continuare"); return; }
     setSaving(true);
     try {
       const payload = { ...form, canone_mensile: form.canone_mensile ? parseFloat(String(form.canone_mensile)) : null };
-      if (editId) { await alloggiApi.update(editId, payload); }
-      else { await alloggiApi.create(payload); }
+      if (editId) {
+        await alloggiApi.update(editId, payload);
+        toast.success("Alloggio aggiornato con successo");
+      } else {
+        await alloggiApi.create(payload);
+        toast.success("Nuovo alloggio creato con successo");
+      }
       setShowForm(false); fetchData();
-    } catch (err: any) { setError(err.response?.data?.error || "Errore nel salvataggio"); }
+    } catch (err: any) {
+      const msg = err.response?.data?.error;
+      if (msg?.includes("DUP") || msg?.includes("già esistente")) toast.error("Esiste già un alloggio con questo ID");
+      else if (msg?.includes("Incorrect")) toast.error("Controlla che le date e i numeri siano corretti");
+      else toast.error(msg || "Si è verificato un errore durante il salvataggio");
+    }
     setSaving(false);
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm("Eliminare questo alloggio?")) return;
-    try { await alloggiApi.delete(id); fetchData(); } catch (err) { console.error(err); }
+    toast("Vuoi eliminare questo alloggio?", {
+      action: { label: "Elimina", onClick: async () => {
+        try {
+          await alloggiApi.delete(id);
+          toast.success("Alloggio eliminato");
+          fetchData();
+        } catch { toast.error("Impossibile eliminare l'alloggio. Potrebbe essere collegato ad altri dati."); }
+      }},
+      cancel: { label: "Annulla", onClick: () => {} },
+      duration: 8000,
+    });
   };
 
   return (
@@ -170,12 +207,11 @@ export default function AlloggiPage() {
             </div>
           </CardHeader>
           <CardContent>
-            {error && <div className="bg-red-50 text-red-700 px-4 py-2 rounded-lg text-sm mb-4 border border-red-200">{error}</div>}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               <div><label className="text-xs font-medium text-gray-500">ID Alloggio *</label>
                 <Input value={form.id_alloggio} onChange={e => setForm({...form, id_alloggio: e.target.value})} placeholder="es. ALG01" disabled={!!editId} /></div>
               <div><label className="text-xs font-medium text-gray-500">Comune</label>
-                <Input value={form.comune} onChange={e => setForm({...form, comune: e.target.value})} /></div>
+                <ComuneAutocomplete value={form.comune} onChange={v => setForm({...form, comune: v})} /></div>
               <div><label className="text-xs font-medium text-gray-500">Indirizzo</label>
                 <Input value={form.indirizzo} onChange={e => setForm({...form, indirizzo: e.target.value})} /></div>
               <div><label className="text-xs font-medium text-gray-500">Tipologia</label>
@@ -248,19 +284,27 @@ export default function AlloggiPage() {
                 </Button>
               )}
             </div>
-            {geocodingMsg && <p className={`text-xs mt-2 ${geocodingMsg.includes("Errore") ? "text-red-600" : "text-green-600"}`}>{geocodingMsg}</p>}
           </CardHeader>
           <CardContent>
             {loadingMap ? (
               <div className="h-[500px] flex items-center justify-center text-gray-400">Caricamento mappa...</div>
-            ) : mapMarkers.length === 0 ? (
-              <div className="h-[300px] flex flex-col items-center justify-center text-gray-400">
-                <MapPin size={40} className="mb-2 opacity-30" />
-                <p className="text-sm">Nessun alloggio geocodificato</p>
-                <p className="text-xs mt-1">Clicca &quot;Geocodifica tutti&quot; per ottenere le coordinate dagli indirizzi</p>
-              </div>
             ) : (
-              <MappaLeaflet markers={mapMarkers} height="500px" />
+              <>
+                {canEdit && <p className="text-xs text-gray-400 mb-2">Clicca sulla mappa per ottenere un indirizzo e creare un nuovo alloggio</p>}
+                <MappaLeaflet markers={mapMarkers} height="500px" onMapClick={canEdit ? handleMapClick : undefined} />
+                {mapClickResult && (
+                  <div className="mt-2 flex items-center gap-3 p-3 bg-purple-50 border border-purple-200 rounded-lg">
+                    <MapPin size={16} className="text-purple-600 shrink-0" />
+                    <div className="flex-1 text-sm">
+                      <span className="font-medium">{mapClickResult.indirizzo || 'Indirizzo non trovato'}</span>
+                      {mapClickResult.comune && <span className="text-gray-500"> — {mapClickResult.comune} {mapClickResult.cap}</span>}
+                    </div>
+                    <Button size="sm" onClick={applyMapAddress}>
+                      <MapPin size={14} className="mr-1" />Usa indirizzo
+                    </Button>
+                  </div>
+                )}
+              </>
             )}
           </CardContent>
         </Card>

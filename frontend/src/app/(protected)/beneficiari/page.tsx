@@ -9,6 +9,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatDate, getStatoColor } from "@/lib/utils";
 import { Plus, Search, Edit, Trash2, ChevronLeft, ChevronRight, X, Save } from "lucide-react";
+import ComuneAutocomplete from "@/components/ComuneAutocomplete";
+import { toast } from "sonner";
 
 const STATI = ["In Corso", "Abbinato Alloggio", "Abbinato Lavoro", "Abbinato Entrambi", "Completato", "Annullato"];
 const NUCLEI = ["S", "N", "NUCLEO", "SINGOLO"];
@@ -34,7 +36,6 @@ export default function BeneficiariPage() {
   const [editId, setEditId] = useState<number | null>(null);
   const [form, setForm] = useState({ ...emptyBen });
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -70,30 +71,40 @@ export default function BeneficiariPage() {
   const handleNew = () => { setEditId(null); setForm({ ...emptyBen }); setShowForm(true); };
 
   const handleSave = async () => {
-    setError("");
-    if (!form.cognome || !form.nome) { setError("Cognome e Nome obbligatori"); return; }
-    if (form.n_componenti_nucleo < 1) { setError("N° Componenti deve essere >= 1"); return; }
+    if (!form.cognome || !form.nome) { toast.error("Inserisci cognome e nome per continuare"); return; }
+    if (form.n_componenti_nucleo < 1) { toast.error("Il numero di componenti deve essere almeno 1"); return; }
     setSaving(true);
     try {
       if (editId) {
         await beneficiariApi.update(editId, form);
+        toast.success("Beneficiario aggiornato con successo");
       } else {
         await beneficiariApi.create(form);
+        toast.success("Nuovo beneficiario creato con successo");
       }
       setShowForm(false);
       fetchData();
     } catch (err: any) {
-      setError(err.response?.data?.error || "Errore nel salvataggio");
+      const msg = err.response?.data?.error;
+      if (msg?.includes("Incorrect")) toast.error("Controlla che le date e i numeri siano corretti");
+      else if (msg?.includes("DUP")) toast.error("Esiste già un beneficiario con questi dati");
+      else toast.error(msg || "Si è verificato un errore durante il salvataggio");
     }
     setSaving(false);
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm("Eliminare questo beneficiario?")) return;
-    try {
-      await beneficiariApi.delete(id);
-      fetchData();
-    } catch (err) { console.error(err); }
+    toast("Vuoi eliminare questo beneficiario?", {
+      action: { label: "Elimina", onClick: async () => {
+        try {
+          await beneficiariApi.delete(id);
+          toast.success("Beneficiario eliminato");
+          fetchData();
+        } catch { toast.error("Impossibile eliminare il beneficiario. Potrebbe essere collegato ad altri dati."); }
+      }},
+      cancel: { label: "Annulla", onClick: () => {} },
+      duration: 8000,
+    });
   };
 
   return (
@@ -141,7 +152,6 @@ export default function BeneficiariPage() {
             </div>
           </CardHeader>
           <CardContent>
-            {error && <div className="bg-red-50 text-red-700 px-4 py-2 rounded-lg text-sm mb-4 border border-red-200">{error}</div>}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               <div><label className="text-xs font-medium text-gray-500">Cognome *</label>
                 <Input value={form.cognome} onChange={e => setForm({...form, cognome: e.target.value})} /></div>
@@ -163,7 +173,7 @@ export default function BeneficiariPage() {
                   <option value="ALLOGGIO">ALLOGGIO</option><option value="LAVORATIVO-ALLOGGIO">LAVORATIVO-ALLOGGIO</option>
                 </select></div>
               <div><label className="text-xs font-medium text-gray-500">Comune</label>
-                <Input value={form.comune} onChange={e => setForm({...form, comune: e.target.value})} /></div>
+                <ComuneAutocomplete value={form.comune} onChange={v => setForm({...form, comune: v})} /></div>
               <div><label className="text-xs font-medium text-gray-500">Data Uscita SAI</label>
                 <Input type="date" value={form.data_uscita_sai} onChange={e => setForm({...form, data_uscita_sai: e.target.value})} /></div>
               <div><label className="text-xs font-medium text-gray-500">Stato</label>

@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Edit, Trash2, X, Save, Shield } from "lucide-react";
+import { toast } from "sonner";
 
 const RUOLI = ["superadmin", "admin", "tutor", "counselor", "viewer"];
 
@@ -19,7 +20,6 @@ export default function UtentiPage() {
   const [editId, setEditId] = useState<number | null>(null);
   const [form, setForm] = useState({ nome: "", cognome: "", email: "", password: "", ruolo: "viewer", attivo: true });
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
 
   const fetchData = async () => {
     setLoading(true);
@@ -32,35 +32,52 @@ export default function UtentiPage() {
   const handleNew = () => {
     setEditId(null);
     setForm({ nome: "", cognome: "", email: "", password: "", ruolo: "viewer", attivo: true });
-    setShowForm(true); setError("");
+    setShowForm(true);
   };
 
   const handleEdit = (u: any) => {
     setEditId(u.id);
     setForm({ nome: u.nome, cognome: u.cognome, email: u.email, password: "", ruolo: u.ruolo, attivo: !!u.attivo });
-    setShowForm(true); setError("");
+    setShowForm(true);
   };
 
   const handleSave = async () => {
-    setError("");
-    if (!form.nome || !form.cognome || !form.email) { setError("Nome, cognome e email obbligatori"); return; }
-    if (!editId && !form.password) { setError("Password obbligatoria per nuovi utenti"); return; }
-    if (!editId && form.password.length < 8) { setError("Password minimo 8 caratteri"); return; }
+    if (!form.nome || !form.cognome || !form.email) { toast.error("Inserisci nome, cognome e email per continuare"); return; }
+    if (!editId && !form.password) { toast.error("La password è obbligatoria per i nuovi utenti"); return; }
+    if (!editId && form.password.length < 8) { toast.error("La password deve avere almeno 8 caratteri"); return; }
     setSaving(true);
     try {
       const payload: any = { nome: form.nome, cognome: form.cognome, email: form.email, ruolo: form.ruolo, attivo: form.attivo };
       if (form.password) payload.password = form.password;
-      if (editId) { await utentiApi.update(editId, payload); }
-      else { await utentiApi.create(payload); }
+      if (editId) {
+        await utentiApi.update(editId, payload);
+        toast.success("Utente aggiornato con successo");
+      } else {
+        await utentiApi.create(payload);
+        toast.success("Nuovo utente creato con successo");
+      }
       setShowForm(false); fetchData();
-    } catch (err: any) { setError(err.response?.data?.error || "Errore nel salvataggio"); }
+    } catch (err: any) {
+      const msg = err.response?.data?.error;
+      if (msg?.includes("DUP") || msg?.includes("già")) toast.error("Esiste già un utente con questa email");
+      else toast.error(msg || "Si è verificato un errore durante il salvataggio");
+    }
     setSaving(false);
   };
 
   const handleDelete = async (id: number) => {
-    if (id === currentUser?.id) { alert("Non puoi eliminare te stesso"); return; }
-    if (!confirm("Eliminare questo utente?")) return;
-    try { await utentiApi.delete(id); fetchData(); } catch (err) { console.error(err); }
+    if (id === currentUser?.id) { toast.error("Non puoi eliminare il tuo stesso account"); return; }
+    toast("Vuoi eliminare questo utente?", {
+      action: { label: "Elimina", onClick: async () => {
+        try {
+          await utentiApi.delete(id);
+          toast.success("Utente eliminato");
+          fetchData();
+        } catch { toast.error("Impossibile eliminare l'utente"); }
+      }},
+      cancel: { label: "Annulla", onClick: () => {} },
+      duration: 8000,
+    });
   };
 
   const ruoloColor = (r: string) => {
@@ -92,7 +109,6 @@ export default function UtentiPage() {
             </div>
           </CardHeader>
           <CardContent>
-            {error && <div className="bg-red-50 text-red-700 px-4 py-2 rounded-lg text-sm mb-4 border border-red-200">{error}</div>}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               <div><label className="text-xs font-medium text-gray-500">Nome *</label>
                 <Input value={form.nome} onChange={e => setForm({...form, nome: e.target.value})} /></div>

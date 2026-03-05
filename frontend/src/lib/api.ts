@@ -128,6 +128,21 @@ export const contrattiApi = {
   update: (id: number, data: any) => api.put(`/contratti/${id}`, data),
 };
 
+// Comuni italiani
+export const comuniApi = {
+  search: (q: string) => api.get("/comuni/search", { params: { q, limit: 15 } }),
+};
+
+// Comuni Progetto
+export const comuniProgettoApi = {
+  list: () => api.get("/comuni-progetto"),
+  nomi: () => api.get("/comuni-progetto/nomi"),
+  get: (id: number) => api.get(`/comuni-progetto/${id}`),
+  create: (data: any) => api.post("/comuni-progetto", data),
+  update: (id: number, data: any) => api.put(`/comuni-progetto/${id}`, data),
+  delete: (id: number) => api.delete(`/comuni-progetto/${id}`),
+};
+
 // Geocoding & Mappa
 export const geocodingApi = {
   geocodeAlloggio: (id: number) => api.post(`/geocoding/alloggi/${id}`),

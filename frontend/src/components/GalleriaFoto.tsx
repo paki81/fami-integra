@@ -4,19 +4,19 @@ import { useState, useEffect, useRef } from "react";
 import { fotoAlloggiApi } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Camera, Upload, Trash2, X, Image as ImageIcon } from "lucide-react";
+import { toast } from "sonner";
 
 interface GalleriaFotoProps {
   alloggioId: number;
   canEdit?: boolean;
 }
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL?.replace("/api", "") || "http://localhost:4000";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
 
 export default function GalleriaFoto({ alloggioId, canEdit = false }: GalleriaFotoProps) {
   const [foto, setFoto] = useState<any[]>([]);
   const [uploading, setUploading] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
-  const [msg, setMsg] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
 
@@ -28,13 +28,13 @@ export default function GalleriaFoto({ alloggioId, canEdit = false }: GalleriaFo
 
   const handleUpload = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
-    setUploading(true); setMsg("");
+    setUploading(true);
     try {
       const res = await fotoAlloggiApi.upload(alloggioId, files);
-      setMsg(`${res.data.foto.length} foto caricate`);
+      toast.success(`${res.data.foto.length} foto caricate con successo`);
       loadFoto();
     } catch (err: any) {
-      setMsg("Errore: " + (err.response?.data?.error || "Upload fallito"));
+      toast.error(err.response?.data?.error || "Errore durante il caricamento delle foto");
     }
     setUploading(false);
     if (fileRef.current) fileRef.current.value = "";
@@ -42,12 +42,18 @@ export default function GalleriaFoto({ alloggioId, canEdit = false }: GalleriaFo
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm("Eliminare questa foto?")) return;
-    try {
-      await fotoAlloggiApi.delete(id);
-      setFoto(prev => prev.filter(f => f.id !== id));
-      if (preview) setPreview(null);
-    } catch { setMsg("Errore durante l'eliminazione"); }
+    toast("Vuoi eliminare questa foto?", {
+      action: { label: "Elimina", onClick: async () => {
+        try {
+          await fotoAlloggiApi.delete(id);
+          setFoto(prev => prev.filter(f => f.id !== id));
+          if (preview) setPreview(null);
+          toast.success("Foto eliminata");
+        } catch { toast.error("Impossibile eliminare la foto"); }
+      }},
+      cancel: { label: "Annulla", onClick: () => {} },
+      duration: 8000,
+    });
   };
 
   return (
@@ -63,10 +69,6 @@ export default function GalleriaFoto({ alloggioId, canEdit = false }: GalleriaFo
             <Camera size={14} className="mr-1.5" />Scatta foto
           </Button>
         </div>
-      )}
-
-      {msg && (
-        <p className={`text-xs px-3 py-1.5 rounded ${msg.includes("Errore") ? "bg-red-50 text-red-600" : "bg-green-50 text-green-600"}`}>{msg}</p>
       )}
 
       {foto.length === 0 ? (

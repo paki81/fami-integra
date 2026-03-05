@@ -18,6 +18,8 @@ const auditRoutes = require('./routes/audit');
 const contrattiRoutes = require('./routes/contratti');
 const fotoAlloggiRoutes = require('./routes/fotoAlloggi');
 const geocodingRoutes = require('./routes/geocoding');
+const comuniRoutes = require('./routes/comuni');
+const comuniProgettoRoutes = require('./routes/comuniProgetto');
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -55,6 +57,7 @@ if (process.env.NODE_ENV !== 'test') {
 }
 
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+app.use('/api/uploads', express.static(path.join(__dirname, '../uploads')));
 
 app.use('/api/auth', authRoutes);
 app.use('/api/beneficiari', beneficiariRoutes);
@@ -68,6 +71,8 @@ app.use('/api/audit', auditRoutes);
 app.use('/api/contratti', contrattiRoutes);
 app.use('/api/foto-alloggi', fotoAlloggiRoutes);
 app.use('/api/geocoding', geocodingRoutes);
+app.use('/api/comuni', comuniRoutes);
+app.use('/api/comuni-progetto', comuniProgettoRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });

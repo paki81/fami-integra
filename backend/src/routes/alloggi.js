@@ -4,6 +4,17 @@ const { body, validationResult } = require('express-validator');
 const pool = require('../models/db');
 const { authenticate, authorize } = require('../middleware/auth');
 const { logAudit } = require('../utils/auditLog');
+const { geocodeAddress } = require('../utils/geocoder');
+
+async function autoGeocode(id, indirizzo, comune) {
+  if (!indirizzo || !comune) return;
+  try {
+    const result = await geocodeAddress(indirizzo, comune);
+    if (result) {
+      await pool.query('UPDATE alloggi SET latitudine = ?, longitudine = ? WHERE id = ?', [result.lat, result.lng, id]);
+    }
+  } catch (err) { console.error('Geocoding auto alloggio:', err.message); }
+}
 
 router.get('/', authenticate, async (req, res) => {
   try {
@@ -55,11 +66,19 @@ router.post('/', authenticate, authorize('superadmin', 'admin', 'tutor'), [
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
     const fields = ['id_alloggio', 'comune', 'indirizzo', 'tipologia', 'n_vani', 'piano', 'canone_mensile', 'spese_incluse', 'proprietario', 'agenzia', 'telefono_referente', 'email_referente', 'data_primo_contatto', 'disponibile_da', 'stato', 'note'];
-    const values = fields.map(f => req.body[f] !== undefined ? req.body[f] : null);
+    const dateFields = ['data_primo_contatto', 'disponibile_da'];
+    const numFields = ['n_vani', 'canone_mensile'];
+    const values = fields.map(f => {
+      let v = req.body[f] !== undefined ? req.body[f] : null;
+      if (v === '' && (dateFields.includes(f) || numFields.includes(f))) v = null;
+      return v;
+    });
     const [result] = await pool.query(`INSERT INTO alloggi (${fields.join(', ')}) VALUES (${fields.map(() => '?').join(', ')})`, values);
 
     const [newRow] = await pool.query('SELECT * FROM alloggi WHERE id = ?', [result.insertId]);
     await logAudit(req.user, 'CREATE', 'alloggi', result.insertId, null, newRow[0], req.ip);
+    // Geocodifica in background
+    autoGeocode(result.insertId, req.body.indirizzo, req.body.comune);
     res.status(201).json(newRow[0]);
   } catch (err) {
     if (err.code === 'ER_DUP_ENTRY') return res.status(400).json({ error: 'ID Alloggio già esistente' });
@@ -75,13 +94,28 @@ router.put('/:id', authenticate, authorize('superadmin', 'admin', 'tutor'), asyn
 
     const fields = ['id_alloggio', 'comune', 'indirizzo', 'tipologia', 'n_vani', 'piano', 'canone_mensile', 'spese_incluse', 'proprietario', 'agenzia', 'telefono_referente', 'email_referente', 'data_primo_contatto', 'disponibile_da', 'stato', 'note'];
     const updates = [], values = [];
-    fields.forEach(f => { if (req.body[f] !== undefined) { updates.push(`${f} = ?`); values.push(req.body[f]); } });
+    const dateFields = ['data_primo_contatto', 'disponibile_da'];
+    const numFields = ['n_vani', 'canone_mensile'];
+    fields.forEach(f => {
+      if (req.body[f] !== undefined) {
+        updates.push(`${f} = ?`);
+        let v = req.body[f];
+        if (v === '' && (dateFields.includes(f) || numFields.includes(f))) v = null;
+        values.push(v);
+      }
+    });
     if (!updates.length) return res.status(400).json({ error: 'Nessun campo da aggiornare' });
 
     values.push(req.params.id);
     await pool.query(`UPDATE alloggi SET ${updates.join(', ')} WHERE id = ?`, values);
     const [updated] = await pool.query('SELECT * FROM alloggi WHERE id = ?', [req.params.id]);
     await logAudit(req.user, 'UPDATE', 'alloggi', req.params.id, old[0], updated[0], req.ip);
+    // Ri-geocodifica se indirizzo o comune sono cambiati
+    const newIndirizzo = req.body.indirizzo !== undefined ? req.body.indirizzo : old[0].indirizzo;
+    const newComune = req.body.comune !== undefined ? req.body.comune : old[0].comune;
+    if (req.body.indirizzo !== undefined || req.body.comune !== undefined) {
+      autoGeocode(req.params.id, newIndirizzo, newComune);
+    }
     res.json(updated[0]);
   } catch (err) {
     console.error(err);

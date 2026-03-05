@@ -106,7 +106,10 @@ router.put('/:id', authenticate, authorize('superadmin', 'admin', 'tutor', 'coun
     fields.forEach(f => {
       if (req.body[f] !== undefined) {
         updates.push(`${f} = ?`);
-        values.push(req.body[f]);
+        let val = req.body[f];
+        // Converti stringhe vuote in NULL per campi data e numerici
+        if (val === '' && ['data_uscita_sai', 'n_componenti_nucleo', 'assegnato_a'].includes(f)) val = null;
+        values.push(val);
       }
     });
 

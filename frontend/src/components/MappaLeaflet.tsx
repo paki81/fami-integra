@@ -13,11 +13,20 @@ interface MarkerData {
   color?: "green" | "blue" | "red" | "orange" | "purple";
 }
 
+interface ReverseGeoResult {
+  lat: number;
+  lng: number;
+  indirizzo: string;
+  comune: string;
+  cap: string;
+}
+
 interface MappaLeafletProps {
   markers: MarkerData[];
   center?: [number, number];
   zoom?: number;
   height?: string;
+  onMapClick?: (result: ReverseGeoResult) => void;
 }
 
 const MARKER_COLORS: Record<string, string> = {
@@ -43,7 +52,7 @@ function createIcon(color: string) {
   });
 }
 
-export default function MappaLeaflet({ markers, center, zoom = 10, height = "500px" }: MappaLeafletProps) {
+export default function MappaLeaflet({ markers, center, zoom = 10, height = "500px", onMapClick }: MappaLeafletProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
   const [ready, setReady] = useState(false);
@@ -87,6 +96,56 @@ export default function MappaLeaflet({ markers, center, zoom = 10, height = "500
       } else {
         map.setView([markers[0].lat, markers[0].lng], 14);
       }
+    }
+
+    // Reverse geocoding al click sulla mappa
+    if (onMapClick) {
+      const clickMarkerRef: { current: L.Marker | null } = { current: null };
+      map.getContainer().style.cursor = 'crosshair';
+
+      map.on('click', async (e: L.LeafletMouseEvent) => {
+        const { lat, lng } = e.latlng;
+
+        // Mostra marker temporaneo
+        if (clickMarkerRef.current) map.removeLayer(clickMarkerRef.current);
+        clickMarkerRef.current = L.marker([lat, lng], {
+          icon: createIcon('purple'),
+          opacity: 0.7
+        }).addTo(map);
+        clickMarkerRef.current.bindPopup('<div class="text-sm text-gray-500">Ricerca indirizzo...</div>').openPopup();
+
+        try {
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=jsonv2&zoom=18&addressdetails=1`,
+            { headers: { 'User-Agent': 'FAMI-INTEGRA/1.0 (fami-integra@aswell.eu)' } }
+          );
+          const data = await res.json();
+          const addr = data.address || {};
+
+          const strada = addr.road || addr.pedestrian || addr.footway || '';
+          const civico = addr.house_number || '';
+          const comune = addr.city || addr.town || addr.village || addr.municipality || '';
+          const cap = addr.postcode || '';
+          const indirizzo = civico ? `${strada} ${civico}`.trim() : strada;
+
+          if (clickMarkerRef.current) {
+            clickMarkerRef.current.setPopupContent(
+              `<div style="min-width:200px">
+                <strong>${indirizzo || 'Indirizzo non trovato'}</strong><br/>
+                ${comune} ${cap}<br/>
+                <small style="color:#666">${lat.toFixed(6)}, ${lng.toFixed(6)}</small><br/>
+                <em style="color:#16a34a;font-size:12px">Clicca "Usa questo indirizzo" nel form</em>
+              </div>`
+            ).openPopup();
+          }
+
+          onMapClick({ lat, lng, indirizzo, comune, cap });
+        } catch {
+          if (clickMarkerRef.current) {
+            clickMarkerRef.current.setPopupContent('<div class="text-sm text-red-500">Errore nella ricerca</div>').openPopup();
+          }
+        }
+      });
     }
 
     // Fix per il resize

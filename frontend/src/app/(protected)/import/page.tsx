@@ -5,6 +5,7 @@ import { importApi } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Upload, Download, FileSpreadsheet, Users, Home, Building2 } from "lucide-react";
+import { toast } from "sonner";
 
 const TABELLE_EXPORT = [
   { key: "beneficiari", label: "Beneficiari", icon: Users },
@@ -17,22 +18,24 @@ const TABELLE_EXPORT = [
 export default function ImportPage() {
   const [importing, setImporting] = useState(false);
   const [result, setResult] = useState<any>(null);
-  const [error, setError] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
   const [importType, setImportType] = useState<"beneficiari" | "alloggi" | "aziende">("beneficiari");
 
   const handleImport = async () => {
     const file = fileRef.current?.files?.[0];
-    if (!file) { setError("Seleziona un file Excel (.xlsx)"); return; }
-    setError(""); setResult(null); setImporting(true);
+    if (!file) { toast.error("Seleziona un file Excel (.xlsx) prima di procedere"); return; }
+    setResult(null); setImporting(true);
     try {
       let res;
       if (importType === "beneficiari") res = await importApi.importBeneficiari(file);
       else if (importType === "alloggi") res = await importApi.importAlloggi(file);
       else res = await importApi.importAziende(file);
       setResult(res.data);
+      toast.success(`Importazione completata: ${res.data.imported} record importati`);
     } catch (err: any) {
-      setError(err.response?.data?.error || "Errore durante l'import");
+      const msg = err.response?.data?.error;
+      if (msg?.includes("formato") || msg?.includes("format")) toast.error("Il file non ha il formato corretto. Verifica che sia un file Excel (.xlsx) valido.");
+      else toast.error(msg || "Si è verificato un errore durante l'importazione");
     }
     setImporting(false);
   };
@@ -49,7 +52,8 @@ export default function ImportPage() {
       a.download = `${tabella}_export.${formato}`;
       a.click();
       window.URL.revokeObjectURL(url);
-    } catch (err) { console.error(err); }
+      toast.success(`Export ${tabella} scaricato`);
+    } catch (err) { toast.error("Errore durante l'esportazione. Riprova."); }
   };
 
   return (
@@ -80,8 +84,6 @@ export default function ImportPage() {
               {importing ? "Importazione..." : "Importa"}
             </Button>
           </div>
-
-          {error && <div className="bg-red-50 text-red-700 px-4 py-3 rounded-lg text-sm border border-red-200">{error}</div>}
 
           {result && (
             <div className="bg-green-50 border border-green-200 rounded-lg p-4">
