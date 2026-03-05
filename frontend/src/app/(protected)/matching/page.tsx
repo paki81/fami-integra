@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatDate, formatCurrency, getScoreColor, getStatoColor } from "@/lib/utils";
-import { GitMerge, Home, Building2, Search, Check, ChevronLeft, ChevronRight } from "lucide-react";
+import { GitMerge, Home, Building2, Search, Check, ChevronLeft, ChevronRight, XCircle, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 
@@ -75,6 +75,71 @@ export default function MatchingPage() {
       if (msg?.includes("già") || msg?.includes("DUP")) toast.error("Questo abbinamento esiste già");
       else toast.error(msg || "Si è verificato un errore durante l'abbinamento");
     }
+  };
+
+  const canEdit = ["superadmin", "admin"].includes(user?.ruolo || "");
+  const canDelete = user?.ruolo === "superadmin";
+
+  const refreshLists = () => {
+    matchingApi.listaMatchAlloggi({ limit: 50 }).then(r => setMatchAlloggi(r.data.data)).catch(console.error);
+    matchingApi.listaMatchLavoro({ limit: 50 }).then(r => setMatchLavoro(r.data.data)).catch(console.error);
+    beneficiariApi.list({ limit: 200, stato: "In Corso,Abbinato Alloggio,Abbinato Lavoro" }).then(r => setBeneficiari(r.data.data)).catch(console.error);
+  };
+
+  const annullaMatchAlloggio = (id: number) => {
+    toast("Vuoi annullare questo abbinamento alloggio?", {
+      action: { label: "Annulla abbinamento", onClick: async () => {
+        try {
+          await matchingApi.annullaMatchAlloggio(id);
+          toast.success("Abbinamento annullato");
+          refreshLists();
+        } catch { toast.error("Errore nell'annullamento"); }
+      }},
+      cancel: { label: "No", onClick: () => {} },
+      duration: 8000,
+    });
+  };
+
+  const annullaMatchLavoro = (id: number) => {
+    toast("Vuoi annullare questo abbinamento lavoro?", {
+      action: { label: "Annulla abbinamento", onClick: async () => {
+        try {
+          await matchingApi.annullaMatchLavoro(id);
+          toast.success("Abbinamento annullato");
+          refreshLists();
+        } catch { toast.error("Errore nell'annullamento"); }
+      }},
+      cancel: { label: "No", onClick: () => {} },
+      duration: 8000,
+    });
+  };
+
+  const eliminaMatchAlloggio = (id: number) => {
+    toast("Vuoi eliminare definitivamente questo abbinamento?", {
+      action: { label: "Elimina", onClick: async () => {
+        try {
+          await matchingApi.deleteMatchAlloggio(id);
+          toast.success("Abbinamento eliminato");
+          refreshLists();
+        } catch { toast.error("Errore nell'eliminazione"); }
+      }},
+      cancel: { label: "No", onClick: () => {} },
+      duration: 8000,
+    });
+  };
+
+  const eliminaMatchLavoro = (id: number) => {
+    toast("Vuoi eliminare definitivamente questo abbinamento?", {
+      action: { label: "Elimina", onClick: async () => {
+        try {
+          await matchingApi.deleteMatchLavoro(id);
+          toast.success("Abbinamento eliminato");
+          refreshLists();
+        } catch { toast.error("Errore nell'eliminazione"); }
+      }},
+      cancel: { label: "No", onClick: () => {} },
+      duration: 8000,
+    });
   };
 
   const filteredBen = beneficiari.filter(b =>
@@ -227,13 +292,15 @@ export default function MatchingPage() {
                     <th className="px-4 py-3 text-left font-medium text-gray-500">Data Abbinamento</th>
                     <th className="px-4 py-3 text-left font-medium text-gray-500">Sopralluogo</th>
                     <th className="px-4 py-3 text-left font-medium text-gray-500">Contratto</th>
+                    <th className="px-4 py-3 text-left font-medium text-gray-500">Stato</th>
+                    {canEdit && <th className="px-4 py-3 text-right font-medium text-gray-500">Azioni</th>}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {matchAlloggi.length === 0 ? (
-                    <tr><td colSpan={6} className="px-4 py-8 text-center text-gray-400">Nessun abbinamento alloggi</td></tr>
+                    <tr><td colSpan={canEdit ? 8 : 7} className="px-4 py-8 text-center text-gray-400">Nessun abbinamento alloggi</td></tr>
                   ) : matchAlloggi.map((m: any) => (
-                    <tr key={m.id} className="hover:bg-gray-50">
+                    <tr key={m.id} className={`hover:bg-gray-50 ${m.stato_match === 'Annullato' ? 'opacity-50' : ''}`}>
                       <td className="px-4 py-3 font-medium">{m.ben_cognome} {m.ben_nome}</td>
                       <td className="px-4 py-3 font-mono text-gray-600">{m.id_alloggio}</td>
                       <td className="px-4 py-3 text-gray-600">{m.alloggio_comune}</td>
@@ -242,6 +309,21 @@ export default function MatchingPage() {
                       <td className="px-4 py-3">
                         <Badge className={m.contratto_firmato === "S" ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-600"}>
                           {m.contratto_firmato === "S" ? "Firmato" : "Non firmato"}</Badge></td>
+                      <td className="px-4 py-3">
+                        <Badge className={m.stato_match === 'Attivo' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-700'}>
+                          {m.stato_match || 'Attivo'}</Badge></td>
+                      {canEdit && (
+                        <td className="px-4 py-3 text-right">
+                          <div className="flex justify-end gap-1">
+                            {m.stato_match !== 'Annullato' && (
+                              <Button variant="ghost" size="icon" className="text-orange-500 hover:text-orange-700" title="Annulla abbinamento" onClick={() => annullaMatchAlloggio(m.id)}><XCircle size={14} /></Button>
+                            )}
+                            {canDelete && (
+                              <Button variant="ghost" size="icon" className="text-red-500 hover:text-red-700" title="Elimina definitivamente" onClick={() => eliminaMatchAlloggio(m.id)}><Trash2 size={14} /></Button>
+                            )}
+                          </div>
+                        </td>
+                      )}
                     </tr>
                   ))}
                 </tbody>
@@ -264,19 +346,36 @@ export default function MatchingPage() {
                     <th className="px-4 py-3 text-left font-medium text-gray-500">Data Abbinamento</th>
                     <th className="px-4 py-3 text-left font-medium text-gray-500">Esito</th>
                     <th className="px-4 py-3 text-left font-medium text-gray-500">Data Avvio</th>
+                    <th className="px-4 py-3 text-left font-medium text-gray-500">Stato</th>
+                    {canEdit && <th className="px-4 py-3 text-right font-medium text-gray-500">Azioni</th>}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {matchLavoro.length === 0 ? (
-                    <tr><td colSpan={6} className="px-4 py-8 text-center text-gray-400">Nessun abbinamento lavoro</td></tr>
+                    <tr><td colSpan={canEdit ? 8 : 7} className="px-4 py-8 text-center text-gray-400">Nessun abbinamento lavoro</td></tr>
                   ) : matchLavoro.map((m: any) => (
-                    <tr key={m.id} className="hover:bg-gray-50">
+                    <tr key={m.id} className={`hover:bg-gray-50 ${m.stato_match === 'Annullato' ? 'opacity-50' : ''}`}>
                       <td className="px-4 py-3 font-medium">{m.ben_cognome} {m.ben_nome}</td>
                       <td className="px-4 py-3 text-gray-700">{m.nome_azienda}</td>
                       <td className="px-4 py-3"><Badge variant="secondary" className="text-xs">{m.settore}</Badge></td>
                       <td className="px-4 py-3 text-gray-600">{formatDate(m.data_match)}</td>
                       <td className="px-4 py-3 text-gray-600">{m.esito || "-"}</td>
                       <td className="px-4 py-3 text-gray-600">{formatDate(m.data_avvio)}</td>
+                      <td className="px-4 py-3">
+                        <Badge className={m.stato_match === 'Attivo' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-700'}>
+                          {m.stato_match || 'Attivo'}</Badge></td>
+                      {canEdit && (
+                        <td className="px-4 py-3 text-right">
+                          <div className="flex justify-end gap-1">
+                            {m.stato_match !== 'Annullato' && (
+                              <Button variant="ghost" size="icon" className="text-orange-500 hover:text-orange-700" title="Annulla abbinamento" onClick={() => annullaMatchLavoro(m.id)}><XCircle size={14} /></Button>
+                            )}
+                            {canDelete && (
+                              <Button variant="ghost" size="icon" className="text-red-500 hover:text-red-700" title="Elimina definitivamente" onClick={() => eliminaMatchLavoro(m.id)}><Trash2 size={14} /></Button>
+                            )}
+                          </div>
+                        </td>
+                      )}
                     </tr>
                   ))}
                 </tbody>

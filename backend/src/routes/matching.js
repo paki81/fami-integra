@@ -163,7 +163,7 @@ router.put('/alloggi/:id', authenticate, authorize('superadmin', 'admin', 'tutor
     const [old] = await pool.query('SELECT * FROM matching_alloggi WHERE id = ?', [req.params.id]);
     if (!old.length) return res.status(404).json({ error: 'Matching non trovato' });
 
-    const fields = ['data_sopralluogo', 'esito_sopralluogo', 'contratto_firmato', 'data_inizio_contratto', 'contributo_progetto', 'note'];
+    const fields = ['data_sopralluogo', 'esito_sopralluogo', 'contratto_firmato', 'data_inizio_contratto', 'contributo_progetto', 'note', 'stato_match'];
     const updates = [], values = [];
     fields.forEach(f => { if (req.body[f] !== undefined) { updates.push(`${f} = ?`); values.push(req.body[f]); } });
     if (!updates.length) return res.status(400).json({ error: 'Nessun campo da aggiornare' });
@@ -191,7 +191,7 @@ router.put('/lavoro/:id', authenticate, authorize('superadmin', 'admin', 'counse
     const [old] = await pool.query('SELECT * FROM matching_lavoro WHERE id = ?', [req.params.id]);
     if (!old.length) return res.status(404).json({ error: 'Matching non trovato' });
 
-    const fields = ['mansione_proposta', 'esito', 'data_avvio', 'note'];
+    const fields = ['mansione_proposta', 'esito', 'data_avvio', 'note', 'stato_match'];
     const updates = [], values = [];
     fields.forEach(f => { if (req.body[f] !== undefined) { updates.push(`${f} = ?`); values.push(req.body[f]); } });
     if (!updates.length) return res.status(400).json({ error: 'Nessun campo da aggiornare' });
@@ -202,6 +202,103 @@ router.put('/lavoro/:id', authenticate, authorize('superadmin', 'admin', 'counse
     const [updated] = await pool.query('SELECT * FROM matching_lavoro WHERE id = ?', [req.params.id]);
     await logAudit(req.user, 'UPDATE', 'matching_lavoro', req.params.id, old[0], updated[0], req.ip);
     res.json(updated[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Errore server' });
+  }
+});
+
+// Funzione helper per ricalcolare lo stato del beneficiario
+async function ricalcolaStatoBeneficiario(idBeneficiario) {
+  const [alloggiAttivi] = await pool.query("SELECT COUNT(*) as c FROM matching_alloggi WHERE id_beneficiario = ? AND stato_match = 'Attivo'", [idBeneficiario]);
+  const [lavoroAttivi] = await pool.query("SELECT COUNT(*) as c FROM matching_lavoro WHERE id_beneficiario = ? AND stato_match = 'Attivo'", [idBeneficiario]);
+  const haAlloggio = alloggiAttivi[0].c > 0;
+  const haLavoro = lavoroAttivi[0].c > 0;
+  let nuovoStato = 'In Corso';
+  if (haAlloggio && haLavoro) nuovoStato = 'Abbinato Entrambi';
+  else if (haAlloggio) nuovoStato = 'Abbinato Alloggio';
+  else if (haLavoro) nuovoStato = 'Abbinato Lavoro';
+  await pool.query('UPDATE beneficiari SET stato = ? WHERE id = ?', [nuovoStato, idBeneficiario]);
+}
+
+// PATCH /api/matching/alloggi/:id/annulla
+router.patch('/alloggi/:id/annulla', authenticate, authorize('superadmin', 'admin'), async (req, res) => {
+  try {
+    const [old] = await pool.query('SELECT * FROM matching_alloggi WHERE id = ?', [req.params.id]);
+    if (!old.length) return res.status(404).json({ error: 'Matching non trovato' });
+    if (old[0].stato_match === 'Annullato') return res.status(400).json({ error: 'Matching già annullato' });
+
+    await pool.query("UPDATE matching_alloggi SET stato_match = 'Annullato' WHERE id = ?", [req.params.id]);
+
+    // Rimetti alloggio disponibile
+    await pool.query("UPDATE alloggi SET stato = 'Disponibile' WHERE id = ?", [old[0].id_alloggio]);
+
+    // Ricalcola stato beneficiario
+    await ricalcolaStatoBeneficiario(old[0].id_beneficiario);
+
+    const [updated] = await pool.query('SELECT * FROM matching_alloggi WHERE id = ?', [req.params.id]);
+    await logAudit(req.user, 'UPDATE', 'matching_alloggi', req.params.id, old[0], updated[0], req.ip);
+    res.json(updated[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Errore server' });
+  }
+});
+
+// PATCH /api/matching/lavoro/:id/annulla
+router.patch('/lavoro/:id/annulla', authenticate, authorize('superadmin', 'admin'), async (req, res) => {
+  try {
+    const [old] = await pool.query('SELECT * FROM matching_lavoro WHERE id = ?', [req.params.id]);
+    if (!old.length) return res.status(404).json({ error: 'Matching non trovato' });
+    if (old[0].stato_match === 'Annullato') return res.status(400).json({ error: 'Matching già annullato' });
+
+    await pool.query("UPDATE matching_lavoro SET stato_match = 'Annullato' WHERE id = ?", [req.params.id]);
+
+    // Ricalcola stato beneficiario
+    await ricalcolaStatoBeneficiario(old[0].id_beneficiario);
+
+    const [updated] = await pool.query('SELECT * FROM matching_lavoro WHERE id = ?', [req.params.id]);
+    await logAudit(req.user, 'UPDATE', 'matching_lavoro', req.params.id, old[0], updated[0], req.ip);
+    res.json(updated[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Errore server' });
+  }
+});
+
+// DELETE /api/matching/alloggi/:id
+router.delete('/alloggi/:id', authenticate, authorize('superadmin'), async (req, res) => {
+  try {
+    const [old] = await pool.query('SELECT * FROM matching_alloggi WHERE id = ?', [req.params.id]);
+    if (!old.length) return res.status(404).json({ error: 'Matching non trovato' });
+
+    await pool.query('DELETE FROM matching_alloggi WHERE id = ?', [req.params.id]);
+    if (old[0].stato_match === 'Attivo') {
+      await pool.query("UPDATE alloggi SET stato = 'Disponibile' WHERE id = ?", [old[0].id_alloggio]);
+      await ricalcolaStatoBeneficiario(old[0].id_beneficiario);
+    }
+
+    await logAudit(req.user, 'DELETE', 'matching_alloggi', req.params.id, old[0], null, req.ip);
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Errore server' });
+  }
+});
+
+// DELETE /api/matching/lavoro/:id
+router.delete('/lavoro/:id', authenticate, authorize('superadmin'), async (req, res) => {
+  try {
+    const [old] = await pool.query('SELECT * FROM matching_lavoro WHERE id = ?', [req.params.id]);
+    if (!old.length) return res.status(404).json({ error: 'Matching non trovato' });
+
+    await pool.query('DELETE FROM matching_lavoro WHERE id = ?', [req.params.id]);
+    if (old[0].stato_match === 'Attivo') {
+      await ricalcolaStatoBeneficiario(old[0].id_beneficiario);
+    }
+
+    await logAudit(req.user, 'DELETE', 'matching_lavoro', req.params.id, old[0], null, req.ip);
+    res.json({ success: true });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Errore server' });

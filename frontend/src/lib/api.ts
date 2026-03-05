@@ -88,6 +88,10 @@ export const matchingApi = {
   listaMatchLavoro: (params?: Record<string, any>) => api.get("/matching/lavoro", { params }),
   updateMatchAlloggio: (id: number, data: any) => api.put(`/matching/alloggi/${id}`, data),
   updateMatchLavoro: (id: number, data: any) => api.put(`/matching/lavoro/${id}`, data),
+  annullaMatchAlloggio: (id: number) => api.patch(`/matching/alloggi/${id}/annulla`),
+  annullaMatchLavoro: (id: number) => api.patch(`/matching/lavoro/${id}/annulla`),
+  deleteMatchAlloggio: (id: number) => api.delete(`/matching/alloggi/${id}`),
+  deleteMatchLavoro: (id: number) => api.delete(`/matching/lavoro/${id}`),
 };
 
 // Utenti
