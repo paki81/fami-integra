@@ -180,8 +180,8 @@ router.put('/alloggi/:id', authenticate, authorize('superadmin', 'admin', 'tutor
 
     // Gestione stato alloggio e creazione contratto
     if (req.body.contratto_firmato === 'S' && old[0].contratto_firmato !== 'S') {
-      // Contratto appena firmato → alloggio "Contratto firmato" + crea monitoraggio
-      await pool.query("UPDATE alloggi SET stato = 'Contratto firmato' WHERE id = ?", [old[0].id_alloggio]);
+      // Contratto appena firmato → alloggio "Occupato" + crea monitoraggio
+      await pool.query("UPDATE alloggi SET stato = 'Occupato' WHERE id = ?", [old[0].id_alloggio]);
       const [alloggio] = await pool.query('SELECT * FROM alloggi WHERE id = ?', [old[0].id_alloggio]);
       const al = alloggio[0] || {};
       const [[existing]] = await pool.query('SELECT COUNT(*) as n FROM monitoraggio_contratti WHERE id_matching = ?', [old[0].id]);
