@@ -44,7 +44,7 @@ export default function UtentiPage() {
   const handleSave = async () => {
     if (!form.nome || !form.cognome || !form.email) { toast.error("Inserisci nome, cognome e email per continuare"); return; }
     if (!editId && !form.password) { toast.error("La password è obbligatoria per i nuovi utenti"); return; }
-    if (!editId && form.password.length < 8) { toast.error("La password deve avere almeno 8 caratteri"); return; }
+    if (form.password && form.password.length < 8) { toast.error("La password deve avere almeno 8 caratteri"); return; }
     setSaving(true);
     try {
       const payload: any = { nome: form.nome, cognome: form.cognome, email: form.email, ruolo: form.ruolo, attivo: form.attivo };
