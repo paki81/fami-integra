@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { beneficiariApi, matchingApi } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatDate, formatCurrency, getScoreColor, getStatoColor } from "@/lib/utils";
-import { GitMerge, Home, Building2, Search, Check, ChevronLeft, ChevronRight, XCircle, Trash2 } from "lucide-react";
+import { GitMerge, Home, Building2, Search, Check, ChevronLeft, ChevronRight, XCircle, Trash2, Pencil, Save, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 
@@ -22,6 +22,9 @@ export default function MatchingPage() {
   const [matchLavoro, setMatchLavoro] = useState<any[]>([]);
   const [tab, setTab] = useState<"cerca" | "alloggi" | "lavoro">("cerca");
   const [search, setSearch] = useState("");
+  const [editingMatch, setEditingMatch] = useState<any>(null);
+  const [editForm, setEditForm] = useState<any>({});
+  const [savingMatch, setSavingMatch] = useState(false);
 
   useEffect(() => {
     beneficiariApi.list({ limit: 200, stato: "In Corso,Abbinato Alloggio,Abbinato Lavoro" }).then(r => setBeneficiari(r.data.data)).catch(console.error);
@@ -140,6 +143,43 @@ export default function MatchingPage() {
       cancel: { label: "No", onClick: () => {} },
       duration: 8000,
     });
+  };
+
+  const startEditAlloggio = (m: any) => {
+    setEditingMatch({ type: 'alloggio', id: m.id });
+    setEditForm({
+      data_sopralluogo: m.data_sopralluogo ? m.data_sopralluogo.split("T")[0] : "",
+      esito_sopralluogo: m.esito_sopralluogo || "",
+      contratto_firmato: m.contratto_firmato || "N",
+      data_inizio_contratto: m.data_inizio_contratto ? m.data_inizio_contratto.split("T")[0] : "",
+      contributo_progetto: m.contributo_progetto || "N",
+      note: m.note || "",
+    });
+  };
+
+  const startEditLavoro = (m: any) => {
+    setEditingMatch({ type: 'lavoro', id: m.id });
+    setEditForm({
+      mansione_proposta: m.mansione_proposta || "",
+      esito: m.esito || "",
+      data_avvio: m.data_avvio ? m.data_avvio.split("T")[0] : "",
+      note: m.note || "",
+    });
+  };
+
+  const saveMatch = async () => {
+    setSavingMatch(true);
+    try {
+      if (editingMatch.type === 'alloggio') {
+        await matchingApi.updateMatchAlloggio(editingMatch.id, editForm);
+      } else {
+        await matchingApi.updateMatchLavoro(editingMatch.id, editForm);
+      }
+      toast.success("Abbinamento aggiornato");
+      setEditingMatch(null);
+      refreshLists();
+    } catch { toast.error("Errore nel salvataggio"); }
+    setSavingMatch(false);
   };
 
   const filteredBen = beneficiari.filter(b =>
@@ -305,31 +345,62 @@ export default function MatchingPage() {
                   {matchAlloggi.length === 0 ? (
                     <tr><td colSpan={canEdit ? 8 : 7} className="px-4 py-8 text-center text-gray-400">Nessun abbinamento alloggi</td></tr>
                   ) : matchAlloggi.map((m: any) => (
-                    <tr key={m.id} className={`hover:bg-gray-50 ${m.stato_match === 'Annullato' ? 'opacity-50' : ''}`}>
-                      <td className="px-4 py-3 font-medium">{m.ben_cognome} {m.ben_nome}</td>
-                      <td className="px-4 py-3 font-mono text-gray-600">{m.id_alloggio}</td>
-                      <td className="px-4 py-3 text-gray-600">{m.alloggio_comune}</td>
-                      <td className="px-4 py-3 text-gray-600">{formatDate(m.data_match)}</td>
-                      <td className="px-4 py-3 text-gray-600">{m.esito_sopralluogo || "-"}</td>
-                      <td className="px-4 py-3">
-                        <Badge className={m.contratto_firmato === "S" ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-600"}>
-                          {m.contratto_firmato === "S" ? "Firmato" : "Non firmato"}</Badge></td>
-                      <td className="px-4 py-3">
-                        <Badge className={m.stato_match === 'Attivo' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-700'}>
-                          {m.stato_match || 'Attivo'}</Badge></td>
-                      {canEdit && (
-                        <td className="px-4 py-3 text-right">
-                          <div className="flex justify-end gap-1">
-                            {m.stato_match !== 'Annullato' && (
-                              <Button variant="ghost" size="icon" className="text-orange-500 hover:text-orange-700" title="Annulla abbinamento" onClick={() => annullaMatchAlloggio(m.id)}><XCircle size={14} /></Button>
-                            )}
-                            {canDelete && (
-                              <Button variant="ghost" size="icon" className="text-red-500 hover:text-red-700" title="Elimina definitivamente" onClick={() => eliminaMatchAlloggio(m.id)}><Trash2 size={14} /></Button>
-                            )}
-                          </div>
-                        </td>
+                    <React.Fragment key={m.id}>
+                      <tr className={`hover:bg-gray-50 ${m.stato_match === 'Annullato' ? 'opacity-50' : ''}`}>
+                        <td className="px-4 py-3 font-medium">{m.ben_cognome} {m.ben_nome}</td>
+                        <td className="px-4 py-3 font-mono text-gray-600">{m.id_alloggio}</td>
+                        <td className="px-4 py-3 text-gray-600">{m.alloggio_comune}</td>
+                        <td className="px-4 py-3 text-gray-600">{formatDate(m.data_match)}</td>
+                        <td className="px-4 py-3 text-gray-600">{m.esito_sopralluogo || "-"}</td>
+                        <td className="px-4 py-3">
+                          <Badge className={m.contratto_firmato === "S" ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-600"}>
+                            {m.contratto_firmato === "S" ? "Firmato" : "Non firmato"}</Badge></td>
+                        <td className="px-4 py-3">
+                          <Badge className={m.stato_match === 'Attivo' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-700'}>
+                            {m.stato_match || 'Attivo'}</Badge></td>
+                        {canEdit && (
+                          <td className="px-4 py-3 text-right">
+                            <div className="flex justify-end gap-1">
+                              {m.stato_match !== 'Annullato' && (
+                                <Button variant="ghost" size="icon" className="text-blue-500 hover:text-blue-700" title="Modifica" onClick={() => startEditAlloggio(m)}><Pencil size={14} /></Button>
+                              )}
+                              {m.stato_match !== 'Annullato' && (
+                                <Button variant="ghost" size="icon" className="text-orange-500 hover:text-orange-700" title="Annulla abbinamento" onClick={() => annullaMatchAlloggio(m.id)}><XCircle size={14} /></Button>
+                              )}
+                              {canDelete && (
+                                <Button variant="ghost" size="icon" className="text-red-500 hover:text-red-700" title="Elimina definitivamente" onClick={() => eliminaMatchAlloggio(m.id)}><Trash2 size={14} /></Button>
+                              )}
+                            </div>
+                          </td>
+                        )}
+                      </tr>
+                      {editingMatch?.type === 'alloggio' && editingMatch?.id === m.id && (
+                        <tr className="bg-blue-50">
+                          <td colSpan={canEdit ? 8 : 7} className="px-4 py-4">
+                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                              <div><label className="text-xs font-medium text-gray-500">Data Sopralluogo</label>
+                                <Input type="date" value={editForm.data_sopralluogo} onChange={e => setEditForm({...editForm, data_sopralluogo: e.target.value})} /></div>
+                              <div><label className="text-xs font-medium text-gray-500">Esito Sopralluogo</label>
+                                <Input value={editForm.esito_sopralluogo} onChange={e => setEditForm({...editForm, esito_sopralluogo: e.target.value})} placeholder="es. Positivo, Negativo..." /></div>
+                              <div><label className="text-xs font-medium text-gray-500">Contratto Firmato</label>
+                                <select className="h-10 w-full px-3 rounded-md border border-gray-300 text-sm bg-white" value={editForm.contratto_firmato} onChange={e => setEditForm({...editForm, contratto_firmato: e.target.value})}>
+                                  <option value="N">No</option><option value="S">Sì</option></select></div>
+                              <div><label className="text-xs font-medium text-gray-500">Data Inizio Contratto</label>
+                                <Input type="date" value={editForm.data_inizio_contratto} onChange={e => setEditForm({...editForm, data_inizio_contratto: e.target.value})} /></div>
+                              <div><label className="text-xs font-medium text-gray-500">Contributo Progetto</label>
+                                <select className="h-10 w-full px-3 rounded-md border border-gray-300 text-sm bg-white" value={editForm.contributo_progetto} onChange={e => setEditForm({...editForm, contributo_progetto: e.target.value})}>
+                                  <option value="N">No</option><option value="S">Sì</option></select></div>
+                              <div className="md:col-span-2"><label className="text-xs font-medium text-gray-500">Note</label>
+                                <Input value={editForm.note} onChange={e => setEditForm({...editForm, note: e.target.value})} /></div>
+                            </div>
+                            <div className="flex gap-2 mt-3">
+                              <Button size="sm" onClick={saveMatch} disabled={savingMatch}><Save size={14} className="mr-1" />{savingMatch ? "Salvataggio..." : "Salva"}</Button>
+                              <Button size="sm" variant="ghost" onClick={() => setEditingMatch(null)}><X size={14} className="mr-1" />Annulla</Button>
+                            </div>
+                          </td>
+                        </tr>
                       )}
-                    </tr>
+                    </React.Fragment>
                   ))}
                 </tbody>
               </table>
@@ -359,29 +430,54 @@ export default function MatchingPage() {
                   {matchLavoro.length === 0 ? (
                     <tr><td colSpan={canEdit ? 8 : 7} className="px-4 py-8 text-center text-gray-400">Nessun abbinamento lavoro</td></tr>
                   ) : matchLavoro.map((m: any) => (
-                    <tr key={m.id} className={`hover:bg-gray-50 ${m.stato_match === 'Annullato' ? 'opacity-50' : ''}`}>
-                      <td className="px-4 py-3 font-medium">{m.ben_cognome} {m.ben_nome}</td>
-                      <td className="px-4 py-3 text-gray-700">{m.nome_azienda}</td>
-                      <td className="px-4 py-3"><Badge variant="secondary" className="text-xs">{m.settore}</Badge></td>
-                      <td className="px-4 py-3 text-gray-600">{formatDate(m.data_match)}</td>
-                      <td className="px-4 py-3 text-gray-600">{m.esito || "-"}</td>
-                      <td className="px-4 py-3 text-gray-600">{formatDate(m.data_avvio)}</td>
-                      <td className="px-4 py-3">
-                        <Badge className={m.stato_match === 'Attivo' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-700'}>
-                          {m.stato_match || 'Attivo'}</Badge></td>
-                      {canEdit && (
-                        <td className="px-4 py-3 text-right">
-                          <div className="flex justify-end gap-1">
-                            {m.stato_match !== 'Annullato' && (
-                              <Button variant="ghost" size="icon" className="text-orange-500 hover:text-orange-700" title="Annulla abbinamento" onClick={() => annullaMatchLavoro(m.id)}><XCircle size={14} /></Button>
-                            )}
-                            {canDelete && (
-                              <Button variant="ghost" size="icon" className="text-red-500 hover:text-red-700" title="Elimina definitivamente" onClick={() => eliminaMatchLavoro(m.id)}><Trash2 size={14} /></Button>
-                            )}
-                          </div>
-                        </td>
+                    <React.Fragment key={m.id}>
+                      <tr className={`hover:bg-gray-50 ${m.stato_match === 'Annullato' ? 'opacity-50' : ''}`}>
+                        <td className="px-4 py-3 font-medium">{m.ben_cognome} {m.ben_nome}</td>
+                        <td className="px-4 py-3 text-gray-700">{m.nome_azienda}</td>
+                        <td className="px-4 py-3"><Badge variant="secondary" className="text-xs">{m.settore}</Badge></td>
+                        <td className="px-4 py-3 text-gray-600">{formatDate(m.data_match)}</td>
+                        <td className="px-4 py-3 text-gray-600">{m.esito || "-"}</td>
+                        <td className="px-4 py-3 text-gray-600">{formatDate(m.data_avvio)}</td>
+                        <td className="px-4 py-3">
+                          <Badge className={m.stato_match === 'Attivo' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-700'}>
+                            {m.stato_match || 'Attivo'}</Badge></td>
+                        {canEdit && (
+                          <td className="px-4 py-3 text-right">
+                            <div className="flex justify-end gap-1">
+                              {m.stato_match !== 'Annullato' && (
+                                <Button variant="ghost" size="icon" className="text-blue-500 hover:text-blue-700" title="Modifica" onClick={() => startEditLavoro(m)}><Pencil size={14} /></Button>
+                              )}
+                              {m.stato_match !== 'Annullato' && (
+                                <Button variant="ghost" size="icon" className="text-orange-500 hover:text-orange-700" title="Annulla abbinamento" onClick={() => annullaMatchLavoro(m.id)}><XCircle size={14} /></Button>
+                              )}
+                              {canDelete && (
+                                <Button variant="ghost" size="icon" className="text-red-500 hover:text-red-700" title="Elimina definitivamente" onClick={() => eliminaMatchLavoro(m.id)}><Trash2 size={14} /></Button>
+                              )}
+                            </div>
+                          </td>
+                        )}
+                      </tr>
+                      {editingMatch?.type === 'lavoro' && editingMatch?.id === m.id && (
+                        <tr className="bg-blue-50">
+                          <td colSpan={canEdit ? 8 : 7} className="px-4 py-4">
+                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                              <div><label className="text-xs font-medium text-gray-500">Mansione Proposta</label>
+                                <Input value={editForm.mansione_proposta} onChange={e => setEditForm({...editForm, mansione_proposta: e.target.value})} /></div>
+                              <div><label className="text-xs font-medium text-gray-500">Esito</label>
+                                <Input value={editForm.esito} onChange={e => setEditForm({...editForm, esito: e.target.value})} placeholder="es. Positivo, In attesa..." /></div>
+                              <div><label className="text-xs font-medium text-gray-500">Data Avvio</label>
+                                <Input type="date" value={editForm.data_avvio} onChange={e => setEditForm({...editForm, data_avvio: e.target.value})} /></div>
+                              <div className="md:col-span-2"><label className="text-xs font-medium text-gray-500">Note</label>
+                                <Input value={editForm.note} onChange={e => setEditForm({...editForm, note: e.target.value})} /></div>
+                            </div>
+                            <div className="flex gap-2 mt-3">
+                              <Button size="sm" onClick={saveMatch} disabled={savingMatch}><Save size={14} className="mr-1" />{savingMatch ? "Salvataggio..." : "Salva"}</Button>
+                              <Button size="sm" variant="ghost" onClick={() => setEditingMatch(null)}><X size={14} className="mr-1" />Annulla</Button>
+                            </div>
+                          </td>
+                        </tr>
                       )}
-                    </tr>
+                    </React.Fragment>
                   ))}
                 </tbody>
               </table>
