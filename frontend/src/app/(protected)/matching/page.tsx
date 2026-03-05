@@ -331,35 +331,50 @@ export default function MatchingPage() {
               <table className="w-full text-sm">
                 <thead className="bg-gray-50 border-b border-gray-200">
                   <tr>
-                    <th className="px-4 py-3 text-left font-medium text-gray-500">Beneficiario</th>
-                    <th className="px-4 py-3 text-left font-medium text-gray-500">Alloggio</th>
-                    <th className="px-4 py-3 text-left font-medium text-gray-500">Comune</th>
-                    <th className="px-4 py-3 text-left font-medium text-gray-500">Data Abbinamento</th>
-                    <th className="px-4 py-3 text-left font-medium text-gray-500">Sopralluogo</th>
-                    <th className="px-4 py-3 text-left font-medium text-gray-500">Contratto</th>
-                    <th className="px-4 py-3 text-left font-medium text-gray-500">Stato</th>
-                    {canEdit && <th className="px-4 py-3 text-right font-medium text-gray-500">Azioni</th>}
+                    <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">Beneficiario</th>
+                    <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">Comp. Nucleo</th>
+                    <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">Comune Pref.</th>
+                    <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">Budget</th>
+                    <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">ID Alloggio</th>
+                    <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">Indirizzo</th>
+                    <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">Data Sopral.</th>
+                    <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">Esito Sopral.</th>
+                    <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">Contratto</th>
+                    <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">Data Contratto</th>
+                    <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">Contributo</th>
+                    <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">Stato</th>
+                    {canEdit && <th className="px-3 py-3 text-right font-medium text-gray-500 text-xs">Azioni</th>}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {matchAlloggi.length === 0 ? (
-                    <tr><td colSpan={canEdit ? 8 : 7} className="px-4 py-8 text-center text-gray-400">Nessun abbinamento alloggi</td></tr>
+                    <tr><td colSpan={canEdit ? 13 : 12} className="px-4 py-8 text-center text-gray-400">Nessun abbinamento alloggi</td></tr>
                   ) : matchAlloggi.map((m: any) => (
                     <React.Fragment key={m.id}>
                       <tr className={`hover:bg-gray-50 ${m.stato_match === 'Annullato' ? 'opacity-50' : ''}`}>
-                        <td className="px-4 py-3 font-medium">{m.ben_cognome} {m.ben_nome}</td>
-                        <td className="px-4 py-3 font-mono text-gray-600">{m.id_alloggio}</td>
-                        <td className="px-4 py-3 text-gray-600">{m.alloggio_comune}</td>
-                        <td className="px-4 py-3 text-gray-600">{formatDate(m.data_match)}</td>
-                        <td className="px-4 py-3 text-gray-600">{m.esito_sopralluogo || "-"}</td>
-                        <td className="px-4 py-3">
-                          <Badge className={m.contratto_firmato === "S" ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-600"}>
-                            {m.contratto_firmato === "S" ? "Firmato" : "Non firmato"}</Badge></td>
-                        <td className="px-4 py-3">
-                          <Badge className={m.stato_match === 'Attivo' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-700'}>
+                        <td className="px-3 py-3 font-medium text-sm whitespace-nowrap">{m.ben_cognome} {m.ben_nome}</td>
+                        <td className="px-3 py-3 text-gray-600 text-xs">{m.composizione_nucleo || "-"}</td>
+                        <td className="px-3 py-3 text-gray-600 text-xs whitespace-nowrap">{m.comune_preferenza || "-"}</td>
+                        <td className="px-3 py-3 text-gray-600 text-xs">{m.budget_massimo ? formatCurrency(m.budget_massimo) : "-"}</td>
+                        <td className="px-3 py-3 font-mono text-gray-600 text-xs">{m.id_alloggio}</td>
+                        <td className="px-3 py-3 text-gray-600 text-xs">{m.indirizzo || "-"}</td>
+                        <td className="px-3 py-3 text-gray-600 text-xs whitespace-nowrap">{formatDate(m.data_sopralluogo)}</td>
+                        <td className="px-3 py-3 text-xs">{m.esito_sopralluogo ? (
+                          <Badge className={m.esito_sopralluogo.includes("Positivo") ? "bg-green-100 text-green-800 text-xs" : m.esito_sopralluogo.includes("Negativo") ? "bg-red-100 text-red-800 text-xs" : "bg-yellow-100 text-yellow-800 text-xs"}>
+                            {m.esito_sopralluogo}</Badge>
+                        ) : "-"}</td>
+                        <td className="px-3 py-3 text-xs">
+                          <Badge className={m.contratto_firmato === "S" ? "bg-green-100 text-green-800 text-xs" : "bg-gray-100 text-gray-600 text-xs"}>
+                            {m.contratto_firmato === "S" ? "Firmato" : m.contratto_firmato === "In corso di firma" ? "In corso" : "No"}</Badge></td>
+                        <td className="px-3 py-3 text-gray-600 text-xs whitespace-nowrap">{formatDate(m.data_inizio_contratto)}</td>
+                        <td className="px-3 py-3 text-xs">
+                          <Badge className={m.contributo_progetto === "Sì" ? "bg-green-100 text-green-800 text-xs" : m.contributo_progetto === "Parziale" ? "bg-yellow-100 text-yellow-800 text-xs" : "bg-gray-100 text-gray-600 text-xs"}>
+                            {m.contributo_progetto === "Sì" ? "Sì" : m.contributo_progetto === "Parziale" ? "Parziale" : "No"}</Badge></td>
+                        <td className="px-3 py-3">
+                          <Badge className={m.stato_match === 'Attivo' ? 'bg-green-100 text-green-800 text-xs' : 'bg-red-100 text-red-700 text-xs'}>
                             {m.stato_match || 'Attivo'}</Badge></td>
                         {canEdit && (
-                          <td className="px-4 py-3 text-right">
+                          <td className="px-3 py-3 text-right">
                             <div className="flex justify-end gap-1">
                               {m.stato_match !== 'Annullato' && (
                                 <Button variant="ghost" size="icon" className="text-blue-500 hover:text-blue-700" title="Modifica" onClick={() => startEditAlloggio(m)}><Pencil size={14} /></Button>
@@ -376,21 +391,28 @@ export default function MatchingPage() {
                       </tr>
                       {editingMatch?.type === 'alloggio' && editingMatch?.id === m.id && (
                         <tr className="bg-blue-50">
-                          <td colSpan={canEdit ? 8 : 7} className="px-4 py-4">
+                          <td colSpan={canEdit ? 13 : 12} className="px-4 py-4">
                             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                               <div><label className="text-xs font-medium text-gray-500">Data Sopralluogo</label>
                                 <Input type="date" value={editForm.data_sopralluogo} onChange={e => setEditForm({...editForm, data_sopralluogo: e.target.value})} /></div>
                               <div><label className="text-xs font-medium text-gray-500">Esito Sopralluogo</label>
-                                <Input value={editForm.esito_sopralluogo} onChange={e => setEditForm({...editForm, esito_sopralluogo: e.target.value})} placeholder="es. Positivo, Negativo..." /></div>
+                                <select className="h-10 w-full px-3 rounded-md border border-gray-300 text-sm bg-white" value={editForm.esito_sopralluogo} onChange={e => setEditForm({...editForm, esito_sopralluogo: e.target.value})}>
+                                  <option value="">-- Seleziona --</option>
+                                  <option value="Positivo – proseguire">Positivo – proseguire</option>
+                                  <option value="Negativo – non adatto">Negativo – non adatto</option>
+                                  <option value="In valutazione">In valutazione</option>
+                                  <option value="Rifiutato dal beneficiario">Rifiutato dal beneficiario</option>
+                                  <option value="Rifiutato dal proprietario">Rifiutato dal proprietario</option>
+                                </select></div>
                               <div><label className="text-xs font-medium text-gray-500">Contratto Firmato</label>
                                 <select className="h-10 w-full px-3 rounded-md border border-gray-300 text-sm bg-white" value={editForm.contratto_firmato} onChange={e => setEditForm({...editForm, contratto_firmato: e.target.value})}>
-                                  <option value="N">No</option><option value="S">Sì</option></select></div>
+                                  <option value="N">No</option><option value="S">Sì</option><option value="In corso di firma">In corso di firma</option></select></div>
                               <div><label className="text-xs font-medium text-gray-500">Data Inizio Contratto</label>
                                 <Input type="date" value={editForm.data_inizio_contratto} onChange={e => setEditForm({...editForm, data_inizio_contratto: e.target.value})} /></div>
                               <div><label className="text-xs font-medium text-gray-500">Contributo Progetto</label>
                                 <select className="h-10 w-full px-3 rounded-md border border-gray-300 text-sm bg-white" value={editForm.contributo_progetto} onChange={e => setEditForm({...editForm, contributo_progetto: e.target.value})}>
-                                  <option value="N">No</option><option value="S">Sì</option></select></div>
-                              <div className="md:col-span-2"><label className="text-xs font-medium text-gray-500">Note</label>
+                                  <option value="No">No</option><option value="Sì">Sì</option><option value="Parziale">Parziale</option></select></div>
+                              <div className="md:col-span-2"><label className="text-xs font-medium text-gray-500">Note Tutor</label>
                                 <Input value={editForm.note} onChange={e => setEditForm({...editForm, note: e.target.value})} /></div>
                             </div>
                             <div className="flex gap-2 mt-3">

@@ -17,13 +17,13 @@ import { toast } from "sonner";
 const MappaLeaflet = dynamic(() => import("@/components/MappaLeaflet"), { ssr: false });
 
 const TIPOLOGIE = ["Appartamento", "Monolocale", "Bilocale", "Stanza singola", "Casa indipendente", "Posto letto", "Altro"];
-const STATI = ["Disponibile", "Occupato", "In trattativa", "Non disponibile"];
+const STATI = ["Disponibile – da verificare", "Contattato – risposta positiva", "Contattato – risposta negativa", "Occupato", "In trattativa", "Contratto firmato"];
 const SPESE = ["S", "N", "Parziali"];
 
 const emptyAlloggio = {
   id_alloggio: "", comune: "", indirizzo: "", tipologia: "Altro", n_vani: 1, piano: "",
   canone_mensile: "", spese_incluse: "N", proprietario: "", agenzia: "",
-  telefono_referente: "", email_referente: "", disponibile_da: "", stato: "Disponibile", note: ""
+  telefono_referente: "", email_referente: "", data_primo_contatto: "", disponibile_da: "", stato: "Disponibile – da verificare", note: ""
 };
 
 export default function AlloggiPage() {
@@ -97,8 +97,9 @@ export default function AlloggiPage() {
       canone_mensile: a.canone_mensile || "", spese_incluse: a.spese_incluse || "N",
       proprietario: a.proprietario || "", agenzia: a.agenzia || "",
       telefono_referente: a.telefono_referente || "", email_referente: a.email_referente || "",
+      data_primo_contatto: a.data_primo_contatto ? a.data_primo_contatto.split("T")[0] : "",
       disponibile_da: a.disponibile_da ? a.disponibile_da.split("T")[0] : "",
-      stato: a.stato || "Disponibile", note: a.note || ""
+      stato: a.stato || "Disponibile – da verificare", note: a.note || ""
     });
     setShowForm(true);
   };
@@ -234,6 +235,8 @@ export default function AlloggiPage() {
                 <Input value={form.telefono_referente} onChange={e => setForm({...form, telefono_referente: e.target.value})} /></div>
               <div><label className="text-xs font-medium text-gray-500">Email Referente</label>
                 <Input value={form.email_referente} onChange={e => setForm({...form, email_referente: e.target.value})} /></div>
+              <div><label className="text-xs font-medium text-gray-500">Data Primo Contatto</label>
+                <Input type="date" value={form.data_primo_contatto} onChange={e => setForm({...form, data_primo_contatto: e.target.value})} /></div>
               <div><label className="text-xs font-medium text-gray-500">Disponibile da</label>
                 <Input type="date" value={form.disponibile_da} onChange={e => setForm({...form, disponibile_da: e.target.value})} /></div>
               <div><label className="text-xs font-medium text-gray-500">Stato</label>
@@ -317,34 +320,48 @@ export default function AlloggiPage() {
             <table className="w-full text-sm">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">ID</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">Comune</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">Indirizzo</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">Tipologia</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">Vani</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">Canone</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">Disponibile</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">Stato</th>
-                  {canEdit && <th className="px-4 py-3 text-right font-medium text-gray-500">Azioni</th>}
+                  <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">ID</th>
+                  <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">Comune</th>
+                  <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">Indirizzo</th>
+                  <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">Tipologia</th>
+                  <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">Vani</th>
+                  <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">Piano</th>
+                  <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">Canone</th>
+                  <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">Spese</th>
+                  <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">Proprietario</th>
+                  <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">Contatti</th>
+                  <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">Data Contatto</th>
+                  <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">Disponibile</th>
+                  <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">Esito / Stato</th>
+                  {canEdit && <th className="px-3 py-3 text-right font-medium text-gray-500 text-xs">Azioni</th>}
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {loading ? (
-                  <tr><td colSpan={9} className="px-4 py-8 text-center text-gray-400">Caricamento...</td></tr>
+                  <tr><td colSpan={canEdit ? 14 : 13} className="px-4 py-8 text-center text-gray-400">Caricamento...</td></tr>
                 ) : data.length === 0 ? (
-                  <tr><td colSpan={9} className="px-4 py-8 text-center text-gray-400">Nessun alloggio trovato</td></tr>
+                  <tr><td colSpan={canEdit ? 14 : 13} className="px-4 py-8 text-center text-gray-400">Nessun alloggio trovato</td></tr>
                 ) : data.map((a) => (
                   <tr key={a.id} className="hover:bg-gray-50 transition-colors cursor-pointer" onClick={() => setSelectedAlloggio(a)}>
-                    <td className="px-4 py-3 font-mono text-gray-600">{a.id_alloggio}</td>
-                    <td className="px-4 py-3 text-gray-700">{a.comune || "-"}</td>
-                    <td className="px-4 py-3 text-gray-600">{a.indirizzo || "-"}</td>
-                    <td className="px-4 py-3"><Badge variant="secondary" className="text-xs">{a.tipologia}</Badge></td>
-                    <td className="px-4 py-3 text-gray-600">{a.n_vani}</td>
-                    <td className="px-4 py-3 text-gray-700 font-medium">{formatCurrency(a.canone_mensile)}</td>
-                    <td className="px-4 py-3 text-gray-600">{formatDate(a.disponibile_da)}</td>
-                    <td className="px-4 py-3"><Badge className={getStatoColor(a.stato)}>{a.stato}</Badge></td>
+                    <td className="px-3 py-3 font-mono text-gray-600 text-xs">{a.id_alloggio}</td>
+                    <td className="px-3 py-3 text-gray-700 text-xs whitespace-nowrap">{a.comune || "-"}</td>
+                    <td className="px-3 py-3 text-gray-600 text-xs">{a.indirizzo || "-"}</td>
+                    <td className="px-3 py-3"><Badge variant="secondary" className="text-xs">{a.tipologia}</Badge></td>
+                    <td className="px-3 py-3 text-gray-600 text-xs text-center">{a.n_vani}</td>
+                    <td className="px-3 py-3 text-gray-600 text-xs">{a.piano || "-"}</td>
+                    <td className="px-3 py-3 text-gray-700 font-medium text-xs whitespace-nowrap">{formatCurrency(a.canone_mensile)}</td>
+                    <td className="px-3 py-3 text-xs">{a.spese_incluse === "S" ? <Badge className="bg-green-100 text-green-800 text-xs">Sì</Badge> : a.spese_incluse === "Parziali" ? <Badge className="bg-yellow-100 text-yellow-800 text-xs">Parziali</Badge> : <Badge className="bg-gray-100 text-gray-600 text-xs">No</Badge>}</td>
+                    <td className="px-3 py-3 text-gray-600 text-xs">{a.proprietario || a.agenzia || "-"}</td>
+                    <td className="px-3 py-3 text-xs">
+                      {a.telefono_referente && <div className="text-gray-600">{a.telefono_referente}</div>}
+                      {a.email_referente && <div className="text-blue-600 truncate max-w-28">{a.email_referente}</div>}
+                      {!a.telefono_referente && !a.email_referente && <span className="text-gray-400">-</span>}
+                    </td>
+                    <td className="px-3 py-3 text-gray-600 text-xs whitespace-nowrap">{formatDate(a.data_primo_contatto)}</td>
+                    <td className="px-3 py-3 text-gray-600 text-xs whitespace-nowrap">{formatDate(a.disponibile_da)}</td>
+                    <td className="px-3 py-3"><Badge className={getStatoColor(a.stato) + " text-xs"}>{a.stato}</Badge></td>
                     {canEdit && (
-                      <td className="px-4 py-3 text-right">
+                      <td className="px-3 py-3 text-right">
                         <div className="flex justify-end gap-1" onClick={e => e.stopPropagation()}>
                           <Button variant="ghost" size="icon" onClick={() => handleEdit(a)}><Edit size={14} /></Button>
                           <Button variant="ghost" size="icon" className="text-blue-500" onClick={() => setSelectedAlloggio(a)}><ImageIcon size={14} /></Button>

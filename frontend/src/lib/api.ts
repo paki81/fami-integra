@@ -130,6 +130,7 @@ export const contrattiApi = {
   list: (params?: Record<string, any>) => api.get("/contratti", { params }),
   create: (data: any) => api.post("/contratti", data),
   update: (id: number, data: any) => api.put(`/contratti/${id}`, data),
+  delete: (id: number) => api.delete(`/contratti/${id}`),
 };
 
 // Comuni italiani

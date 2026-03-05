@@ -38,8 +38,13 @@ export function getStatoColor(stato: string): string {
     case "Completato": return "bg-emerald-100 text-emerald-800";
     case "Annullato": return "bg-red-100 text-red-800";
     case "Disponibile": return "bg-green-100 text-green-800";
+    case "Disponibile – da verificare": return "bg-blue-100 text-blue-800";
+    case "Contattato – risposta positiva": return "bg-green-100 text-green-800";
+    case "Contattato – risposta negativa": return "bg-red-100 text-red-800";
     case "Occupato": return "bg-red-100 text-red-800";
     case "In trattativa": return "bg-yellow-100 text-yellow-800";
+    case "Contratto firmato": return "bg-emerald-100 text-emerald-800";
+    case "Non disponibile": return "bg-gray-200 text-gray-700";
     default: return "bg-gray-100 text-gray-800";
   }
 }
