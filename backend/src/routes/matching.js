@@ -164,8 +164,14 @@ router.put('/alloggi/:id', authenticate, authorize('superadmin', 'admin', 'tutor
     if (!old.length) return res.status(404).json({ error: 'Matching non trovato' });
 
     const fields = ['data_sopralluogo', 'esito_sopralluogo', 'contratto_firmato', 'data_inizio_contratto', 'contributo_progetto', 'note', 'stato_match'];
+    const dateFields = ['data_sopralluogo', 'data_inizio_contratto'];
     const updates = [], values = [];
-    fields.forEach(f => { if (req.body[f] !== undefined) { updates.push(`${f} = ?`); values.push(req.body[f]); } });
+    fields.forEach(f => {
+      if (req.body[f] !== undefined) {
+        updates.push(`${f} = ?`);
+        values.push(req.body[f] === '' && dateFields.includes(f) ? null : req.body[f]);
+      }
+    });
     if (!updates.length) return res.status(400).json({ error: 'Nessun campo da aggiornare' });
 
     values.push(req.params.id);
@@ -192,8 +198,14 @@ router.put('/lavoro/:id', authenticate, authorize('superadmin', 'admin', 'counse
     if (!old.length) return res.status(404).json({ error: 'Matching non trovato' });
 
     const fields = ['mansione_proposta', 'esito', 'data_avvio', 'note', 'stato_match'];
+    const dateFields = ['data_avvio'];
     const updates = [], values = [];
-    fields.forEach(f => { if (req.body[f] !== undefined) { updates.push(`${f} = ?`); values.push(req.body[f]); } });
+    fields.forEach(f => {
+      if (req.body[f] !== undefined) {
+        updates.push(`${f} = ?`);
+        values.push(req.body[f] === '' && dateFields.includes(f) ? null : req.body[f]);
+      }
+    });
     if (!updates.length) return res.status(400).json({ error: 'Nessun campo da aggiornare' });
 
     values.push(req.params.id);
