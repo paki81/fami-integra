@@ -18,7 +18,7 @@ router.get('/', authenticate, authorize('superadmin', 'admin'), async (req, res)
 router.post('/', authenticate, authorize('superadmin'), [
   body('nome').notEmpty().trim(),
   body('cognome').notEmpty().trim(),
-  body('email').isEmail().normalizeEmail(),
+  body('email').isEmail().normalizeEmail({ gmail_remove_dots: false }),
   body('password').isLength({ min: 8 }),
   body('ruolo').isIn(['superadmin', 'admin', 'tutor', 'counselor', 'viewer'])
 ], async (req, res) => {

@@ -11,7 +11,7 @@ const { sendMail, resetPasswordTemplate } = require('../utils/mailer');
 
 // POST /api/auth/login
 router.post('/login', [
-  body('email').isEmail().normalizeEmail(),
+  body('email').isEmail().normalizeEmail({ gmail_remove_dots: false }),
   body('password').notEmpty()
 ], async (req, res) => {
   try {
@@ -77,7 +77,7 @@ router.post('/change-password', authenticate, [
 
 // POST /api/auth/forgot-password
 router.post('/forgot-password', [
-  body('email').isEmail().normalizeEmail()
+  body('email').isEmail().normalizeEmail({ gmail_remove_dots: false })
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
