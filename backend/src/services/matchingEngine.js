@@ -109,8 +109,9 @@ async function scoreAlloggio(beneficiario, alloggio) {
   }
 
   // Disponibilità temporale: +15 punti
-  if (alloggio.stato === 'Disponibile') {
-    score += 8;
+  const statiDisponibili = ['Disponibile', 'Disponibile – da verificare', 'Contattato – risposta positiva', 'In trattativa'];
+  if (statiDisponibili.includes(alloggio.stato)) {
+    score += alloggio.stato === 'Disponibile – da verificare' ? 6 : 8;
     if (beneficiario.data_uscita_sai && alloggio.disponibile_da) {
       const uscita = new Date(beneficiario.data_uscita_sai);
       const disponibile = new Date(alloggio.disponibile_da);
