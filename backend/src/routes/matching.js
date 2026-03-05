@@ -178,9 +178,24 @@ router.put('/alloggi/:id', authenticate, authorize('superadmin', 'admin', 'tutor
     values.push(req.params.id);
     await pool.query(`UPDATE matching_alloggi SET ${updates.join(', ')} WHERE id = ?`, values);
 
-    // Se contratto firmato, aggiorna stato alloggio a Occupato
-    if (req.body.contratto_firmato === 'S') {
-      await pool.query("UPDATE alloggi SET stato = 'Occupato' WHERE id = ?", [old[0].id_alloggio]);
+    // Se contratto firmato, aggiorna stato alloggio e crea monitoraggio contratto
+    if (req.body.contratto_firmato === 'S' && old[0].contratto_firmato !== 'S') {
+      await pool.query("UPDATE alloggi SET stato = 'Contratto firmato' WHERE id = ?", [old[0].id_alloggio]);
+      // Recupera dati alloggio per popolare il contratto
+      const [alloggio] = await pool.query('SELECT * FROM alloggi WHERE id = ?', [old[0].id_alloggio]);
+      const al = alloggio[0] || {};
+      // Verifica che non esista già un contratto per questo matching
+      const [[existing]] = await pool.query('SELECT COUNT(*) as n FROM monitoraggio_contratti WHERE id_matching = ?', [old[0].id]);
+      if (existing.n === 0) {
+        await pool.query(
+          `INSERT INTO monitoraggio_contratti (id_beneficiario, id_alloggio, id_matching, comune, data_inizio_contratto, canone_mensile, contributo_mensile, stato_contratto, creato_da)
+           VALUES (?, ?, ?, ?, ?, ?, ?, 'Attivo', ?)`,
+          [old[0].id_beneficiario, old[0].id_alloggio, old[0].id, al.comune || null,
+           req.body.data_inizio_contratto || null, al.canone_mensile || null,
+           (req.body.contributo_progetto === 'Sì' || old[0].contributo_progetto === 'Sì') ? al.canone_mensile : 0,
+           req.user.id]
+        );
+      }
     }
 
     const [updated] = await pool.query('SELECT * FROM matching_alloggi WHERE id = ?', [req.params.id]);

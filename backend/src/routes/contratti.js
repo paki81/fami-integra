@@ -21,7 +21,7 @@ router.get('/', authenticate, async (req, res) => {
        JOIN alloggi a ON mc.id_alloggio = a.id
        WHERE ${whereClause}`, params);
     const [rows] = await pool.query(
-      `SELECT mc.*, b.cognome as ben_cognome, b.nome as ben_nome, b.id_sai,
+      `SELECT mc.*, b.cognome as ben_cognome, b.nome as ben_nome,
               a.id_alloggio, a.indirizzo, a.comune as alloggio_comune
        FROM monitoraggio_contratti mc
        JOIN beneficiari b ON mc.id_beneficiario = b.id

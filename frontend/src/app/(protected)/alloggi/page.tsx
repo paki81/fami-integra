@@ -59,6 +59,10 @@ export default function AlloggiPage() {
   const [editingContratto, setEditingContratto] = useState<any>(null);
   const [editContrattoForm, setEditContrattoForm] = useState<any>({});
   const [savingContratto, setSavingContratto] = useState(false);
+  const [showNewContratto, setShowNewContratto] = useState(false);
+  const [newContrattoForm, setNewContrattoForm] = useState<any>({ id_beneficiario: "", id_alloggio: "", comune: "", data_inizio_contratto: "", data_fine_contratto: "", canone_mensile: "", contributo_mensile: "", mesi_contributo_previsti: 0, note: "" });
+  const [beneficiariList, setBeneficiariList] = useState<any[]>([]);
+  const [alloggiList, setAlloggiList] = useState<any[]>([]);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -156,6 +160,43 @@ export default function AlloggiPage() {
 
   const STATI_CONTRATTO = ["Attivo", "Scaduto", "Risolto anticipatamente", "In rinnovo"];
 
+  const openNewContratto = async () => {
+    setShowNewContratto(true);
+    setNewContrattoForm({ id_beneficiario: "", id_alloggio: "", comune: "", data_inizio_contratto: "", data_fine_contratto: "", canone_mensile: "", contributo_mensile: "", mesi_contributo_previsti: 0, note: "" });
+    try {
+      const [resB, resA] = await Promise.all([
+        beneficiariApi.list({ limit: 200, stato: "In Corso,Abbinato Alloggio,Abbinato Lavoro,Abbinato Entrambi" }),
+        alloggiApi.list({ limit: 200 })
+      ]);
+      setBeneficiariList(resB.data.data || []);
+      setAlloggiList(resA.data.data || []);
+    } catch { toast.error("Errore nel caricamento liste"); }
+  };
+
+  const handleAlloggioSelectForContratto = (alloggioId: string) => {
+    const al = alloggiList.find((a: any) => String(a.id) === alloggioId);
+    setNewContrattoForm((prev: any) => ({
+      ...prev,
+      id_alloggio: alloggioId,
+      comune: al?.comune || prev.comune,
+      canone_mensile: al?.canone_mensile || prev.canone_mensile,
+    }));
+  };
+
+  const saveNewContratto = async () => {
+    if (!newContrattoForm.id_beneficiario || !newContrattoForm.id_alloggio) {
+      toast.error("Seleziona beneficiario e alloggio"); return;
+    }
+    setSavingContratto(true);
+    try {
+      await contrattiApi.create(newContrattoForm);
+      toast.success("Contratto creato");
+      setShowNewContratto(false);
+      fetchContratti();
+    } catch (err: any) { toast.error(err.response?.data?.error || "Errore nella creazione"); }
+    setSavingContratto(false);
+  };
+
   const handleEdit = (a: any) => {
     setEditId(a.id);
     setForm({
@@ -249,6 +290,7 @@ export default function AlloggiPage() {
             </div>
           )}
           {mainTab === "registro" && canEdit && <Button onClick={handleNew}><Plus size={16} className="mr-2" />Nuovo Alloggio</Button>}
+          {mainTab === "contratti" && canEdit && <Button onClick={openNewContratto}><Plus size={16} className="mr-2" />Nuovo Contratto</Button>}
         </div>
       </div>
 
@@ -481,6 +523,49 @@ export default function AlloggiPage() {
             </div>
           </CardContent>
         </Card>
+
+        {showNewContratto && (
+          <Card className="border-green-200 shadow-lg">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle>Nuovo Contratto</CardTitle>
+                <Button variant="ghost" size="icon" onClick={() => setShowNewContratto(false)}><X size={18} /></Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div><label className="text-xs font-medium text-gray-500">Beneficiario *</label>
+                  <select className="h-10 w-full px-3 rounded-md border border-gray-300 text-sm bg-white" value={newContrattoForm.id_beneficiario} onChange={e => setNewContrattoForm({...newContrattoForm, id_beneficiario: e.target.value})}>
+                    <option value="">-- Seleziona --</option>
+                    {beneficiariList.map((b: any) => <option key={b.id} value={b.id}>{b.cognome} {b.nome}</option>)}
+                  </select></div>
+                <div><label className="text-xs font-medium text-gray-500">Alloggio *</label>
+                  <select className="h-10 w-full px-3 rounded-md border border-gray-300 text-sm bg-white" value={newContrattoForm.id_alloggio} onChange={e => handleAlloggioSelectForContratto(e.target.value)}>
+                    <option value="">-- Seleziona --</option>
+                    {alloggiList.map((a: any) => <option key={a.id} value={a.id}>{a.id_alloggio} - {a.indirizzo}, {a.comune}</option>)}
+                  </select></div>
+                <div><label className="text-xs font-medium text-gray-500">Comune</label>
+                  <Input value={newContrattoForm.comune} onChange={e => setNewContrattoForm({...newContrattoForm, comune: e.target.value})} /></div>
+                <div><label className="text-xs font-medium text-gray-500">Data Inizio Contratto</label>
+                  <Input type="date" value={newContrattoForm.data_inizio_contratto} onChange={e => setNewContrattoForm({...newContrattoForm, data_inizio_contratto: e.target.value})} /></div>
+                <div><label className="text-xs font-medium text-gray-500">Data Fine Contratto</label>
+                  <Input type="date" value={newContrattoForm.data_fine_contratto} onChange={e => setNewContrattoForm({...newContrattoForm, data_fine_contratto: e.target.value})} /></div>
+                <div><label className="text-xs font-medium text-gray-500">Canone Mensile (€)</label>
+                  <Input type="number" step="0.01" value={newContrattoForm.canone_mensile} onChange={e => setNewContrattoForm({...newContrattoForm, canone_mensile: e.target.value})} /></div>
+                <div><label className="text-xs font-medium text-gray-500">Contributo Progetto (€/mese)</label>
+                  <Input type="number" step="0.01" value={newContrattoForm.contributo_mensile} onChange={e => setNewContrattoForm({...newContrattoForm, contributo_mensile: e.target.value})} /></div>
+                <div><label className="text-xs font-medium text-gray-500">Mesi Contributo Previsti</label>
+                  <Input type="number" min={0} value={newContrattoForm.mesi_contributo_previsti} onChange={e => setNewContrattoForm({...newContrattoForm, mesi_contributo_previsti: parseInt(e.target.value) || 0})} /></div>
+                <div className="sm:col-span-2 lg:col-span-3"><label className="text-xs font-medium text-gray-500">Note</label>
+                  <Input value={newContrattoForm.note} onChange={e => setNewContrattoForm({...newContrattoForm, note: e.target.value})} /></div>
+              </div>
+              <div className="flex justify-end gap-3 mt-4">
+                <Button variant="outline" onClick={() => setShowNewContratto(false)}>Annulla</Button>
+                <Button onClick={saveNewContratto} disabled={savingContratto}><Save size={16} className="mr-2" />{savingContratto ? "Salvataggio..." : "Salva"}</Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         <Card>
           <CardContent className="p-0">
