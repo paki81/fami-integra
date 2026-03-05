@@ -18,7 +18,11 @@ router.get('/', authenticate, async (req, res) => {
     let params = [];
 
     if (comune) { where.push('comune = ?'); params.push(comune); }
-    if (stato) { where.push('stato = ?'); params.push(stato); }
+    if (stato) {
+      const stati = stato.split(',').map(s => s.trim()).filter(Boolean);
+      if (stati.length === 1) { where.push('stato = ?'); params.push(stati[0]); }
+      else if (stati.length > 1) { where.push(`stato IN (${stati.map(() => '?').join(',')})`); params.push(...stati); }
+    }
     if (area_intervento) { where.push('area_intervento LIKE ?'); params.push(`%${area_intervento}%`); }
     if (search) { where.push('(cognome LIKE ? OR nome LIKE ? OR note LIKE ?)'); params.push(`%${search}%`, `%${search}%`, `%${search}%`); }
 

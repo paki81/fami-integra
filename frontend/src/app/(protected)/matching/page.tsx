@@ -24,7 +24,7 @@ export default function MatchingPage() {
   const [search, setSearch] = useState("");
 
   useEffect(() => {
-    beneficiariApi.list({ limit: 100, stato: "In Corso" }).then(r => setBeneficiari(r.data.data)).catch(console.error);
+    beneficiariApi.list({ limit: 200, stato: "In Corso,Abbinato Alloggio,Abbinato Lavoro" }).then(r => setBeneficiari(r.data.data)).catch(console.error);
     matchingApi.listaMatchAlloggi({ limit: 50 }).then(r => setMatchAlloggi(r.data.data)).catch(console.error);
     matchingApi.listaMatchLavoro({ limit: 50 }).then(r => setMatchLavoro(r.data.data)).catch(console.error);
   }, []);
@@ -111,7 +111,14 @@ export default function MatchingPage() {
                 <div key={b.id}
                   onClick={() => handleSelectBen(b)}
                   className={`p-3 rounded-lg cursor-pointer border transition-colors ${selectedBen?.id === b.id ? "border-green-500 bg-green-50" : "border-gray-100 hover:bg-gray-50"}`}>
-                  <p className="font-medium text-sm">{b.cognome} {b.nome}</p>
+                  <div className="flex items-center justify-between">
+                    <p className="font-medium text-sm">{b.cognome} {b.nome}</p>
+                    {b.stato !== "In Corso" && (
+                      <Badge className={b.stato === "Abbinato Alloggio" ? "bg-orange-100 text-orange-700 text-[10px]" : "bg-indigo-100 text-indigo-700 text-[10px]"}>
+                        {b.stato === "Abbinato Alloggio" ? "Ha alloggio" : "Ha lavoro"}
+                      </Badge>
+                    )}
+                  </div>
                   <p className="text-xs text-gray-500">{b.comune} · {b.n_componenti_nucleo} comp. · {b.area_intervento}</p>
                   <p className="text-xs text-gray-400">Uscita: {formatDate(b.data_uscita_sai)}</p>
                 </div>

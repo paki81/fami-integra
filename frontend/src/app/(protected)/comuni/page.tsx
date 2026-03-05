@@ -15,8 +15,8 @@ import dynamic from "next/dynamic";
 const MappaComuniProgetto = dynamic(() => import("@/components/MappaComuniProgetto"), { ssr: false });
 
 const emptyForm = {
-  nome: "", provincia: "", sigla: "", indirizzo_sede: "",
-  telefono_sede: "", email_sede: "", responsabile: "", note: "", attivo: true,
+  nome: "", provincia: "", sigla: "", tipologia_progetto: "", ruolo_comune: "Altro",
+  indirizzo_sede: "", telefono_sede: "", email_sede: "", responsabile: "", note: "", attivo: true,
 };
 
 export default function ComuniPage() {
@@ -50,6 +50,7 @@ export default function ComuniPage() {
     setEditId(c.id);
     setForm({
       nome: c.nome || "", provincia: c.provincia || "", sigla: c.sigla || "",
+      tipologia_progetto: c.tipologia_progetto || "", ruolo_comune: c.ruolo_comune || "Altro",
       indirizzo_sede: c.indirizzo_sede || "", telefono_sede: c.telefono_sede || "",
       email_sede: c.email_sede || "", responsabile: c.responsabile || "",
       note: c.note || "", attivo: !!c.attivo,
@@ -131,6 +132,19 @@ export default function ComuniPage() {
                 <label className="text-xs font-medium text-gray-500">Sigla</label>
                 <Input value={form.sigla} onChange={e => setForm({ ...form, sigla: e.target.value })} maxLength={2} />
               </div>
+              <div>
+                <label className="text-xs font-medium text-gray-500">Tipologia Progetto</label>
+                <Input value={form.tipologia_progetto} onChange={e => setForm({ ...form, tipologia_progetto: e.target.value })} placeholder="es. SAI, CAS, FAMI..." />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-gray-500">Ruolo Comune</label>
+                <select className="w-full px-3 py-2 rounded-md border border-gray-300 text-sm bg-white" value={form.ruolo_comune} onChange={e => setForm({ ...form, ruolo_comune: e.target.value })}>
+                  <option value="Capofila">Capofila</option>
+                  <option value="Partner">Partner</option>
+                  <option value="Associato">Associato</option>
+                  <option value="Altro">Altro</option>
+                </select>
+              </div>
               <div className="sm:col-span-2">
                 <label className="text-xs font-medium text-gray-500">Indirizzo Sede Operativa</label>
                 <Input value={form.indirizzo_sede} onChange={e => setForm({ ...form, indirizzo_sede: e.target.value })} placeholder="Via Roma 1" />
@@ -168,6 +182,68 @@ export default function ComuniPage() {
         </Card>
       )}
 
+      {/* Lista comuni */}
+      <Card>
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50 border-b border-gray-200">
+                <tr>
+                  <th className="px-4 py-3 text-left font-medium text-gray-500">Comune</th>
+                  <th className="px-4 py-3 text-left font-medium text-gray-500">Provincia</th>
+                  <th className="px-4 py-3 text-left font-medium text-gray-500">Tipologia</th>
+                  <th className="px-4 py-3 text-left font-medium text-gray-500">Ruolo</th>
+                  <th className="px-4 py-3 text-left font-medium text-gray-500">Sede Operativa</th>
+                  <th className="px-4 py-3 text-left font-medium text-gray-500">Responsabile</th>
+                  <th className="px-4 py-3 text-left font-medium text-gray-500">Contatti</th>
+                  <th className="px-4 py-3 text-left font-medium text-gray-500">Stato</th>
+                  {canEdit && <th className="px-4 py-3 text-right font-medium text-gray-500">Azioni</th>}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {loading ? (
+                  <tr><td colSpan={canEdit ? 9 : 8} className="px-4 py-8 text-center text-gray-400">Caricamento...</td></tr>
+                ) : data.length === 0 ? (
+                  <tr><td colSpan={canEdit ? 9 : 8} className="px-4 py-8 text-center text-gray-400">Nessun comune nel progetto</td></tr>
+                ) : data.map(c => (
+                  <tr key={c.id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-4 py-3 font-medium text-gray-900">{c.nome}</td>
+                    <td className="px-4 py-3 text-gray-600">{c.provincia} {c.sigla ? `(${c.sigla})` : ""}</td>
+                    <td className="px-4 py-3 text-gray-600 text-xs">{c.tipologia_progetto || "\u2014"}</td>
+                    <td className="px-4 py-3">
+                      <Badge className={c.ruolo_comune === 'Capofila' ? 'bg-amber-100 text-amber-800' : c.ruolo_comune === 'Partner' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-600'}>
+                        {c.ruolo_comune || 'Altro'}
+                      </Badge>
+                    </td>
+                    <td className="px-4 py-3 text-gray-600 text-xs">{c.indirizzo_sede || "\u2014"}</td>
+                    <td className="px-4 py-3 text-gray-600">
+                      {c.responsabile && <span className="flex items-center gap-1"><User size={12} />{c.responsabile}</span>}
+                    </td>
+                    <td className="px-4 py-3 text-gray-500 text-xs space-y-0.5">
+                      {c.telefono_sede && <span className="flex items-center gap-1"><Phone size={10} />{c.telefono_sede}</span>}
+                      {c.email_sede && <span className="flex items-center gap-1"><Mail size={10} />{c.email_sede}</span>}
+                    </td>
+                    <td className="px-4 py-3">
+                      <Badge className={c.attivo ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-500"}>
+                        {c.attivo ? "Attivo" : "Inattivo"}
+                      </Badge>
+                    </td>
+                    {canEdit && (
+                      <td className="px-4 py-3 text-right">
+                        <div className="flex justify-end gap-1">
+                          <Button variant="ghost" size="icon" onClick={() => handleEdit(c)}><Edit size={14} /></Button>
+                          <Button variant="ghost" size="icon" className="text-red-500 hover:text-red-700" onClick={() => handleDelete(c.id)}><Trash2 size={14} /></Button>
+                        </div>
+                      </td>
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Mappa */}
       <Card>
         <CardHeader className="pb-3">
@@ -187,68 +263,6 @@ export default function ComuniPage() {
           ) : (
             <MappaComuniProgetto comuni={data} height="500px" />
           )}
-        </CardContent>
-      </Card>
-
-      {/* Lista comuni */}
-      <Card>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b border-gray-200">
-                <tr>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">Comune</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">Provincia</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">Sede Operativa</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">Responsabile</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">Contatti</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">Stato</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">Mappa</th>
-                  {canEdit && <th className="px-4 py-3 text-right font-medium text-gray-500">Azioni</th>}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {loading ? (
-                  <tr><td colSpan={canEdit ? 8 : 7} className="px-4 py-8 text-center text-gray-400">Caricamento...</td></tr>
-                ) : data.length === 0 ? (
-                  <tr><td colSpan={canEdit ? 8 : 7} className="px-4 py-8 text-center text-gray-400">Nessun comune nel progetto</td></tr>
-                ) : data.map(c => (
-                  <tr key={c.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-4 py-3 font-medium text-gray-900">{c.nome}</td>
-                    <td className="px-4 py-3 text-gray-600">{c.provincia} {c.sigla ? `(${c.sigla})` : ""}</td>
-                    <td className="px-4 py-3 text-gray-600 text-xs">{c.indirizzo_sede || "—"}</td>
-                    <td className="px-4 py-3 text-gray-600">
-                      {c.responsabile && <span className="flex items-center gap-1"><User size={12} />{c.responsabile}</span>}
-                    </td>
-                    <td className="px-4 py-3 text-gray-500 text-xs space-y-0.5">
-                      {c.telefono_sede && <span className="flex items-center gap-1"><Phone size={10} />{c.telefono_sede}</span>}
-                      {c.email_sede && <span className="flex items-center gap-1"><Mail size={10} />{c.email_sede}</span>}
-                    </td>
-                    <td className="px-4 py-3">
-                      <Badge className={c.attivo ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-500"}>
-                        {c.attivo ? "Attivo" : "Inattivo"}
-                      </Badge>
-                    </td>
-                    <td className="px-4 py-3">
-                      {c.latitudine ? (
-                        <Badge className="bg-blue-50 text-blue-700"><MapPin size={10} className="mr-1" />Geolocalizzato</Badge>
-                      ) : (
-                        <span className="text-xs text-gray-400">Non geolocalizzato</span>
-                      )}
-                    </td>
-                    {canEdit && (
-                      <td className="px-4 py-3 text-right">
-                        <div className="flex justify-end gap-1">
-                          <Button variant="ghost" size="icon" onClick={() => handleEdit(c)}><Edit size={14} /></Button>
-                          <Button variant="ghost" size="icon" className="text-red-500 hover:text-red-700" onClick={() => handleDelete(c.id)}><Trash2 size={14} /></Button>
-                        </div>
-                      </td>
-                    )}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
         </CardContent>
       </Card>
     </div>

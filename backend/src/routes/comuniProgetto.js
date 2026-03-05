@@ -44,11 +44,11 @@ router.post('/', authenticate, authorize('superadmin', 'admin'), [
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
-    const { nome, provincia, sigla, indirizzo_sede, telefono_sede, email_sede, responsabile, note, attivo } = req.body;
+    const { nome, provincia, sigla, tipologia_progetto, ruolo_comune, indirizzo_sede, telefono_sede, email_sede, responsabile, note, attivo } = req.body;
     const [result] = await pool.query(
-      `INSERT INTO comuni_progetto (nome, provincia, sigla, indirizzo_sede, telefono_sede, email_sede, responsabile, note, attivo)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [nome, provincia || null, sigla || null, indirizzo_sede || null, telefono_sede || null, email_sede || null, responsabile || null, note || null, attivo !== undefined ? attivo : 1]
+      `INSERT INTO comuni_progetto (nome, provincia, sigla, tipologia_progetto, ruolo_comune, indirizzo_sede, telefono_sede, email_sede, responsabile, note, attivo)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [nome, provincia || null, sigla || null, tipologia_progetto || null, ruolo_comune || 'Altro', indirizzo_sede || null, telefono_sede || null, email_sede || null, responsabile || null, note || null, attivo !== undefined ? attivo : 1]
     );
 
     // Geocodifica sede in background
@@ -74,7 +74,7 @@ router.put('/:id', authenticate, authorize('superadmin', 'admin'), async (req, r
     const [old] = await pool.query('SELECT * FROM comuni_progetto WHERE id = ?', [req.params.id]);
     if (!old.length) return res.status(404).json({ error: 'Comune non trovato' });
 
-    const fields = ['nome', 'provincia', 'sigla', 'indirizzo_sede', 'telefono_sede', 'email_sede', 'responsabile', 'note', 'attivo'];
+    const fields = ['nome', 'provincia', 'sigla', 'tipologia_progetto', 'ruolo_comune', 'indirizzo_sede', 'telefono_sede', 'email_sede', 'responsabile', 'note', 'attivo'];
     const updates = [], values = [];
     fields.forEach(f => {
       if (req.body[f] !== undefined) {
