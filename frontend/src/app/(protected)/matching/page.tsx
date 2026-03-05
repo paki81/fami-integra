@@ -416,33 +416,44 @@ export default function MatchingPage() {
               <table className="w-full text-sm">
                 <thead className="bg-gray-50 border-b border-gray-200">
                   <tr>
-                    <th className="px-4 py-3 text-left font-medium text-gray-500">Beneficiario</th>
-                    <th className="px-4 py-3 text-left font-medium text-gray-500">Azienda</th>
-                    <th className="px-4 py-3 text-left font-medium text-gray-500">Settore</th>
-                    <th className="px-4 py-3 text-left font-medium text-gray-500">Data Abbinamento</th>
-                    <th className="px-4 py-3 text-left font-medium text-gray-500">Esito</th>
-                    <th className="px-4 py-3 text-left font-medium text-gray-500">Data Avvio</th>
-                    <th className="px-4 py-3 text-left font-medium text-gray-500">Stato</th>
-                    {canEdit && <th className="px-4 py-3 text-right font-medium text-gray-500">Azioni</th>}
+                    <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">Beneficiario</th>
+                    <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">Nazionalità</th>
+                    <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">Livello IT</th>
+                    <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">Competenze</th>
+                    <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">ID Azienda</th>
+                    <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">Azienda</th>
+                    <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">Mansione</th>
+                    <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">Data Proposta</th>
+                    <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">Esito</th>
+                    <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">Data Avvio</th>
+                    <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">Stato</th>
+                    {canEdit && <th className="px-3 py-3 text-right font-medium text-gray-500 text-xs">Azioni</th>}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {matchLavoro.length === 0 ? (
-                    <tr><td colSpan={canEdit ? 8 : 7} className="px-4 py-8 text-center text-gray-400">Nessun abbinamento lavoro</td></tr>
+                    <tr><td colSpan={canEdit ? 12 : 11} className="px-4 py-8 text-center text-gray-400">Nessun abbinamento lavoro</td></tr>
                   ) : matchLavoro.map((m: any) => (
                     <React.Fragment key={m.id}>
                       <tr className={`hover:bg-gray-50 ${m.stato_match === 'Annullato' ? 'opacity-50' : ''}`}>
-                        <td className="px-4 py-3 font-medium">{m.ben_cognome} {m.ben_nome}</td>
-                        <td className="px-4 py-3 text-gray-700">{m.nome_azienda}</td>
-                        <td className="px-4 py-3"><Badge variant="secondary" className="text-xs">{m.settore}</Badge></td>
-                        <td className="px-4 py-3 text-gray-600">{formatDate(m.data_match)}</td>
-                        <td className="px-4 py-3 text-gray-600">{m.esito || "-"}</td>
-                        <td className="px-4 py-3 text-gray-600">{formatDate(m.data_avvio)}</td>
-                        <td className="px-4 py-3">
-                          <Badge className={m.stato_match === 'Attivo' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-700'}>
+                        <td className="px-3 py-3 font-medium text-sm whitespace-nowrap">{m.ben_cognome} {m.ben_nome}</td>
+                        <td className="px-3 py-3 text-gray-600 text-xs">{m.ben_nazionalita || "-"}</td>
+                        <td className="px-3 py-3 text-xs">{m.ben_livello_italiano ? <Badge variant="secondary" className="text-xs">{m.ben_livello_italiano}</Badge> : "-"}</td>
+                        <td className="px-3 py-3 text-gray-600 text-xs max-w-32 truncate">{m.ben_competenze || "-"}</td>
+                        <td className="px-3 py-3 font-mono text-gray-600 text-xs">{m.id_azienda}</td>
+                        <td className="px-3 py-3 text-gray-700 text-sm whitespace-nowrap">{m.nome_azienda}</td>
+                        <td className="px-3 py-3 text-gray-600 text-xs">{m.mansione_proposta || m.mansione_profilo || "-"}</td>
+                        <td className="px-3 py-3 text-gray-600 text-xs whitespace-nowrap">{formatDate(m.data_match)}</td>
+                        <td className="px-3 py-3 text-xs">{m.esito ? (
+                          <Badge className={m.esito.includes("accettata") || m.esito.includes("avviato") ? "bg-green-100 text-green-800 text-xs" : m.esito.includes("rifiutata") || m.esito.includes("idoneo") ? "bg-red-100 text-red-800 text-xs" : "bg-yellow-100 text-yellow-800 text-xs"}>
+                            {m.esito}</Badge>
+                        ) : "-"}</td>
+                        <td className="px-3 py-3 text-gray-600 text-xs whitespace-nowrap">{formatDate(m.data_avvio)}</td>
+                        <td className="px-3 py-3">
+                          <Badge className={m.stato_match === 'Attivo' ? 'bg-green-100 text-green-800 text-xs' : 'bg-red-100 text-red-700 text-xs'}>
                             {m.stato_match || 'Attivo'}</Badge></td>
                         {canEdit && (
-                          <td className="px-4 py-3 text-right">
+                          <td className="px-3 py-3 text-right">
                             <div className="flex justify-end gap-1">
                               {m.stato_match !== 'Annullato' && (
                                 <Button variant="ghost" size="icon" className="text-blue-500 hover:text-blue-700" title="Modifica" onClick={() => startEditLavoro(m)}><Pencil size={14} /></Button>
@@ -459,12 +470,19 @@ export default function MatchingPage() {
                       </tr>
                       {editingMatch?.type === 'lavoro' && editingMatch?.id === m.id && (
                         <tr className="bg-blue-50">
-                          <td colSpan={canEdit ? 8 : 7} className="px-4 py-4">
+                          <td colSpan={canEdit ? 12 : 11} className="px-4 py-4">
                             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                               <div><label className="text-xs font-medium text-gray-500">Mansione Proposta</label>
                                 <Input value={editForm.mansione_proposta} onChange={e => setEditForm({...editForm, mansione_proposta: e.target.value})} /></div>
                               <div><label className="text-xs font-medium text-gray-500">Esito</label>
-                                <Input value={editForm.esito} onChange={e => setEditForm({...editForm, esito: e.target.value})} placeholder="es. Positivo, In attesa..." /></div>
+                                <select className="h-10 w-full px-3 rounded-md border border-gray-300 text-sm bg-white" value={editForm.esito} onChange={e => setEditForm({...editForm, esito: e.target.value})}>
+                                  <option value="">-- Seleziona --</option>
+                                  <option value="Proposta accettata">Proposta accettata</option>
+                                  <option value="Proposta rifiutata">Proposta rifiutata</option>
+                                  <option value="Colloquio in programma">Colloquio in programma</option>
+                                  <option value="Tirocinio avviato">Tirocinio avviato</option>
+                                  <option value="Non idoneo">Non idoneo</option>
+                                </select></div>
                               <div><label className="text-xs font-medium text-gray-500">Data Avvio</label>
                                 <Input type="date" value={editForm.data_avvio} onChange={e => setEditForm({...editForm, data_avvio: e.target.value})} /></div>
                               <div className="md:col-span-2"><label className="text-xs font-medium text-gray-500">Note</label>

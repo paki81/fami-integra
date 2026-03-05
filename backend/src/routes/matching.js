@@ -141,6 +141,7 @@ router.get('/lavoro', authenticate, async (req, res) => {
     );
     const [rows] = await pool.query(
       `SELECT ml.*, b.cognome as ben_cognome, b.nome as ben_nome,
+              b.nazionalita as ben_nazionalita, b.livello_italiano as ben_livello_italiano, b.competenze as ben_competenze,
               az.id_azienda, az.nome_azienda, az.settore, az.mansione_profilo
        FROM matching_lavoro ml 
        JOIN beneficiari b ON ml.id_beneficiario = b.id 

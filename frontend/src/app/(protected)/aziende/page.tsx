@@ -14,13 +14,18 @@ import { toast } from "sonner";
 
 const MappaLeaflet = dynamic(() => import("@/components/MappaLeaflet"), { ssr: false });
 
-const ORARI = ["Full-time", "Part-time", "Su turni", "Altro"];
+const ORARI = ["Full-time", "Part-time", "Su turni", "Stagionale", "Altro"];
+const SETTORI = ["Agricoltura", "Ristorazione", "Edilizia", "Pulizie", "Logistica", "Commercio", "Altro"];
+const TIPI_CONTRATTO = ["Tempo determinato", "Indeterminato", "Part time", "Tirocinio", "Lavoro occasionale"];
+const ESITI_CONTATTO = ["Da contattare", "Contattato – risposta positiva", "Contattato – risposta negativa", "In attesa"];
 
 const emptyAzienda = {
   id_azienda: "", nome_azienda: "", settore: "", mansione_profilo: "", tipo_contratto: "",
   orario: "Full-time", indirizzo: "", comune: "", referente: "", telefono: "", email: "",
-  disponibile: "S", tirocinio: "N", note: ""
+  data_primo_contatto: "", esito_contatto: "", disponibile: "S", tirocinio: "N", note: ""
 };
+
+const formatDate = (d: string) => d ? new Date(d).toLocaleDateString("it-IT") : "-";
 
 export default function AziendePage() {
   const { canEdit, canDelete } = useAuth();
@@ -91,6 +96,8 @@ export default function AziendePage() {
       mansione_profilo: a.mansione_profilo || "", tipo_contratto: a.tipo_contratto || "",
       orario: a.orario || "Full-time", indirizzo: a.indirizzo || "", comune: a.comune || "",
       referente: a.referente || "", telefono: a.telefono || "", email: a.email || "",
+      data_primo_contatto: a.data_primo_contatto ? a.data_primo_contatto.split("T")[0] : "",
+      esito_contatto: a.esito_contatto || "",
       disponibile: a.disponibile || "S", tirocinio: a.tirocinio || "N", note: a.note || ""
     });
     setShowForm(true);
@@ -206,11 +213,17 @@ export default function AziendePage() {
               <div><label className="text-xs font-medium text-gray-500">Nome Azienda *</label>
                 <Input value={form.nome_azienda} onChange={e => setForm({...form, nome_azienda: e.target.value})} /></div>
               <div><label className="text-xs font-medium text-gray-500">Settore</label>
-                <Input value={form.settore} onChange={e => setForm({...form, settore: e.target.value})} placeholder="es. Ristorazione" /></div>
+                <select className="h-10 w-full px-3 rounded-md border border-gray-300 text-sm bg-white"
+                  value={form.settore} onChange={e => setForm({...form, settore: e.target.value})}>
+                  <option value="">-- Seleziona --</option>
+                  {SETTORI.map(s => <option key={s} value={s}>{s}</option>)}</select></div>
               <div className="sm:col-span-2"><label className="text-xs font-medium text-gray-500">Mansione/Profilo</label>
                 <Input value={form.mansione_profilo} onChange={e => setForm({...form, mansione_profilo: e.target.value})} /></div>
               <div><label className="text-xs font-medium text-gray-500">Tipo Contratto</label>
-                <Input value={form.tipo_contratto} onChange={e => setForm({...form, tipo_contratto: e.target.value})} placeholder="es. Tirocinio" /></div>
+                <select className="h-10 w-full px-3 rounded-md border border-gray-300 text-sm bg-white"
+                  value={form.tipo_contratto} onChange={e => setForm({...form, tipo_contratto: e.target.value})}>
+                  <option value="">-- Seleziona --</option>
+                  {TIPI_CONTRATTO.map(t => <option key={t} value={t}>{t}</option>)}</select></div>
               <div><label className="text-xs font-medium text-gray-500">Orario</label>
                 <select className="h-10 w-full px-3 rounded-md border border-gray-300 text-sm bg-white"
                   value={form.orario} onChange={e => setForm({...form, orario: e.target.value})}>
@@ -225,6 +238,13 @@ export default function AziendePage() {
                 <Input value={form.telefono} onChange={e => setForm({...form, telefono: e.target.value})} /></div>
               <div><label className="text-xs font-medium text-gray-500">Email</label>
                 <Input value={form.email} onChange={e => setForm({...form, email: e.target.value})} /></div>
+              <div><label className="text-xs font-medium text-gray-500">Data Primo Contatto</label>
+                <Input type="date" value={form.data_primo_contatto} onChange={e => setForm({...form, data_primo_contatto: e.target.value})} /></div>
+              <div><label className="text-xs font-medium text-gray-500">Esito Contatto</label>
+                <select className="h-10 w-full px-3 rounded-md border border-gray-300 text-sm bg-white"
+                  value={form.esito_contatto} onChange={e => setForm({...form, esito_contatto: e.target.value})}>
+                  <option value="">-- Seleziona --</option>
+                  {ESITI_CONTATTO.map(e => <option key={e} value={e}>{e}</option>)}</select></div>
               <div><label className="text-xs font-medium text-gray-500">Disponibile</label>
                 <select className="h-10 w-full px-3 rounded-md border border-gray-300 text-sm bg-white"
                   value={form.disponibile} onChange={e => setForm({...form, disponibile: e.target.value})}>
@@ -292,38 +312,55 @@ export default function AziendePage() {
             <table className="w-full text-sm">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">ID</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">Azienda</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">Settore</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">Mansione</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">Contratto</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">Comune</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">Disp.</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">Tirocinio</th>
-                  {canEdit && <th className="px-4 py-3 text-right font-medium text-gray-500">Azioni</th>}
+                  <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">ID</th>
+                  <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">Azienda</th>
+                  <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">Settore</th>
+                  <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">Mansione</th>
+                  <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">Contratto</th>
+                  <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">Orario</th>
+                  <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">Comune</th>
+                  <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">Referente</th>
+                  <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">Contatti</th>
+                  <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">Data Contatto</th>
+                  <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">Esito</th>
+                  <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">Disp.</th>
+                  <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">Tirocinio</th>
+                  {canEdit && <th className="px-3 py-3 text-right font-medium text-gray-500 text-xs">Azioni</th>}
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {loading ? (
-                  <tr><td colSpan={9} className="px-4 py-8 text-center text-gray-400">Caricamento...</td></tr>
+                  <tr><td colSpan={canEdit ? 14 : 13} className="px-4 py-8 text-center text-gray-400">Caricamento...</td></tr>
                 ) : data.length === 0 ? (
-                  <tr><td colSpan={9} className="px-4 py-8 text-center text-gray-400">Nessuna azienda trovata</td></tr>
+                  <tr><td colSpan={canEdit ? 14 : 13} className="px-4 py-8 text-center text-gray-400">Nessuna azienda trovata</td></tr>
                 ) : data.map((a) => (
                   <tr key={a.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-4 py-3 font-mono text-gray-600">{a.id_azienda}</td>
-                    <td className="px-4 py-3 font-medium text-gray-900">{a.nome_azienda}</td>
-                    <td className="px-4 py-3"><Badge variant="secondary" className="text-xs">{a.settore || "-"}</Badge></td>
-                    <td className="px-4 py-3 text-gray-600 text-xs max-w-48 truncate">{a.mansione_profilo || "-"}</td>
-                    <td className="px-4 py-3 text-gray-600 text-xs">{a.tipo_contratto || "-"}</td>
-                    <td className="px-4 py-3 text-gray-600">{a.comune || "-"}</td>
-                    <td className="px-4 py-3">
-                      <Badge className={a.disponibile === "S" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}>
+                    <td className="px-3 py-3 font-mono text-gray-600 text-xs">{a.id_azienda}</td>
+                    <td className="px-3 py-3 font-medium text-gray-900 text-sm whitespace-nowrap">{a.nome_azienda}</td>
+                    <td className="px-3 py-3"><Badge variant="secondary" className="text-xs">{a.settore || "-"}</Badge></td>
+                    <td className="px-3 py-3 text-gray-600 text-xs max-w-40 truncate">{a.mansione_profilo || "-"}</td>
+                    <td className="px-3 py-3 text-gray-600 text-xs">{a.tipo_contratto || "-"}</td>
+                    <td className="px-3 py-3 text-gray-600 text-xs">{a.orario || "-"}</td>
+                    <td className="px-3 py-3 text-gray-600 text-xs whitespace-nowrap">{a.comune || "-"}</td>
+                    <td className="px-3 py-3 text-gray-600 text-xs">{a.referente || "-"}</td>
+                    <td className="px-3 py-3 text-xs">
+                      {a.telefono && <div className="text-gray-600">{a.telefono}</div>}
+                      {a.email && <div className="text-blue-600 truncate max-w-32">{a.email}</div>}
+                      {!a.telefono && !a.email && <span className="text-gray-400">-</span>}
+                    </td>
+                    <td className="px-3 py-3 text-gray-600 text-xs whitespace-nowrap">{formatDate(a.data_primo_contatto)}</td>
+                    <td className="px-3 py-3 text-xs">{a.esito_contatto ? (
+                      <Badge className={a.esito_contatto.includes("positiva") ? "bg-green-100 text-green-800 text-xs" : a.esito_contatto.includes("negativa") ? "bg-red-100 text-red-800 text-xs" : "bg-yellow-100 text-yellow-800 text-xs"}>
+                        {a.esito_contatto.replace("Contattato – ", "")}</Badge>
+                    ) : "-"}</td>
+                    <td className="px-3 py-3">
+                      <Badge className={a.disponibile === "S" ? "bg-green-100 text-green-800 text-xs" : "bg-red-100 text-red-800 text-xs"}>
                         {a.disponibile === "S" ? "Sì" : "No"}</Badge></td>
-                    <td className="px-4 py-3">
-                      <Badge className={a.tirocinio === "S" ? "bg-blue-100 text-blue-800" : "bg-gray-100 text-gray-600"}>
+                    <td className="px-3 py-3">
+                      <Badge className={a.tirocinio === "S" ? "bg-blue-100 text-blue-800 text-xs" : "bg-gray-100 text-gray-600 text-xs"}>
                         {a.tirocinio === "S" ? "Sì" : "No"}</Badge></td>
                     {canEdit && (
-                      <td className="px-4 py-3 text-right">
+                      <td className="px-3 py-3 text-right">
                         <div className="flex justify-end gap-1">
                           <Button variant="ghost" size="icon" onClick={() => handleEdit(a)}><Edit size={14} /></Button>
                           {canDelete && <Button variant="ghost" size="icon" className="text-red-500 hover:text-red-700" onClick={() => handleDelete(a.id)}><Trash2 size={14} /></Button>}
