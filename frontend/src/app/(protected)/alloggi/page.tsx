@@ -2,14 +2,15 @@
 
 import { useEffect, useState, useCallback } from "react";
 import dynamic from "next/dynamic";
-import { alloggiApi, geocodingApi } from "@/lib/api";
+import { alloggiApi, geocodingApi, contrattiApi, beneficiariApi } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatDate, formatCurrency, getStatoColor } from "@/lib/utils";
-import { Plus, Search, Edit, Trash2, ChevronLeft, ChevronRight, X, Save, Map, List, MapPin, Image as ImageIcon } from "lucide-react";
+import React from "react";
+import { Plus, Search, Edit, Trash2, ChevronLeft, ChevronRight, X, Save, Map, List, MapPin, Image as ImageIcon, FileText, Pencil } from "lucide-react";
 import GalleriaFoto from "@/components/GalleriaFoto";
 import ComuneAutocomplete from "@/components/ComuneAutocomplete";
 import { toast } from "sonner";
@@ -47,6 +48,17 @@ export default function AlloggiPage() {
   const [geocodingMsg, setGeocodingMsg] = useState("");
   const [selectedAlloggio, setSelectedAlloggio] = useState<any>(null);
   const [mapClickResult, setMapClickResult] = useState<{lat:number,lng:number,indirizzo:string,comune:string,cap:string}|null>(null);
+  const [mainTab, setMainTab] = useState<"registro"|"contratti">("registro");
+  const [contratti, setContratti] = useState<any[]>([]);
+  const [contrattiTotal, setContrattiTotal] = useState(0);
+  const [contrattiPage, setContrattiPage] = useState(1);
+  const [contrattiPages, setContrattiPages] = useState(1);
+  const [contrattiLoading, setContrattiLoading] = useState(false);
+  const [filtroStatoContratto, setFiltroStatoContratto] = useState("");
+  const [searchContratti, setSearchContratti] = useState("");
+  const [editingContratto, setEditingContratto] = useState<any>(null);
+  const [editContrattoForm, setEditContrattoForm] = useState<any>({});
+  const [savingContratto, setSavingContratto] = useState(false);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -88,6 +100,61 @@ export default function AlloggiPage() {
   };
 
   useEffect(() => { if (viewTab === "mappa") loadMapData(); }, [viewTab]);
+
+  // --- Monitoraggio Contratti ---
+  const fetchContratti = useCallback(async () => {
+    setContrattiLoading(true);
+    try {
+      const params: any = { page: contrattiPage, limit: 15 };
+      if (filtroStatoContratto) params.stato_contratto = filtroStatoContratto;
+      if (searchContratti) params.search = searchContratti;
+      const res = await contrattiApi.list(params);
+      setContratti(res.data.data); setContrattiTotal(res.data.total); setContrattiPages(res.data.pages);
+    } catch (err) { console.error(err); }
+    setContrattiLoading(false);
+  }, [contrattiPage, filtroStatoContratto, searchContratti]);
+
+  useEffect(() => { if (mainTab === "contratti") fetchContratti(); }, [mainTab, fetchContratti]);
+
+  const startEditContratto = (c: any) => {
+    setEditingContratto(c.id);
+    setEditContrattoForm({
+      data_inizio_contratto: c.data_inizio_contratto ? c.data_inizio_contratto.split("T")[0] : "",
+      data_fine_contratto: c.data_fine_contratto ? c.data_fine_contratto.split("T")[0] : "",
+      canone_mensile: c.canone_mensile || "",
+      contributo_mensile: c.contributo_mensile || "",
+      mesi_contributo_previsti: c.mesi_contributo_previsti || 0,
+      pagamenti_effettuati: c.pagamenti_effettuati || 0,
+      ultimo_pagamento: c.ultimo_pagamento ? c.ultimo_pagamento.split("T")[0] : "",
+      stato_contratto: c.stato_contratto || "Attivo",
+      note: c.note || "",
+    });
+  };
+
+  const saveContratto = async () => {
+    if (!editingContratto) return;
+    setSavingContratto(true);
+    try {
+      await contrattiApi.update(editingContratto, editContrattoForm);
+      toast.success("Contratto aggiornato");
+      setEditingContratto(null);
+      fetchContratti();
+    } catch (err: any) { toast.error(err.response?.data?.error || "Errore nel salvataggio"); }
+    setSavingContratto(false);
+  };
+
+  const deleteContratto = (id: number) => {
+    toast("Vuoi eliminare questo contratto?", {
+      action: { label: "Elimina", onClick: async () => {
+        try { await contrattiApi.delete(id); toast.success("Contratto eliminato"); fetchContratti(); }
+        catch { toast.error("Errore nell'eliminazione"); }
+      }},
+      cancel: { label: "Annulla", onClick: () => {} },
+      duration: 8000,
+    });
+  };
+
+  const STATI_CONTRATTO = ["Attivo", "Scaduto", "Risolto anticipatamente", "In rinnovo"];
 
   const handleEdit = (a: any) => {
     setEditId(a.id);
@@ -164,19 +231,28 @@ export default function AlloggiPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Alloggi</h1>
-          <p className="text-sm text-gray-500">{total} registrati</p>
+          <p className="text-sm text-gray-500">{mainTab === "registro" ? `${total} registrati` : `${contrattiTotal} contratti`}</p>
         </div>
         <div className="flex gap-2">
           <div className="flex bg-gray-100 rounded-lg p-0.5">
-            <button onClick={() => { setViewTab("lista"); setSelectedAlloggio(null); }} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${viewTab === "lista" ? "bg-white shadow text-gray-900" : "text-gray-500"}`}>
-              <List size={14} />Lista</button>
-            <button onClick={() => setViewTab("mappa")} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${viewTab === "mappa" ? "bg-white shadow text-gray-900" : "text-gray-500"}`}>
-              <Map size={14} />Mappa</button>
+            <button onClick={() => setMainTab("registro")} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${mainTab === "registro" ? "bg-white shadow text-gray-900" : "text-gray-500"}`}>
+              <List size={14} />Registro</button>
+            <button onClick={() => setMainTab("contratti")} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${mainTab === "contratti" ? "bg-white shadow text-gray-900" : "text-gray-500"}`}>
+              <FileText size={14} />Contratti</button>
           </div>
-          {canEdit && <Button onClick={handleNew}><Plus size={16} className="mr-2" />Nuovo Alloggio</Button>}
+          {mainTab === "registro" && (
+            <div className="flex bg-gray-100 rounded-lg p-0.5">
+              <button onClick={() => { setViewTab("lista"); setSelectedAlloggio(null); }} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${viewTab === "lista" ? "bg-white shadow text-gray-900" : "text-gray-500"}`}>
+                <List size={14} />Lista</button>
+              <button onClick={() => setViewTab("mappa")} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${viewTab === "mappa" ? "bg-white shadow text-gray-900" : "text-gray-500"}`}>
+                <Map size={14} />Mappa</button>
+            </div>
+          )}
+          {mainTab === "registro" && canEdit && <Button onClick={handleNew}><Plus size={16} className="mr-2" />Nuovo Alloggio</Button>}
         </div>
       </div>
 
+      {mainTab === "registro" && (<>
       <Card>
         <CardContent className="p-4">
           <div className="flex flex-col sm:flex-row gap-3">
@@ -385,6 +461,127 @@ export default function AlloggiPage() {
           )}
         </CardContent>
       </Card>}
+      </>)}
+
+      {/* === TAB MONITORAGGIO CONTRATTI === */}
+      {mainTab === "contratti" && (<>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="relative flex-1">
+                <Search size={16} className="absolute left-3 top-3 text-gray-400" />
+                <Input placeholder="Cerca per beneficiario, alloggio..." className="pl-9"
+                  value={searchContratti} onChange={e => { setSearchContratti(e.target.value); setContrattiPage(1); }} />
+              </div>
+              <select className="h-10 px-3 rounded-md border border-gray-300 text-sm bg-white"
+                value={filtroStatoContratto} onChange={e => { setFiltroStatoContratto(e.target.value); setContrattiPage(1); }}>
+                <option value="">Tutti gli stati</option>
+                {STATI_CONTRATTO.map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50 border-b border-gray-200">
+                  <tr>
+                    <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">Beneficiario</th>
+                    <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">ID Alloggio</th>
+                    <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">Comune</th>
+                    <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">Inizio</th>
+                    <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">Fine</th>
+                    <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">Canone</th>
+                    <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">Contributo/mese</th>
+                    <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">Mesi Previsti</th>
+                    <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">Totale Contrib.</th>
+                    <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">Pagamenti</th>
+                    <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">Ultimo Pag.</th>
+                    <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">Stato</th>
+                    {canEdit && <th className="px-3 py-3 text-right font-medium text-gray-500 text-xs">Azioni</th>}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {contrattiLoading ? (
+                    <tr><td colSpan={canEdit ? 13 : 12} className="px-4 py-8 text-center text-gray-400">Caricamento...</td></tr>
+                  ) : contratti.length === 0 ? (
+                    <tr><td colSpan={canEdit ? 13 : 12} className="px-4 py-8 text-center text-gray-400">Nessun contratto trovato</td></tr>
+                  ) : contratti.map((c: any) => (
+                    <React.Fragment key={c.id}>
+                      <tr className="hover:bg-gray-50 transition-colors">
+                        <td className="px-3 py-3 font-medium text-sm whitespace-nowrap">{c.ben_cognome} {c.ben_nome}</td>
+                        <td className="px-3 py-3 font-mono text-gray-600 text-xs">{c.id_alloggio}</td>
+                        <td className="px-3 py-3 text-gray-600 text-xs whitespace-nowrap">{c.comune || c.alloggio_comune || "-"}</td>
+                        <td className="px-3 py-3 text-gray-600 text-xs whitespace-nowrap">{formatDate(c.data_inizio_contratto)}</td>
+                        <td className="px-3 py-3 text-gray-600 text-xs whitespace-nowrap">{formatDate(c.data_fine_contratto)}</td>
+                        <td className="px-3 py-3 text-gray-700 font-medium text-xs whitespace-nowrap">{formatCurrency(c.canone_mensile)}</td>
+                        <td className="px-3 py-3 text-gray-600 text-xs">{formatCurrency(c.contributo_mensile)}</td>
+                        <td className="px-3 py-3 text-gray-600 text-xs text-center">{c.mesi_contributo_previsti || 0}</td>
+                        <td className="px-3 py-3 text-gray-700 font-medium text-xs">{formatCurrency(c.totale_contributo)}</td>
+                        <td className="px-3 py-3 text-gray-600 text-xs text-center">{c.pagamenti_effettuati || 0}</td>
+                        <td className="px-3 py-3 text-gray-600 text-xs whitespace-nowrap">{formatDate(c.ultimo_pagamento)}</td>
+                        <td className="px-3 py-3">
+                          <Badge className={c.stato_contratto === "Attivo" ? "bg-green-100 text-green-800 text-xs" : c.stato_contratto === "In rinnovo" ? "bg-blue-100 text-blue-800 text-xs" : c.stato_contratto === "Scaduto" ? "bg-red-100 text-red-800 text-xs" : "bg-yellow-100 text-yellow-800 text-xs"}>
+                            {c.stato_contratto}</Badge></td>
+                        {canEdit && (
+                          <td className="px-3 py-3 text-right">
+                            <div className="flex justify-end gap-1">
+                              <Button variant="ghost" size="icon" onClick={() => startEditContratto(c)}><Pencil size={14} /></Button>
+                              {canDelete && <Button variant="ghost" size="icon" className="text-red-500 hover:text-red-700" onClick={() => deleteContratto(c.id)}><Trash2 size={14} /></Button>}
+                            </div>
+                          </td>
+                        )}
+                      </tr>
+                      {editingContratto === c.id && (
+                        <tr className="bg-blue-50">
+                          <td colSpan={canEdit ? 13 : 12} className="px-4 py-4">
+                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                              <div><label className="text-xs font-medium text-gray-500">Data Inizio Contratto</label>
+                                <Input type="date" value={editContrattoForm.data_inizio_contratto} onChange={e => setEditContrattoForm({...editContrattoForm, data_inizio_contratto: e.target.value})} /></div>
+                              <div><label className="text-xs font-medium text-gray-500">Data Fine Contratto</label>
+                                <Input type="date" value={editContrattoForm.data_fine_contratto} onChange={e => setEditContrattoForm({...editContrattoForm, data_fine_contratto: e.target.value})} /></div>
+                              <div><label className="text-xs font-medium text-gray-500">Canone Mensile (€)</label>
+                                <Input type="number" step="0.01" value={editContrattoForm.canone_mensile} onChange={e => setEditContrattoForm({...editContrattoForm, canone_mensile: e.target.value})} /></div>
+                              <div><label className="text-xs font-medium text-gray-500">Contributo Progetto (€/mese)</label>
+                                <Input type="number" step="0.01" value={editContrattoForm.contributo_mensile} onChange={e => setEditContrattoForm({...editContrattoForm, contributo_mensile: e.target.value})} /></div>
+                              <div><label className="text-xs font-medium text-gray-500">Mesi Contributo Previsti</label>
+                                <Input type="number" min={0} value={editContrattoForm.mesi_contributo_previsti} onChange={e => setEditContrattoForm({...editContrattoForm, mesi_contributo_previsti: parseInt(e.target.value) || 0})} /></div>
+                              <div><label className="text-xs font-medium text-gray-500">Pagamenti Effettuati</label>
+                                <Input type="number" min={0} value={editContrattoForm.pagamenti_effettuati} onChange={e => setEditContrattoForm({...editContrattoForm, pagamenti_effettuati: parseInt(e.target.value) || 0})} /></div>
+                              <div><label className="text-xs font-medium text-gray-500">Ultimo Pagamento</label>
+                                <Input type="date" value={editContrattoForm.ultimo_pagamento} onChange={e => setEditContrattoForm({...editContrattoForm, ultimo_pagamento: e.target.value})} /></div>
+                              <div><label className="text-xs font-medium text-gray-500">Stato Contratto</label>
+                                <select className="h-10 w-full px-3 rounded-md border border-gray-300 text-sm bg-white" value={editContrattoForm.stato_contratto} onChange={e => setEditContrattoForm({...editContrattoForm, stato_contratto: e.target.value})}>
+                                  {STATI_CONTRATTO.map(s => <option key={s} value={s}>{s}</option>)}</select></div>
+                              <div className="md:col-span-2"><label className="text-xs font-medium text-gray-500">Note</label>
+                                <Input value={editContrattoForm.note} onChange={e => setEditContrattoForm({...editContrattoForm, note: e.target.value})} /></div>
+                            </div>
+                            <div className="flex gap-2 mt-3">
+                              <Button size="sm" onClick={saveContratto} disabled={savingContratto}><Save size={14} className="mr-1" />{savingContratto ? "Salvataggio..." : "Salva"}</Button>
+                              <Button size="sm" variant="ghost" onClick={() => setEditingContratto(null)}><X size={14} className="mr-1" />Annulla</Button>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {contrattiPages > 1 && (
+              <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200 bg-gray-50">
+                <p className="text-sm text-gray-500">Pagina {contrattiPage} di {contrattiPages} ({contrattiTotal} risultati)</p>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" disabled={contrattiPage <= 1} onClick={() => setContrattiPage(p => p - 1)}><ChevronLeft size={14} /></Button>
+                  <Button variant="outline" size="sm" disabled={contrattiPage >= contrattiPages} onClick={() => setContrattiPage(p => p + 1)}><ChevronRight size={14} /></Button>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </>)}
     </div>
   );
 }
