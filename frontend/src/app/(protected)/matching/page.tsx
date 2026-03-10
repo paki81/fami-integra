@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import dynamic from "next/dynamic";
 import { beneficiariApi, matchingApi } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
@@ -31,6 +31,19 @@ export default function MatchingPage() {
   const [detailAlloggio, setDetailAlloggio] = useState<any>(null);
   const [detailAzienda, setDetailAzienda] = useState<any>(null);
   const [sugTab, setSugTab] = useState<"alloggi"|"aziende">("alloggi");
+  const [isScrolled, setIsScrolled] = useState(false);
+  const heroRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (heroRef.current) {
+        const heroBottom = heroRef.current.getBoundingClientRect().bottom;
+        setIsScrolled(heroBottom < 10);
+      }
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   useEffect(() => {
     beneficiariApi.list({ limit: 200, stato: "In Corso,Abbinato Alloggio,Abbinato Lavoro" }).then(r => setBeneficiari(r.data.data)).catch(console.error);
@@ -194,8 +207,35 @@ export default function MatchingPage() {
 
   return (
     <div className="space-y-6">
-      {/* Hero Header */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-green-600 via-emerald-600 to-teal-700 p-6 sm:p-8">
+      {/* Sticky Compact Bar - appare su scroll */}
+      <div className={`fixed top-0 left-0 lg:left-64 right-0 z-30 transition-all duration-300 ease-in-out ${isScrolled ? "translate-y-0 opacity-100" : "-translate-y-full opacity-0 pointer-events-none"}`}>
+        <div className="bg-gradient-to-r from-green-600 via-emerald-600 to-teal-700 shadow-lg border-b border-green-500/30">
+          <div className="px-4 sm:px-6 py-2.5 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center">
+                <GitMerge size={16} className="text-white" />
+              </div>
+              <h1 className="text-base font-bold text-white">Abbinamento</h1>
+            </div>
+            <div className="flex items-center gap-1 bg-white/15 backdrop-blur-sm rounded-lg p-0.5">
+              <button onClick={() => setTab("cerca")} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${tab === "cerca" ? "bg-white/25 text-white" : "text-white/70 hover:text-white"}`}>
+                <Search size={12} />Cerca</button>
+              <button onClick={() => setTab("alloggi")} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${tab === "alloggi" ? "bg-white/25 text-white" : "text-white/70 hover:text-white"}`}>
+                <Home size={12} />Alloggi <span className="bg-white/20 px-1.5 py-0.5 rounded text-[10px]">{matchAlloggi.length}</span></button>
+              <button onClick={() => setTab("lavoro")} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${tab === "lavoro" ? "bg-white/25 text-white" : "text-white/70 hover:text-white"}`}>
+                <Building2 size={12} />Lavoro <span className="bg-white/20 px-1.5 py-0.5 rounded text-[10px]">{matchLavoro.length}</span></button>
+            </div>
+            <div className="hidden sm:flex items-center gap-2 text-white text-xs font-medium">
+              <span className="bg-white/15 px-2.5 py-1 rounded-lg">{matchAlloggi.length} <span className="text-white/70">alloggi</span></span>
+              <span className="bg-white/15 px-2.5 py-1 rounded-lg">{matchLavoro.length} <span className="text-white/70">lavoro</span></span>
+              <span className="bg-white/15 px-2.5 py-1 rounded-lg">{beneficiari.length} <span className="text-white/70">in uscita</span></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Hero Header - versione grande */}
+      <div ref={heroRef} className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-green-600 via-emerald-600 to-teal-700 p-6 sm:p-8">
         <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.05%22%3E%3Cpath%20d%3D%22M36%2034v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6%2034v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6%204V0H4v4H0v2h4v4h2V6h4V4H6z%22%2F%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E')] opacity-30" />
         <div className="relative flex flex-col sm:flex-row sm:items-end justify-between gap-4">
           <div>
