@@ -11,20 +11,20 @@ router.get('/stats', authenticate, async (req, res) => {
     const [[benAbbinati]] = await pool.query("SELECT COUNT(*) as n FROM beneficiari WHERE stato IN ('Abbinato Alloggio','Abbinato Lavoro','Abbinato Entrambi','Completato')");
 
     const [[alloggiTotale]] = await pool.query('SELECT COUNT(*) as n FROM alloggi');
-    const [[alloggiDisponibili]] = await pool.query("SELECT COUNT(*) as n FROM alloggi WHERE stato = 'Disponibile'");
+    const [[alloggiDisponibili]] = await pool.query("SELECT COUNT(*) as n FROM alloggi WHERE stato NOT IN ('Occupato', 'Contratto firmato', 'Non disponibile', 'Contattato \u2013 risposta negativa')");
 
     const [[aziendeTotale]] = await pool.query('SELECT COUNT(*) as n FROM aziende');
     const [[aziendeDisponibili]] = await pool.query("SELECT COUNT(*) as n FROM aziende WHERE disponibile = 'S'");
 
     const [[matchAlloggi]] = await pool.query('SELECT COUNT(*) as n FROM matching_alloggi');
     const [[matchLavoro]] = await pool.query('SELECT COUNT(*) as n FROM matching_lavoro');
-    const [[contrattiFirmati]] = await pool.query("SELECT COUNT(*) as n FROM matching_alloggi WHERE contratto_firmato = 'S'");
+    const [[contrattiAttivi]] = await pool.query("SELECT COUNT(*) as n FROM monitoraggio_contratti WHERE stato_contratto = 'Attivo'");
 
     res.json({
       beneficiari: { totale: benTotale.n, in_corso: benInCorso.n, abbinati: benAbbinati.n },
       alloggi: { totale: alloggiTotale.n, disponibili: alloggiDisponibili.n },
       aziende: { totale: aziendeTotale.n, disponibili: aziendeDisponibili.n },
-      matching: { alloggi: matchAlloggi.n, lavoro: matchLavoro.n, contratti_firmati: contrattiFirmati.n }
+      matching: { alloggi: matchAlloggi.n, lavoro: matchLavoro.n, contratti_firmati: contrattiAttivi.n }
     });
   } catch (err) {
     console.error(err);
