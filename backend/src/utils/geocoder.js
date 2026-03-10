@@ -5,7 +5,7 @@ const https = require('https');
  * Rate limit: max 1 request/secondo
  * Fallback progressivo: indirizzo+comune → solo comune
  */
-function nominatimSearch(query) {
+function nominatimSearch(query, retries = 2) {
   return new Promise((resolve, reject) => {
     const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1&countrycodes=it`;
     const options = {
@@ -13,6 +13,11 @@ function nominatimSearch(query) {
     };
 
     https.get(url, options, (res) => {
+      if (res.statusCode === 429 && retries > 0) {
+        // Rate limited: aspetta e riprova
+        setTimeout(() => nominatimSearch(query, retries - 1).then(resolve).catch(reject), 5000);
+        return;
+      }
       let data = '';
       res.on('data', chunk => data += chunk);
       res.on('end', () => {
@@ -28,10 +33,18 @@ function nominatimSearch(query) {
             resolve(null);
           }
         } catch (err) {
-          reject(err);
+          if (retries > 0) {
+            setTimeout(() => nominatimSearch(query, retries - 1).then(resolve).catch(reject), 5000);
+          } else {
+            resolve(null);
+          }
         }
       });
-    }).on('error', reject);
+    }).on('error', (err) => {
+      if (retries > 0) {
+        setTimeout(() => nominatimSearch(query, retries - 1).then(resolve).catch(reject), 5000);
+      } else { reject(err); }
+    });
   });
 }
 
@@ -43,12 +56,12 @@ async function geocodeAddress(indirizzo, comune) {
     const r1 = await nominatimSearch(`${indirizzo}, ${comune}, Italia`);
     if (r1) return r1;
     // Rispetta rate limit Nominatim
-    await delay(1100);
+    await delay(2000);
   }
 
   // Tentativo 2: solo via (senza numero civico) + comune
   if (indirizzo) {
-    const viaSenza = indirizzo.replace(/[,]?\s*\d+\s*\/?[a-zA-Z]?\s*$/,'').trim();
+    const viaSenza = indirizzo.replace(/[,]?\s*(N\.?\s*)?\d+\s*\/?[a-zA-Z]?\s*$/i,'').trim();
     if (viaSenza !== indirizzo) {
       const r2 = await nominatimSearch(`${viaSenza}, ${comune}, Italia`);
       if (r2) return r2;
