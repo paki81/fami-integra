@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
@@ -69,6 +70,41 @@ export default function Sidebar() {
         <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
           {filtered.map((item) => {
             const isActive = pathname === item.href || pathname?.startsWith(item.href + "/");
+            const isMatching = item.href === "/matching";
+            if (isMatching) {
+              return (
+                <React.Fragment key={item.href}>
+                  <div className="pt-2 pb-1">
+                    <div className="h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent" />
+                  </div>
+                  <Link
+                    href={item.href}
+                    onClick={() => setOpen(false)}
+                    className={cn(
+                      "group relative flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold transition-all duration-200",
+                      isActive
+                        ? "bg-gradient-to-r from-green-600 to-emerald-600 text-white shadow-lg shadow-green-200"
+                        : "bg-gradient-to-r from-green-50 to-emerald-50 text-green-800 hover:from-green-100 hover:to-emerald-100 hover:shadow-md hover:shadow-green-100 border border-green-200/60"
+                    )}
+                  >
+                    <div className={cn(
+                      "flex items-center justify-center w-7 h-7 rounded-lg transition-colors",
+                      isActive ? "bg-white/20" : "bg-green-600/10"
+                    )}>
+                      <item.icon size={16} className={isActive ? "text-white" : "text-green-700"} />
+                    </div>
+                    {item.label}
+                    <span className={cn(
+                      "ml-auto w-2 h-2 rounded-full animate-pulse",
+                      isActive ? "bg-white/70" : "bg-green-500"
+                    )} />
+                  </Link>
+                  <div className="pt-1 pb-2">
+                    <div className="h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent" />
+                  </div>
+                </React.Fragment>
+              );
+            }
             return (
               <Link
                 key={item.href}

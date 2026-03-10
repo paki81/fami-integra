@@ -192,136 +192,198 @@ export default function MatchingPage() {
   );
 
   return (
-    <div className="space-y-4">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Abbinamento</h1>
-        <p className="text-sm text-gray-500">Trova alloggi e lavoro per i beneficiari</p>
+    <div className="space-y-6">
+      {/* Hero Header */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-green-600 via-emerald-600 to-teal-700 p-6 sm:p-8">
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.05%22%3E%3Cpath%20d%3D%22M36%2034v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6%2034v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6%204V0H4v4H0v2h4v4h2V6h4V4H6z%22%2F%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E')] opacity-30" />
+        <div className="relative flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                <GitMerge size={24} className="text-white" />
+              </div>
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">Abbinamento</h1>
+                <p className="text-green-100 text-sm mt-0.5">Trova alloggi e lavoro per i beneficiari</p>
+              </div>
+            </div>
+          </div>
+          <div className="flex gap-3">
+            <div className="bg-white/15 backdrop-blur-sm rounded-xl px-4 py-2.5 text-center min-w-[90px]">
+              <p className="text-2xl font-bold text-white">{matchAlloggi.length}</p>
+              <p className="text-[11px] text-green-100 font-medium">Alloggi</p>
+            </div>
+            <div className="bg-white/15 backdrop-blur-sm rounded-xl px-4 py-2.5 text-center min-w-[90px]">
+              <p className="text-2xl font-bold text-white">{matchLavoro.length}</p>
+              <p className="text-[11px] text-green-100 font-medium">Lavoro</p>
+            </div>
+            <div className="bg-white/15 backdrop-blur-sm rounded-xl px-4 py-2.5 text-center min-w-[90px]">
+              <p className="text-2xl font-bold text-white">{beneficiari.length}</p>
+              <p className="text-[11px] text-green-100 font-medium">In uscita</p>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-2 border-b border-gray-200 pb-2">
-        <Button variant={tab === "cerca" ? "default" : "ghost"} size="sm" onClick={() => setTab("cerca")}>
-          <Search size={14} className="mr-2" />Cerca Abbinamento</Button>
-        <Button variant={tab === "alloggi" ? "default" : "ghost"} size="sm" onClick={() => setTab("alloggi")}>
-          <Home size={14} className="mr-2" />Abbinamenti Alloggi ({matchAlloggi.length})</Button>
-        <Button variant={tab === "lavoro" ? "default" : "ghost"} size="sm" onClick={() => setTab("lavoro")}>
-          <Building2 size={14} className="mr-2" />Abbinamenti Lavoro ({matchLavoro.length})</Button>
+      {/* Tabs - pill style */}
+      <div className="flex gap-1.5 bg-gray-100/80 rounded-xl p-1.5 w-fit">
+        <button onClick={() => setTab("cerca")} className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200 ${tab === "cerca" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>
+          <Search size={15} />Cerca Abbinamento</button>
+        <button onClick={() => setTab("alloggi")} className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200 ${tab === "alloggi" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>
+          <Home size={15} />Alloggi<span className={`ml-1 px-1.5 py-0.5 rounded-md text-xs ${tab === "alloggi" ? "bg-orange-100 text-orange-700" : "bg-gray-200 text-gray-500"}`}>{matchAlloggi.length}</span></button>
+        <button onClick={() => setTab("lavoro")} className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200 ${tab === "lavoro" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>
+          <Building2 size={15} />Lavoro<span className={`ml-1 px-1.5 py-0.5 rounded-md text-xs ${tab === "lavoro" ? "bg-indigo-100 text-indigo-700" : "bg-gray-200 text-gray-500"}`}>{matchLavoro.length}</span></button>
       </div>
 
       {tab === "cerca" && (
-        <div className="grid lg:grid-cols-3 gap-4">
+        <div className="grid lg:grid-cols-3 gap-6">
           {/* Lista beneficiari */}
-          <Card className="lg:col-span-1">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm">Beneficiari in uscita</CardTitle>
-              <Input placeholder="Cerca..." value={search} onChange={e => setSearch(e.target.value)} className="mt-2" />
-            </CardHeader>
-            <CardContent className="max-h-[500px] overflow-y-auto space-y-2">
-              {filteredBen.map(b => (
-                <div key={b.id}
-                  onClick={() => handleSelectBen(b)}
-                  className={`p-3 rounded-lg cursor-pointer border transition-colors ${selectedBen?.id === b.id ? "border-green-500 bg-green-50" : "border-gray-100 hover:bg-gray-50"}`}>
-                  <div className="flex items-center justify-between">
-                    <p className="font-medium text-sm">{b.cognome} {b.nome}</p>
-                    {b.stato !== "In Corso" && (
-                      <Badge className={b.stato === "Abbinato Alloggio" ? "bg-orange-100 text-orange-700 text-[10px]" : "bg-indigo-100 text-indigo-700 text-[10px]"}>
-                        {b.stato === "Abbinato Alloggio" ? "Ha alloggio" : "Ha lavoro"}
-                      </Badge>
-                    )}
-                  </div>
-                  <p className="text-xs text-gray-500">{b.comune} · {b.n_componenti_nucleo} comp. · {b.area_intervento}</p>
-                  <p className="text-xs text-gray-400">Uscita: {formatDate(b.data_uscita_sai)}</p>
+          <div className="lg:col-span-1">
+            <div className="bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden">
+              <div className="p-4 border-b border-gray-100">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-semibold text-gray-900 text-[15px]">Beneficiari in uscita</h3>
+                  <span className="text-xs font-medium text-gray-400 bg-gray-100 px-2 py-1 rounded-md">{filteredBen.length}</span>
                 </div>
-              ))}
-              {filteredBen.length === 0 && <p className="text-sm text-gray-400 text-center py-4">Nessun beneficiario</p>}
-            </CardContent>
-          </Card>
+                <div className="relative">
+                  <Search size={15} className="absolute left-3 top-2.5 text-gray-400" />
+                  <Input placeholder="Cerca beneficiario..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9 bg-gray-50/80 border-gray-200 rounded-lg h-9 text-sm" />
+                </div>
+              </div>
+              <div className="max-h-[540px] overflow-y-auto p-2 space-y-1.5">
+                {filteredBen.map(b => (
+                  <div key={b.id}
+                    onClick={() => handleSelectBen(b)}
+                    className={`p-3 rounded-xl cursor-pointer transition-all duration-200 ${selectedBen?.id === b.id ? "bg-green-50 ring-2 ring-green-500/30 shadow-sm" : "hover:bg-gray-50 hover:shadow-sm"}`}>
+                    <div className="flex items-center justify-between mb-1">
+                      <p className="font-semibold text-sm text-gray-900">{b.cognome} {b.nome}</p>
+                      {b.stato !== "In Corso" && (
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold ${b.stato === "Abbinato Alloggio" ? "bg-orange-100 text-orange-700" : "bg-indigo-100 text-indigo-700"}`}>
+                          {b.stato === "Abbinato Alloggio" ? "Alloggio" : "Lavoro"}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-gray-500 leading-relaxed">{b.comune} · {b.n_componenti_nucleo} comp. · {b.area_intervento}</p>
+                    <p className="text-[11px] text-gray-400 mt-0.5">Uscita: {formatDate(b.data_uscita_sai)}</p>
+                  </div>
+                ))}
+                {filteredBen.length === 0 && <p className="text-sm text-gray-400 text-center py-8">Nessun beneficiario trovato</p>}
+              </div>
+            </div>
+          </div>
 
           {/* Suggerimenti */}
-          <div className="lg:col-span-2 space-y-4">
+          <div className="lg:col-span-2 space-y-5">
             {!selectedBen ? (
-              <Card>
-                <CardContent className="p-8 text-center text-gray-400">
-                  <GitMerge size={48} className="mx-auto mb-4 opacity-30" />
-                  <p>Seleziona un beneficiario per vedere i suggerimenti di abbinamento</p>
-                </CardContent>
-              </Card>
+              <div className="bg-white rounded-2xl border border-gray-200/80 shadow-sm p-12 text-center">
+                <div className="w-20 h-20 mx-auto mb-5 rounded-2xl bg-gray-50 flex items-center justify-center">
+                  <GitMerge size={36} className="text-gray-300" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-400 mb-1">Seleziona un beneficiario</h3>
+                <p className="text-sm text-gray-400">Scegli dalla lista per visualizzare i suggerimenti di abbinamento</p>
+              </div>
             ) : loadingSug ? (
-              <Card><CardContent className="p-8 text-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-700 mx-auto" /></CardContent></Card>
+              <div className="bg-white rounded-2xl border border-gray-200/80 shadow-sm p-12 text-center">
+                <div className="animate-spin rounded-full h-10 w-10 border-[3px] border-green-200 border-t-green-600 mx-auto" />
+                <p className="text-sm text-gray-400 mt-4">Analisi compatibilità in corso...</p>
+              </div>
             ) : (
               <>
+                {/* Riepilogo beneficiario selezionato */}
+                <div className="bg-white rounded-2xl border border-gray-200/80 shadow-sm p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center text-green-700 font-bold text-sm">
+                      {selectedBen.cognome?.[0]}{selectedBen.nome?.[0]}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-gray-900">{selectedBen.cognome} {selectedBen.nome}</p>
+                      <p className="text-xs text-gray-500">{selectedBen.comune} · {selectedBen.n_componenti_nucleo} componenti · {selectedBen.area_intervento}</p>
+                    </div>
+                    <div className="flex gap-2">
+                      {sugAlloggi.length > 0 && <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-orange-50 text-orange-700 text-xs font-semibold"><Home size={12} />{sugAlloggi.length}</span>}
+                      {sugAziende.length > 0 && <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-700 text-xs font-semibold"><Building2 size={12} />{sugAziende.length}</span>}
+                    </div>
+                  </div>
+                </div>
+
                 {/* Suggerimenti Alloggi */}
                 {(selectedBen.area_intervento?.includes("ALLOGGIO") || selectedBen.area_intervento?.includes("LAVORATIVO-ALLOGGIO")) && (
-                  <Card>
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-sm flex items-center gap-2">
+                  <div className="bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden">
+                    <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-lg bg-orange-100 flex items-center justify-center">
                         <Home size={16} className="text-orange-600" />
-                        Alloggi suggeriti ({sugAlloggi.length})
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-2">
+                      </div>
+                      <h3 className="font-semibold text-[15px] text-gray-900">Alloggi suggeriti</h3>
+                      <span className="ml-auto text-xs font-medium text-gray-400 bg-gray-100 px-2 py-1 rounded-md">{sugAlloggi.length}</span>
+                    </div>
+                    <div className="p-3 space-y-2">
                       {sugAlloggi.length === 0 ? (
-                        <p className="text-sm text-gray-400">Nessun alloggio compatibile trovato</p>
+                        <p className="text-sm text-gray-400 text-center py-6">Nessun alloggio compatibile trovato</p>
                       ) : sugAlloggi.map((s: any) => (
-                        <div key={s.alloggio.id} className="flex items-center justify-between p-3 rounded-lg border border-gray-100 hover:border-gray-200 cursor-pointer" onClick={() => setDetailAlloggio(s)}>
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2">
-                              <span className={`px-2 py-0.5 rounded text-xs font-bold ${getScoreColor(s.score)}`}>{s.score}%</span>
-                              <span className="font-medium text-sm">{s.alloggio.id_alloggio}</span>
-                              <Badge variant="secondary" className="text-xs">{s.alloggio.tipologia}</Badge>
+                        <div key={s.alloggio.id} className="group flex items-center justify-between p-3.5 rounded-xl border border-gray-100 hover:border-green-200 hover:bg-green-50/30 cursor-pointer transition-all duration-200" onClick={() => setDetailAlloggio(s)}>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className={`px-2.5 py-0.5 rounded-lg text-xs font-bold ${getScoreColor(s.score)}`}>{s.score}%</span>
+                              <span className="font-semibold text-sm text-gray-900">{s.alloggio.id_alloggio}</span>
+                              <span className="px-2 py-0.5 rounded-md bg-gray-100 text-gray-600 text-[11px] font-medium">{s.alloggio.tipologia}</span>
                             </div>
-                            <p className="text-xs text-gray-500 mt-1">
+                            <p className="text-xs text-gray-500 mt-1.5 leading-relaxed">
                               {s.alloggio.comune} · {s.alloggio.indirizzo} · {s.alloggio.n_vani} vani · {formatCurrency(s.alloggio.canone_mensile)}
-                              {s.distanzaKm != null && <span className="text-purple-600 ml-1">{s.distanzaKm} km{s.durataMin ? ` (~${s.durataMin} min)` : ""}</span>}
-                              {s.stessoComune && <span className="text-green-600 ml-1">✓ Stesso comune</span>}
-                              {s.canoneOk === true && <span className="text-green-600 ml-1">✓ Nel budget</span>}
-                              {s.canoneOk === "parziale" && <span className="text-amber-600 ml-1">⚠ Leggermente sopra budget</span>}
-                              {s.canoneOk === false && <span className="text-red-500 ml-1">✗ Fuori budget</span>}
                             </p>
+                            <div className="flex flex-wrap gap-1.5 mt-1.5">
+                              {s.distanzaKm != null && <span className="inline-flex items-center gap-1 text-[11px] text-purple-600 font-medium"><MapPin size={10} />{s.distanzaKm} km{s.durataMin ? ` (~${s.durataMin} min)` : ""}</span>}
+                              {s.stessoComune && <span className="inline-flex items-center gap-1 text-[11px] text-green-600 font-medium">✓ Stesso comune</span>}
+                              {s.canoneOk === true && <span className="text-[11px] text-green-600 font-medium">✓ Nel budget</span>}
+                              {s.canoneOk === "parziale" && <span className="text-[11px] text-amber-600 font-medium">⚠ Sopra budget</span>}
+                              {s.canoneOk === false && <span className="text-[11px] text-red-500 font-medium">✗ Fuori budget</span>}
+                            </div>
                           </div>
-                          <Button size="sm" onClick={(e) => { e.stopPropagation(); creaMatchAlloggio(s.alloggio.id); }}>
+                          <Button size="sm" className="opacity-70 group-hover:opacity-100 transition-opacity rounded-lg" onClick={(e) => { e.stopPropagation(); creaMatchAlloggio(s.alloggio.id); }}>
                             <Check size={14} className="mr-1" />Abbina
                           </Button>
                         </div>
                       ))}
-                    </CardContent>
-                  </Card>
+                    </div>
+                  </div>
                 )}
 
                 {/* Suggerimenti Aziende */}
                 {selectedBen.area_intervento?.includes("LAVORATIVO") && (
-                  <Card>
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-sm flex items-center gap-2">
+                  <div className="bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden">
+                    <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center">
                         <Building2 size={16} className="text-indigo-600" />
-                        Aziende suggerite ({sugAziende.length})
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-2">
+                      </div>
+                      <h3 className="font-semibold text-[15px] text-gray-900">Aziende suggerite</h3>
+                      <span className="ml-auto text-xs font-medium text-gray-400 bg-gray-100 px-2 py-1 rounded-md">{sugAziende.length}</span>
+                    </div>
+                    <div className="p-3 space-y-2">
                       {sugAziende.length === 0 ? (
-                        <p className="text-sm text-gray-400">Nessuna azienda compatibile trovata</p>
+                        <p className="text-sm text-gray-400 text-center py-6">Nessuna azienda compatibile trovata</p>
                       ) : sugAziende.map((s: any) => (
-                        <div key={s.azienda.id} className="flex items-center justify-between p-3 rounded-lg border border-gray-100 hover:border-gray-200 cursor-pointer" onClick={() => setDetailAzienda(s)}>
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2">
-                              <span className={`px-2 py-0.5 rounded text-xs font-bold ${getScoreColor(s.score)}`}>{s.score}%</span>
-                              <span className="font-medium text-sm">{s.azienda.nome_azienda}</span>
-                              <Badge variant="secondary" className="text-xs">{s.azienda.settore}</Badge>
+                        <div key={s.azienda.id} className="group flex items-center justify-between p-3.5 rounded-xl border border-gray-100 hover:border-indigo-200 hover:bg-indigo-50/30 cursor-pointer transition-all duration-200" onClick={() => setDetailAzienda(s)}>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className={`px-2.5 py-0.5 rounded-lg text-xs font-bold ${getScoreColor(s.score)}`}>{s.score}%</span>
+                              <span className="font-semibold text-sm text-gray-900">{s.azienda.nome_azienda}</span>
+                              <span className="px-2 py-0.5 rounded-md bg-gray-100 text-gray-600 text-[11px] font-medium">{s.azienda.settore}</span>
                             </div>
-                            <p className="text-xs text-gray-500 mt-1">
+                            <p className="text-xs text-gray-500 mt-1.5 leading-relaxed">
                               {s.azienda.comune} · {s.azienda.mansione_profilo} · {s.azienda.tipo_contratto}
-                              {s.distanzaKm != null && <span className="text-purple-600 ml-1">{s.distanzaKm} km{s.durataMin ? ` (~${s.durataMin} min)` : ""}</span>}
-                              {s.stessoComune && <span className="text-green-600 ml-1">✓ Stesso comune</span>}
-                              {s.azienda.tirocinio === "S" && <span className="text-blue-600 ml-1">✓ Tirocinio</span>}
                             </p>
+                            <div className="flex flex-wrap gap-1.5 mt-1.5">
+                              {s.distanzaKm != null && <span className="inline-flex items-center gap-1 text-[11px] text-purple-600 font-medium"><MapPin size={10} />{s.distanzaKm} km{s.durataMin ? ` (~${s.durataMin} min)` : ""}</span>}
+                              {s.stessoComune && <span className="inline-flex items-center gap-1 text-[11px] text-green-600 font-medium">✓ Stesso comune</span>}
+                              {s.azienda.tirocinio === "S" && <span className="text-[11px] text-blue-600 font-medium">✓ Tirocinio</span>}
+                            </div>
                           </div>
-                          <Button size="sm" onClick={(e) => { e.stopPropagation(); creaMatchLavoro(s.azienda.id); }}>
+                          <Button size="sm" className="opacity-70 group-hover:opacity-100 transition-opacity rounded-lg" onClick={(e) => { e.stopPropagation(); creaMatchLavoro(s.azienda.id); }}>
                             <Check size={14} className="mr-1" />Abbina
                           </Button>
                         </div>
                       ))}
-                    </CardContent>
-                  </Card>
+                    </div>
+                  </div>
                 )}
               </>
             )}
@@ -330,11 +392,11 @@ export default function MatchingPage() {
       )}
 
       {tab === "alloggi" && (
-        <Card>
-          <CardContent className="p-0">
+        <div className="bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden">
+          <div className="p-0">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead className="bg-gray-50 border-b border-gray-200">
+                <thead className="bg-gray-50/80 border-b border-gray-200">
                   <tr>
                     <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">Beneficiario</th>
                     <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">Comp. Nucleo</th>
@@ -432,16 +494,16 @@ export default function MatchingPage() {
                 </tbody>
               </table>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       )}
 
       {tab === "lavoro" && (
-        <Card>
-          <CardContent className="p-0">
+        <div className="bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden">
+          <div className="p-0">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead className="bg-gray-50 border-b border-gray-200">
+                <thead className="bg-gray-50/80 border-b border-gray-200">
                   <tr>
                     <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">Beneficiario</th>
                     <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">Nazionalità</th>
@@ -527,8 +589,8 @@ export default function MatchingPage() {
                 </tbody>
               </table>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       )}
       {/* Modale Dettaglio Alloggio */}
       {detailAlloggio && (() => {
