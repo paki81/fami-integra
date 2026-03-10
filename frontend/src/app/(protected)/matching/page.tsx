@@ -30,6 +30,7 @@ export default function MatchingPage() {
   const [savingMatch, setSavingMatch] = useState(false);
   const [detailAlloggio, setDetailAlloggio] = useState<any>(null);
   const [detailAzienda, setDetailAzienda] = useState<any>(null);
+  const [sugTab, setSugTab] = useState<"alloggi"|"aziende">("alloggi");
 
   useEffect(() => {
     beneficiariApi.list({ limit: 200, stato: "In Corso,Abbinato Alloggio,Abbinato Lavoro" }).then(r => setBeneficiari(r.data.data)).catch(console.error);
@@ -236,156 +237,261 @@ export default function MatchingPage() {
       </div>
 
       {tab === "cerca" && (
-        <div className="grid lg:grid-cols-3 gap-6">
-          {/* Lista beneficiari */}
-          <div className="lg:col-span-1">
-            <div className="bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden">
-              <div className="p-4 border-b border-gray-100">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="font-semibold text-gray-900 text-[15px]">Beneficiari in uscita</h3>
-                  <span className="text-xs font-medium text-gray-400 bg-gray-100 px-2 py-1 rounded-md">{filteredBen.length}</span>
-                </div>
-                <div className="relative">
-                  <Search size={15} className="absolute left-3 top-2.5 text-gray-400" />
-                  <Input placeholder="Cerca beneficiario..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9 bg-gray-50/80 border-gray-200 rounded-lg h-9 text-sm" />
-                </div>
+        <div className="grid lg:grid-cols-12 gap-5">
+          {/* Step indicator */}
+          <div className="lg:col-span-12">
+            <div className="flex items-center gap-3 text-xs font-medium text-gray-400">
+              <div className={`flex items-center gap-1.5 ${!selectedBen ? "text-green-700" : "text-green-600"}`}>
+                <span className={`inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold ${!selectedBen ? "bg-green-600 text-white" : "bg-green-100 text-green-700"}`}>1</span>
+                Seleziona beneficiario
               </div>
-              <div className="max-h-[540px] overflow-y-auto p-2 space-y-1.5">
-                {filteredBen.map(b => (
-                  <div key={b.id}
-                    onClick={() => handleSelectBen(b)}
-                    className={`p-3 rounded-xl cursor-pointer transition-all duration-200 ${selectedBen?.id === b.id ? "bg-green-50 ring-2 ring-green-500/30 shadow-sm" : "hover:bg-gray-50 hover:shadow-sm"}`}>
-                    <div className="flex items-center justify-between mb-1">
-                      <p className="font-semibold text-sm text-gray-900">{b.cognome} {b.nome}</p>
-                      {b.stato !== "In Corso" && (
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold ${b.stato === "Abbinato Alloggio" ? "bg-orange-100 text-orange-700" : "bg-indigo-100 text-indigo-700"}`}>
-                          {b.stato === "Abbinato Alloggio" ? "Alloggio" : "Lavoro"}
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-xs text-gray-500 leading-relaxed">{b.comune} · {b.n_componenti_nucleo} comp. · {b.area_intervento}</p>
-                    <p className="text-[11px] text-gray-400 mt-0.5">Uscita: {formatDate(b.data_uscita_sai)}</p>
-                  </div>
-                ))}
-                {filteredBen.length === 0 && <p className="text-sm text-gray-400 text-center py-8">Nessun beneficiario trovato</p>}
+              <ChevronRight size={14} className="text-gray-300" />
+              <div className={`flex items-center gap-1.5 ${selectedBen && !loadingSug ? "text-green-700" : ""}`}>
+                <span className={`inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold ${selectedBen && !loadingSug ? "bg-green-600 text-white" : "bg-gray-200 text-gray-500"}`}>2</span>
+                Confronta suggerimenti
+              </div>
+              <ChevronRight size={14} className="text-gray-300" />
+              <div className="flex items-center gap-1.5">
+                <span className="inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold bg-gray-200 text-gray-500">3</span>
+                Crea abbinamento
               </div>
             </div>
           </div>
 
-          {/* Suggerimenti */}
-          <div className="lg:col-span-2 space-y-5">
-            {!selectedBen ? (
-              <div className="bg-white rounded-2xl border border-gray-200/80 shadow-sm p-12 text-center">
-                <div className="w-20 h-20 mx-auto mb-5 rounded-2xl bg-gray-50 flex items-center justify-center">
-                  <GitMerge size={36} className="text-gray-300" />
+          {/* Lista beneficiari - pannello sinistro */}
+          <div className="lg:col-span-4">
+            <div className="bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden sticky top-4">
+              <div className="p-4 border-b border-gray-100 bg-gradient-to-b from-gray-50/80 to-white">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <Users size={16} className="text-green-600" />
+                    <h3 className="font-semibold text-gray-900 text-sm">Beneficiari</h3>
+                  </div>
+                  <span className="text-xs font-semibold text-green-700 bg-green-100 px-2 py-0.5 rounded-full">{filteredBen.length}</span>
                 </div>
-                <h3 className="text-lg font-semibold text-gray-400 mb-1">Seleziona un beneficiario</h3>
-                <p className="text-sm text-gray-400">Scegli dalla lista per visualizzare i suggerimenti di abbinamento</p>
+                <div className="relative">
+                  <Search size={15} className="absolute left-3 top-2.5 text-gray-400" />
+                  <Input placeholder="Nome, cognome o comune..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9 bg-white border-gray-200 rounded-xl h-9 text-sm focus:ring-green-500 focus:border-green-500" />
+                </div>
+              </div>
+              <div className="max-h-[520px] overflow-y-auto divide-y divide-gray-50">
+                {filteredBen.map(b => {
+                  const isSelected = selectedBen?.id === b.id;
+                  return (
+                    <div key={b.id}
+                      onClick={() => handleSelectBen(b)}
+                      className={`flex items-start gap-3 px-4 py-3 cursor-pointer transition-all duration-150 ${isSelected ? "bg-green-50 border-l-[3px] border-l-green-500" : "hover:bg-gray-50/80 border-l-[3px] border-l-transparent"}`}>
+                      <div className={`w-9 h-9 rounded-lg flex items-center justify-center text-xs font-bold shrink-0 mt-0.5 ${isSelected ? "bg-green-600 text-white" : "bg-gray-100 text-gray-600"}`}>
+                        {b.cognome?.[0]}{b.nome?.[0]}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2">
+                          <p className={`font-semibold text-sm truncate ${isSelected ? "text-green-900" : "text-gray-900"}`}>{b.cognome} {b.nome}</p>
+                          {b.stato !== "In Corso" && (
+                            <span className={`shrink-0 inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-semibold ${b.stato === "Abbinato Alloggio" ? "bg-orange-100 text-orange-700" : "bg-indigo-100 text-indigo-700"}`}>
+                              {b.stato === "Abbinato Alloggio" ? <Home size={9} /> : <Building2 size={9} />}
+                              {b.stato === "Abbinato Alloggio" ? "Alloggio" : "Lavoro"}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-[11px] text-gray-500 mt-0.5 truncate">{b.comune} · {b.n_componenti_nucleo} comp. · {b.area_intervento}</p>
+                        <p className="text-[10px] text-gray-400 mt-0.5">Uscita {formatDate(b.data_uscita_sai)}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+                {filteredBen.length === 0 && <div className="px-4 py-10 text-center"><Search size={24} className="mx-auto text-gray-300 mb-2" /><p className="text-sm text-gray-400">Nessun risultato</p></div>}
+              </div>
+            </div>
+          </div>
+
+          {/* Pannello suggerimenti - destra */}
+          <div className="lg:col-span-8">
+            {!selectedBen ? (
+              <div className="bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden">
+                <div className="px-8 py-16 text-center">
+                  <div className="w-24 h-24 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-green-50 to-emerald-100 flex items-center justify-center">
+                    <GitMerge size={40} className="text-green-400" />
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-800 mb-2">Inizia la ricerca</h3>
+                  <p className="text-sm text-gray-400 max-w-sm mx-auto leading-relaxed">
+                    Seleziona un beneficiario dalla lista per analizzare automaticamente le compatibilità con alloggi e aziende disponibili
+                  </p>
+                  <div className="mt-8 flex items-center justify-center gap-6 text-xs text-gray-400">
+                    <div className="flex items-center gap-1.5"><Home size={14} className="text-orange-400" />Alloggi per comune e budget</div>
+                    <div className="flex items-center gap-1.5"><Building2 size={14} className="text-indigo-400" />Aziende per competenze</div>
+                  </div>
+                </div>
               </div>
             ) : loadingSug ? (
-              <div className="bg-white rounded-2xl border border-gray-200/80 shadow-sm p-12 text-center">
-                <div className="animate-spin rounded-full h-10 w-10 border-[3px] border-green-200 border-t-green-600 mx-auto" />
-                <p className="text-sm text-gray-400 mt-4">Analisi compatibilità in corso...</p>
+              <div className="bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden">
+                <div className="px-8 py-16 text-center">
+                  <div className="relative w-16 h-16 mx-auto mb-5">
+                    <div className="absolute inset-0 rounded-full border-[3px] border-green-100" />
+                    <div className="absolute inset-0 rounded-full border-[3px] border-transparent border-t-green-600 animate-spin" />
+                    <div className="absolute inset-3 rounded-full bg-green-50 flex items-center justify-center">
+                      <Search size={18} className="text-green-600" />
+                    </div>
+                  </div>
+                  <h3 className="text-base font-semibold text-gray-700 mb-1">Analisi in corso</h3>
+                  <p className="text-sm text-gray-400">Calcolo compatibilità per {selectedBen.cognome} {selectedBen.nome}...</p>
+                </div>
               </div>
             ) : (
-              <>
-                {/* Riepilogo beneficiario selezionato */}
-                <div className="bg-white rounded-2xl border border-gray-200/80 shadow-sm p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center text-green-700 font-bold text-sm">
+              <div className="space-y-4">
+                {/* Card profilo beneficiario */}
+                <div className="bg-white rounded-2xl border border-gray-200/80 shadow-sm p-5">
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-white font-bold text-base shrink-0">
                       {selectedBen.cognome?.[0]}{selectedBen.nome?.[0]}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-gray-900">{selectedBen.cognome} {selectedBen.nome}</p>
-                      <p className="text-xs text-gray-500">{selectedBen.comune} · {selectedBen.n_componenti_nucleo} componenti · {selectedBen.area_intervento}</p>
-                    </div>
-                    <div className="flex gap-2">
-                      {sugAlloggi.length > 0 && <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-orange-50 text-orange-700 text-xs font-semibold"><Home size={12} />{sugAlloggi.length}</span>}
-                      {sugAziende.length > 0 && <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-700 text-xs font-semibold"><Building2 size={12} />{sugAziende.length}</span>}
+                      <div className="flex items-center justify-between gap-3">
+                        <h3 className="text-lg font-bold text-gray-900">{selectedBen.cognome} {selectedBen.nome}</h3>
+                        <button onClick={() => { setSelectedBen(null); setSugAlloggi([]); setSugAziende([]); }} className="text-gray-400 hover:text-gray-600 transition-colors"><X size={18} /></button>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1.5 text-xs text-gray-500">
+                        <span className="inline-flex items-center gap-1"><MapPin size={12} className="text-gray-400" />{selectedBen.comune}</span>
+                        <span className="inline-flex items-center gap-1"><Users size={12} className="text-gray-400" />{selectedBen.n_componenti_nucleo} componenti</span>
+                        <span className="inline-flex items-center gap-1"><Clock size={12} className="text-gray-400" />Uscita {formatDate(selectedBen.data_uscita_sai)}</span>
+                      </div>
+                      <div className="mt-2.5 flex flex-wrap gap-1.5">
+                        <span className="px-2.5 py-1 rounded-lg bg-green-50 text-green-700 text-xs font-semibold border border-green-200/60">{selectedBen.area_intervento}</span>
+                        {selectedBen.budget_max_affitto && <span className="px-2.5 py-1 rounded-lg bg-gray-50 text-gray-600 text-xs font-medium border border-gray-200/60">Budget: {formatCurrency(selectedBen.budget_max_affitto)}</span>}
+                        {selectedBen.nucleo_singolo && <span className="px-2.5 py-1 rounded-lg bg-gray-50 text-gray-600 text-xs font-medium border border-gray-200/60">{selectedBen.nucleo_singolo}</span>}
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Suggerimenti Alloggi */}
-                {(selectedBen.area_intervento?.includes("ALLOGGIO") || selectedBen.area_intervento?.includes("LAVORATIVO-ALLOGGIO")) && (
-                  <div className="bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden">
-                    <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-lg bg-orange-100 flex items-center justify-center">
-                        <Home size={16} className="text-orange-600" />
-                      </div>
-                      <h3 className="font-semibold text-[15px] text-gray-900">Alloggi suggeriti</h3>
-                      <span className="ml-auto text-xs font-medium text-gray-400 bg-gray-100 px-2 py-1 rounded-md">{sugAlloggi.length}</span>
-                    </div>
-                    <div className="p-3 space-y-2">
-                      {sugAlloggi.length === 0 ? (
-                        <p className="text-sm text-gray-400 text-center py-6">Nessun alloggio compatibile trovato</p>
-                      ) : sugAlloggi.map((s: any) => (
-                        <div key={s.alloggio.id} className="group flex items-center justify-between p-3.5 rounded-xl border border-gray-100 hover:border-green-200 hover:bg-green-50/30 cursor-pointer transition-all duration-200" onClick={() => setDetailAlloggio(s)}>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <span className={`px-2.5 py-0.5 rounded-lg text-xs font-bold ${getScoreColor(s.score)}`}>{s.score}%</span>
-                              <span className="font-semibold text-sm text-gray-900">{s.alloggio.id_alloggio}</span>
-                              <span className="px-2 py-0.5 rounded-md bg-gray-100 text-gray-600 text-[11px] font-medium">{s.alloggio.tipologia}</span>
-                            </div>
-                            <p className="text-xs text-gray-500 mt-1.5 leading-relaxed">
-                              {s.alloggio.comune} · {s.alloggio.indirizzo} · {s.alloggio.n_vani} vani · {formatCurrency(s.alloggio.canone_mensile)}
-                            </p>
-                            <div className="flex flex-wrap gap-1.5 mt-1.5">
-                              {s.distanzaKm != null && <span className="inline-flex items-center gap-1 text-[11px] text-purple-600 font-medium"><MapPin size={10} />{s.distanzaKm} km{s.durataMin ? ` (~${s.durataMin} min)` : ""}</span>}
-                              {s.stessoComune && <span className="inline-flex items-center gap-1 text-[11px] text-green-600 font-medium">✓ Stesso comune</span>}
-                              {s.canoneOk === true && <span className="text-[11px] text-green-600 font-medium">✓ Nel budget</span>}
-                              {s.canoneOk === "parziale" && <span className="text-[11px] text-amber-600 font-medium">⚠ Sopra budget</span>}
-                              {s.canoneOk === false && <span className="text-[11px] text-red-500 font-medium">✗ Fuori budget</span>}
-                            </div>
-                          </div>
-                          <Button size="sm" className="opacity-70 group-hover:opacity-100 transition-opacity rounded-lg" onClick={(e) => { e.stopPropagation(); creaMatchAlloggio(s.alloggio.id); }}>
-                            <Check size={14} className="mr-1" />Abbina
-                          </Button>
+                {/* Sub-tab Alloggi / Aziende */}
+                {(() => {
+                  const hasAlloggi = selectedBen.area_intervento?.includes("ALLOGGIO") || selectedBen.area_intervento?.includes("LAVORATIVO-ALLOGGIO");
+                  const hasAziende = selectedBen.area_intervento?.includes("LAVORATIVO");
+                  const showBoth = hasAlloggi && hasAziende;
+                  const activeSubTab = showBoth ? sugTab : (hasAlloggi ? "alloggi" : "aziende");
+                  return (
+                    <div className="bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden">
+                      {/* Sub-tab header */}
+                      {showBoth && (
+                        <div className="flex border-b border-gray-100">
+                          <button onClick={() => setSugTab("alloggi")}
+                            className={`flex-1 flex items-center justify-center gap-2 px-4 py-3.5 text-sm font-semibold transition-all relative ${activeSubTab === "alloggi" ? "text-orange-700 bg-orange-50/50" : "text-gray-400 hover:text-gray-600 hover:bg-gray-50/50"}`}>
+                            <Home size={15} />Alloggi
+                            <span className={`px-2 py-0.5 rounded-full text-[11px] font-bold ${activeSubTab === "alloggi" ? "bg-orange-100 text-orange-700" : "bg-gray-100 text-gray-500"}`}>{sugAlloggi.length}</span>
+                            {activeSubTab === "alloggi" && <div className="absolute bottom-0 left-4 right-4 h-0.5 bg-orange-500 rounded-full" />}
+                          </button>
+                          <button onClick={() => setSugTab("aziende")}
+                            className={`flex-1 flex items-center justify-center gap-2 px-4 py-3.5 text-sm font-semibold transition-all relative ${activeSubTab === "aziende" ? "text-indigo-700 bg-indigo-50/50" : "text-gray-400 hover:text-gray-600 hover:bg-gray-50/50"}`}>
+                            <Building2 size={15} />Aziende
+                            <span className={`px-2 py-0.5 rounded-full text-[11px] font-bold ${activeSubTab === "aziende" ? "bg-indigo-100 text-indigo-700" : "bg-gray-100 text-gray-500"}`}>{sugAziende.length}</span>
+                            {activeSubTab === "aziende" && <div className="absolute bottom-0 left-4 right-4 h-0.5 bg-indigo-500 rounded-full" />}
+                          </button>
                         </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                      )}
+                      {!showBoth && (
+                        <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-2">
+                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${hasAlloggi ? "bg-orange-100" : "bg-indigo-100"}`}>
+                            {hasAlloggi ? <Home size={16} className="text-orange-600" /> : <Building2 size={16} className="text-indigo-600" />}
+                          </div>
+                          <h3 className="font-semibold text-[15px] text-gray-900">{hasAlloggi ? "Alloggi suggeriti" : "Aziende suggerite"}</h3>
+                          <span className="ml-auto text-xs font-medium text-gray-400 bg-gray-100 px-2 py-1 rounded-md">{hasAlloggi ? sugAlloggi.length : sugAziende.length}</span>
+                        </div>
+                      )}
 
-                {/* Suggerimenti Aziende */}
-                {selectedBen.area_intervento?.includes("LAVORATIVO") && (
-                  <div className="bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden">
-                    <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center">
-                        <Building2 size={16} className="text-indigo-600" />
-                      </div>
-                      <h3 className="font-semibold text-[15px] text-gray-900">Aziende suggerite</h3>
-                      <span className="ml-auto text-xs font-medium text-gray-400 bg-gray-100 px-2 py-1 rounded-md">{sugAziende.length}</span>
-                    </div>
-                    <div className="p-3 space-y-2">
-                      {sugAziende.length === 0 ? (
-                        <p className="text-sm text-gray-400 text-center py-6">Nessuna azienda compatibile trovata</p>
-                      ) : sugAziende.map((s: any) => (
-                        <div key={s.azienda.id} className="group flex items-center justify-between p-3.5 rounded-xl border border-gray-100 hover:border-indigo-200 hover:bg-indigo-50/30 cursor-pointer transition-all duration-200" onClick={() => setDetailAzienda(s)}>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <span className={`px-2.5 py-0.5 rounded-lg text-xs font-bold ${getScoreColor(s.score)}`}>{s.score}%</span>
-                              <span className="font-semibold text-sm text-gray-900">{s.azienda.nome_azienda}</span>
-                              <span className="px-2 py-0.5 rounded-md bg-gray-100 text-gray-600 text-[11px] font-medium">{s.azienda.settore}</span>
+                      {/* Contenuto suggerimenti alloggi */}
+                      {activeSubTab === "alloggi" && (
+                        <div className="p-3 space-y-2 max-h-[480px] overflow-y-auto">
+                          {sugAlloggi.length === 0 ? (
+                            <div className="py-10 text-center"><Home size={28} className="mx-auto text-gray-300 mb-2" /><p className="text-sm text-gray-400">Nessun alloggio compatibile trovato</p></div>
+                          ) : sugAlloggi.map((s: any) => (
+                            <div key={s.alloggio.id} className="group rounded-xl border border-gray-100 hover:border-green-200 hover:shadow-md cursor-pointer transition-all duration-200 overflow-hidden" onClick={() => setDetailAlloggio(s)}>
+                              <div className="flex items-stretch">
+                                {/* Score visuale */}
+                                <div className={`w-16 shrink-0 flex flex-col items-center justify-center p-2 ${s.score >= 80 ? "bg-green-50" : s.score >= 60 ? "bg-yellow-50" : "bg-red-50"}`}>
+                                  <svg viewBox="0 0 36 36" className="w-10 h-10">
+                                    <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#e5e7eb" strokeWidth="3" />
+                                    <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke={s.score >= 80 ? "#16a34a" : s.score >= 60 ? "#ca8a04" : "#dc2626"} strokeWidth="3" strokeDasharray={`${s.score}, 100`} strokeLinecap="round" />
+                                    <text x="18" y="21" textAnchor="middle" className="text-[10px] font-bold" fill={s.score >= 80 ? "#16a34a" : s.score >= 60 ? "#ca8a04" : "#dc2626"}>{s.score}%</text>
+                                  </svg>
+                                </div>
+                                {/* Info */}
+                                <div className="flex-1 p-3 min-w-0">
+                                  <div className="flex items-center justify-between gap-2 mb-1.5">
+                                    <div className="flex items-center gap-2">
+                                      <span className="font-bold text-sm text-gray-900">{s.alloggio.id_alloggio}</span>
+                                      <span className="px-2 py-0.5 rounded-md bg-gray-100 text-gray-600 text-[11px] font-medium">{s.alloggio.tipologia}</span>
+                                    </div>
+                                    <Button size="sm" className="h-7 text-xs opacity-0 group-hover:opacity-100 transition-opacity rounded-lg bg-green-600 hover:bg-green-700" onClick={(e) => { e.stopPropagation(); creaMatchAlloggio(s.alloggio.id); }}>
+                                      <Check size={12} className="mr-1" />Abbina
+                                    </Button>
+                                  </div>
+                                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-3 gap-y-1 text-[11px]">
+                                    <span className="inline-flex items-center gap-1 text-gray-600"><MapPin size={10} className="text-gray-400 shrink-0" />{s.alloggio.comune}</span>
+                                    <span className="inline-flex items-center gap-1 text-gray-600"><Layers size={10} className="text-gray-400 shrink-0" />{s.alloggio.n_vani} vani</span>
+                                    <span className="inline-flex items-center gap-1 text-gray-600"><Euro size={10} className="text-gray-400 shrink-0" />{formatCurrency(s.alloggio.canone_mensile)}</span>
+                                    {s.distanzaKm != null && <span className="inline-flex items-center gap-1 text-purple-600 font-medium"><MapPin size={10} className="shrink-0" />{s.distanzaKm} km</span>}
+                                  </div>
+                                  <div className="flex flex-wrap gap-1.5 mt-2">
+                                    {s.stessoComune && <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-green-50 text-green-700 text-[10px] font-semibold border border-green-200/60">Stesso comune</span>}
+                                    {s.canoneOk === true && <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-green-50 text-green-700 text-[10px] font-semibold border border-green-200/60">Nel budget</span>}
+                                    {s.canoneOk === "parziale" && <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 text-[10px] font-semibold border border-amber-200/60">Sopra budget</span>}
+                                    {s.canoneOk === false && <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-red-50 text-red-700 text-[10px] font-semibold border border-red-200/60">Fuori budget</span>}
+                                  </div>
+                                </div>
+                              </div>
                             </div>
-                            <p className="text-xs text-gray-500 mt-1.5 leading-relaxed">
-                              {s.azienda.comune} · {s.azienda.mansione_profilo} · {s.azienda.tipo_contratto}
-                            </p>
-                            <div className="flex flex-wrap gap-1.5 mt-1.5">
-                              {s.distanzaKm != null && <span className="inline-flex items-center gap-1 text-[11px] text-purple-600 font-medium"><MapPin size={10} />{s.distanzaKm} km{s.durataMin ? ` (~${s.durataMin} min)` : ""}</span>}
-                              {s.stessoComune && <span className="inline-flex items-center gap-1 text-[11px] text-green-600 font-medium">✓ Stesso comune</span>}
-                              {s.azienda.tirocinio === "S" && <span className="text-[11px] text-blue-600 font-medium">✓ Tirocinio</span>}
-                            </div>
-                          </div>
-                          <Button size="sm" className="opacity-70 group-hover:opacity-100 transition-opacity rounded-lg" onClick={(e) => { e.stopPropagation(); creaMatchLavoro(s.azienda.id); }}>
-                            <Check size={14} className="mr-1" />Abbina
-                          </Button>
+                          ))}
                         </div>
-                      ))}
+                      )}
+
+                      {/* Contenuto suggerimenti aziende */}
+                      {activeSubTab === "aziende" && (
+                        <div className="p-3 space-y-2 max-h-[480px] overflow-y-auto">
+                          {sugAziende.length === 0 ? (
+                            <div className="py-10 text-center"><Building2 size={28} className="mx-auto text-gray-300 mb-2" /><p className="text-sm text-gray-400">Nessuna azienda compatibile trovata</p></div>
+                          ) : sugAziende.map((s: any) => (
+                            <div key={s.azienda.id} className="group rounded-xl border border-gray-100 hover:border-indigo-200 hover:shadow-md cursor-pointer transition-all duration-200 overflow-hidden" onClick={() => setDetailAzienda(s)}>
+                              <div className="flex items-stretch">
+                                {/* Score visuale */}
+                                <div className={`w-16 shrink-0 flex flex-col items-center justify-center p-2 ${s.score >= 80 ? "bg-green-50" : s.score >= 60 ? "bg-yellow-50" : "bg-red-50"}`}>
+                                  <svg viewBox="0 0 36 36" className="w-10 h-10">
+                                    <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#e5e7eb" strokeWidth="3" />
+                                    <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke={s.score >= 80 ? "#16a34a" : s.score >= 60 ? "#ca8a04" : "#dc2626"} strokeWidth="3" strokeDasharray={`${s.score}, 100`} strokeLinecap="round" />
+                                    <text x="18" y="21" textAnchor="middle" className="text-[10px] font-bold" fill={s.score >= 80 ? "#16a34a" : s.score >= 60 ? "#ca8a04" : "#dc2626"}>{s.score}%</text>
+                                  </svg>
+                                </div>
+                                {/* Info */}
+                                <div className="flex-1 p-3 min-w-0">
+                                  <div className="flex items-center justify-between gap-2 mb-1.5">
+                                    <div className="flex items-center gap-2">
+                                      <span className="font-bold text-sm text-gray-900">{s.azienda.nome_azienda}</span>
+                                      <span className="px-2 py-0.5 rounded-md bg-gray-100 text-gray-600 text-[11px] font-medium">{s.azienda.settore}</span>
+                                    </div>
+                                    <Button size="sm" className="h-7 text-xs opacity-0 group-hover:opacity-100 transition-opacity rounded-lg bg-indigo-600 hover:bg-indigo-700" onClick={(e) => { e.stopPropagation(); creaMatchLavoro(s.azienda.id); }}>
+                                      <Check size={12} className="mr-1" />Abbina
+                                    </Button>
+                                  </div>
+                                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-3 gap-y-1 text-[11px]">
+                                    <span className="inline-flex items-center gap-1 text-gray-600"><MapPin size={10} className="text-gray-400 shrink-0" />{s.azienda.comune}</span>
+                                    <span className="inline-flex items-center gap-1 text-gray-600"><Layers size={10} className="text-gray-400 shrink-0" />{s.azienda.mansione_profilo}</span>
+                                    <span className="inline-flex items-center gap-1 text-gray-600"><Clock size={10} className="text-gray-400 shrink-0" />{s.azienda.tipo_contratto}</span>
+                                  </div>
+                                  <div className="flex flex-wrap gap-1.5 mt-2">
+                                    {s.stessoComune && <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-green-50 text-green-700 text-[10px] font-semibold border border-green-200/60">Stesso comune</span>}
+                                    {s.distanzaKm != null && <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-purple-50 text-purple-700 text-[10px] font-semibold border border-purple-200/60">{s.distanzaKm} km</span>}
+                                    {s.azienda.tirocinio === "S" && <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 text-[10px] font-semibold border border-blue-200/60">Tirocinio</span>}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                  </div>
-                )}
-              </>
+                  );
+                })()}
+              </div>
             )}
           </div>
         </div>
