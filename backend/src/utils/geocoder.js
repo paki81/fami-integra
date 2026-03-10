@@ -63,26 +63,77 @@ async function searchWithFallback(query) {
 }
 
 async function geocodeAddress(indirizzo, comune) {
-  // Tentativo 1: indirizzo completo + comune
+  // Step 0: geocodifica il comune per ottenere coordinate di riferimento
+  const comuneRef = await photonSearch(`${comune}, Italia`);
+  const comuneLat = comuneRef ? comuneRef.lat : null;
+  const comuneLng = comuneRef ? comuneRef.lng : null;
+  await delay(300);
+
+  // Tentativo 1: indirizzo completo + comune (con bias coordinate comune)
   if (indirizzo) {
-    const r1 = await searchWithFallback(`${indirizzo}, ${comune}, Italia`);
-    if (r1) return r1;
-    await delay(500);
+    const r1 = await photonSearchBiased(`${indirizzo}, ${comune}, Italia`, comuneLat, comuneLng);
+    if (r1 && isNearComune(r1, comuneLat, comuneLng)) return r1;
+    await delay(300);
   }
 
   // Tentativo 2: solo via (senza numero civico) + comune
   if (indirizzo) {
     const viaSenza = indirizzo.replace(/[,]?\s*(N\.?\s*)?\d+\s*\/?[a-zA-Z]?\s*$/i,'').trim();
     if (viaSenza !== indirizzo) {
-      const r2 = await searchWithFallback(`${viaSenza}, ${comune}, Italia`);
-      if (r2) return r2;
-      await delay(500);
+      const r2 = await photonSearchBiased(`${viaSenza}, ${comune}, Italia`, comuneLat, comuneLng);
+      if (r2 && isNearComune(r2, comuneLat, comuneLng)) return r2;
+      await delay(300);
     }
   }
 
-  // Tentativo 3: solo comune
-  const r3 = await searchWithFallback(`${comune}, Italia`);
-  return r3;
+  // Tentativo 3: restituisci le coordinate del comune
+  if (comuneRef) return comuneRef;
+
+  // Tentativo 4: fallback Nominatim
+  return await nominatimSearch(`${comune}, Italia`);
+}
+
+function photonSearchBiased(query, lat, lng) {
+  if (lat && lng) {
+    return new Promise((resolve) => {
+      const url = `https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=5&lat=${lat}&lon=${lng}`;
+      https.get(url, { timeout: 8000 }, (res) => {
+        let data = '';
+        res.on('data', chunk => data += chunk);
+        res.on('end', () => {
+          try {
+            const json = JSON.parse(data);
+            if (json.features && json.features.length > 0) {
+              // Scegli il risultato più vicino al comune
+              let best = null, bestDist = Infinity;
+              for (const f of json.features) {
+                const c = f.geometry.coordinates;
+                const d = Math.sqrt(Math.pow(c[1] - lat, 2) + Math.pow(c[0] - lng, 2));
+                if (d < bestDist) { bestDist = d; best = f; }
+              }
+              if (best) {
+                const coords = best.geometry.coordinates;
+                const props = best.properties || {};
+                resolve({
+                  lat: coords[1], lng: coords[0],
+                  display_name: [props.name, props.street, props.city, props.county, props.state].filter(Boolean).join(', ')
+                });
+              } else { resolve(null); }
+            } else { resolve(null); }
+          } catch { resolve(null); }
+        });
+      }).on('error', () => resolve(null))
+        .on('timeout', function() { this.destroy(); resolve(null); });
+    });
+  }
+  return photonSearch(query);
+}
+
+function isNearComune(result, comuneLat, comuneLng) {
+  if (!comuneLat || !comuneLng) return true;
+  // Tolleranza ~30km (circa 0.3 gradi)
+  const dist = Math.sqrt(Math.pow(result.lat - comuneLat, 2) + Math.pow(result.lng - comuneLng, 2));
+  return dist < 0.3;
 }
 
 module.exports = { geocodeAddress };
