@@ -17,7 +17,7 @@ import { toast } from "sonner";
 
 const MappaLeaflet = dynamic(() => import("@/components/MappaLeaflet"), { ssr: false });
 
-const TIPOLOGIE = ["Appartamento", "Monolocale", "Bilocale", "Stanza singola", "Casa indipendente", "Posto letto", "Altro"];
+const TIPOLOGIE = ["Appartamento", "Monolocale", "Bilocale", "Trilocale", "Stanza singola", "Casa", "Casa indipendente", "Mansarda", "Posto letto", "Altro"];
 const STATI = ["Disponibile – da verificare", "Contattato – risposta positiva", "Contattato – risposta negativa", "Occupato", "In trattativa", "Contratto firmato"];
 const SPESE = ["S", "N", "Parziali"];
 

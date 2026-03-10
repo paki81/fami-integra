@@ -66,16 +66,27 @@ router.post('/alloggi', authenticate, authorize('superadmin', 'admin'), upload.s
 
         const canone = parseFloat(String(row['Canone Mensile (€)'] || row['Canone Mensile'] || 0).replace(/[€,]/g, '')) || null;
         const disponibileDa = row['Disponibile da'] ? excelDateToISO(row['Disponibile da']) : null;
+        const dataPrimoContatto = row['Data Primo Contatto'] ? excelDateToISO(row['Data Primo Contatto']) : null;
+
+        // Mappatura tipologia Excel → ENUM DB
+        const tipologiaMap = { 'Casa': 'Casa', 'Casa indipendente': 'Casa indipendente', 'Trilocale': 'Trilocale', 'Mansarda ammobiliata': 'Mansarda', 'Mansarda': 'Mansarda', 'Appartamento PT ammobiliato': 'Appartamento', 'Non specificato': 'Altro' };
+        const tipRaw = (row['Tipologia'] || 'Altro').trim();
+        const tipologia = tipologiaMap[tipRaw] || (['Appartamento','Monolocale','Bilocale','Trilocale','Stanza singola','Casa','Casa indipendente','Mansarda','Posto letto'].includes(tipRaw) ? tipRaw : 'Altro');
+
+        // Mappatura stato Excel → ENUM DB
+        const statoRaw = (row['Esito / Stato'] || '').trim();
+        const statiValidi = ['Disponibile – da verificare','Contattato – risposta positiva','Contattato – risposta negativa','Occupato','In trattativa','Contratto firmato'];
+        const stato = statiValidi.includes(statoRaw) ? statoRaw : 'Disponibile – da verificare';
 
         await pool.query(
-          `INSERT INTO alloggi (id_alloggio, comune, indirizzo, tipologia, n_vani, piano, canone_mensile, spese_incluse, proprietario, telefono_referente, email_referente, disponibile_da, stato, note)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-           ON DUPLICATE KEY UPDATE comune=VALUES(comune), indirizzo=VALUES(indirizzo), tipologia=VALUES(tipologia)`,
+          `INSERT INTO alloggi (id_alloggio, comune, indirizzo, tipologia, n_vani, piano, canone_mensile, spese_incluse, proprietario, telefono_referente, email_referente, data_primo_contatto, disponibile_da, stato, note)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+           ON DUPLICATE KEY UPDATE comune=VALUES(comune), indirizzo=VALUES(indirizzo), tipologia=VALUES(tipologia), n_vani=VALUES(n_vani), piano=VALUES(piano), canone_mensile=VALUES(canone_mensile), spese_incluse=VALUES(spese_incluse), proprietario=VALUES(proprietario), telefono_referente=VALUES(telefono_referente), email_referente=VALUES(email_referente), data_primo_contatto=VALUES(data_primo_contatto), disponibile_da=VALUES(disponibile_da), stato=VALUES(stato), note=VALUES(note)`,
           [
             idAlloggio,
             row['Comune'] || null,
             row['Indirizzo'] || null,
-            row['Tipologia'] || 'Altro',
+            tipologia,
             parseInt(row['N° Vani'] || 1) || 1,
             row['Piano'] || null,
             canone,
@@ -83,8 +94,9 @@ router.post('/alloggi', authenticate, authorize('superadmin', 'admin'), upload.s
             row['Proprietario / Agenzia'] || null,
             row['Telefono Referente'] || null,
             row['Email Referente'] || null,
+            dataPrimoContatto,
             disponibileDa,
-            row['Esito / Stato'] || 'Disponibile',
+            stato,
             row['Note'] || null
           ]
         );
