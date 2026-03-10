@@ -42,13 +42,12 @@ export default function AlloggiPage() {
   const [editId, setEditId] = useState<number | null>(null);
   const [form, setForm] = useState({ ...emptyAlloggio });
   const [saving, setSaving] = useState(false);
-  const [viewTab, setViewTab] = useState<"lista" | "mappa">("lista");
   const [mapMarkers, setMapMarkers] = useState<any[]>([]);
   const [loadingMap, setLoadingMap] = useState(false);
   const [geocodingMsg, setGeocodingMsg] = useState("");
   const [selectedAlloggio, setSelectedAlloggio] = useState<any>(null);
   const [mapClickResult, setMapClickResult] = useState<{lat:number,lng:number,indirizzo:string,comune:string,cap:string}|null>(null);
-  const [mainTab, setMainTab] = useState<"registro"|"contratti">("registro");
+  const [mainTab, setMainTab] = useState<"lista"|"mappa"|"contratti">("lista");
   const [contratti, setContratti] = useState<any[]>([]);
   const [contrattiTotal, setContrattiTotal] = useState(0);
   const [contrattiPage, setContrattiPage] = useState(1);
@@ -103,7 +102,7 @@ export default function AlloggiPage() {
     } catch (err: any) { toast.error("Errore durante la geocodifica degli indirizzi"); }
   };
 
-  useEffect(() => { if (viewTab === "mappa") loadMapData(); }, [viewTab]);
+  useEffect(() => { if (mainTab === "mappa") loadMapData(); }, [mainTab]);
 
   // --- Monitoraggio Contratti ---
   const fetchContratti = useCallback(async () => {
@@ -272,29 +271,23 @@ export default function AlloggiPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Alloggi</h1>
-          <p className="text-sm text-gray-500">{mainTab === "registro" ? `${total} registrati` : `${contrattiTotal} contratti`}</p>
+          <p className="text-sm text-gray-500">{mainTab === "contratti" ? `${contrattiTotal} contratti` : `${total} registrati`}</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
           <div className="flex bg-gray-100 rounded-lg p-0.5">
-            <button onClick={() => setMainTab("registro")} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${mainTab === "registro" ? "bg-white shadow text-gray-900" : "text-gray-500"}`}>
-              <List size={14} />Registro</button>
+            <button onClick={() => { setMainTab("lista"); setSelectedAlloggio(null); }} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${mainTab === "lista" ? "bg-white shadow text-gray-900" : "text-gray-500"}`}>
+              <List size={14} />Lista</button>
+            <button onClick={() => setMainTab("mappa")} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${mainTab === "mappa" ? "bg-white shadow text-gray-900" : "text-gray-500"}`}>
+              <Map size={14} />Mappa</button>
             <button onClick={() => setMainTab("contratti")} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${mainTab === "contratti" ? "bg-white shadow text-gray-900" : "text-gray-500"}`}>
               <FileText size={14} />Contratti</button>
           </div>
-          {mainTab === "registro" && (
-            <div className="flex bg-gray-100 rounded-lg p-0.5">
-              <button onClick={() => { setViewTab("lista"); setSelectedAlloggio(null); }} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${viewTab === "lista" ? "bg-white shadow text-gray-900" : "text-gray-500"}`}>
-                <List size={14} />Lista</button>
-              <button onClick={() => setViewTab("mappa")} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${viewTab === "mappa" ? "bg-white shadow text-gray-900" : "text-gray-500"}`}>
-                <Map size={14} />Mappa</button>
-            </div>
-          )}
-          {mainTab === "registro" && canEdit && <Button onClick={handleNew}><Plus size={16} className="mr-2" />Nuovo Alloggio</Button>}
+          {mainTab !== "contratti" && canEdit && <Button onClick={handleNew}><Plus size={16} className="mr-2" />Nuovo Alloggio</Button>}
           {mainTab === "contratti" && canEdit && <Button onClick={openNewContratto}><Plus size={16} className="mr-2" />Nuovo Contratto</Button>}
         </div>
       </div>
 
-      {mainTab === "registro" && (<>
+      {mainTab !== "contratti" && (<>
       <Card>
         <CardContent className="p-4">
           <div className="flex flex-col sm:flex-row gap-3">
@@ -392,7 +385,7 @@ export default function AlloggiPage() {
       )}
 
       {/* Mappa */}
-      {viewTab === "mappa" && (
+      {mainTab === "mappa" && (
         <Card>
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
@@ -432,7 +425,7 @@ export default function AlloggiPage() {
       )}
 
       {/* Tabella lista */}
-      {viewTab === "lista" && <Card>
+      {mainTab === "lista" && <Card>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
