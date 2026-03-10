@@ -209,13 +209,14 @@ export default function MatchingPage() {
     <div className="space-y-6">
       {/* Sticky Compact Bar - appare su scroll */}
       <div className={`fixed top-0 left-0 lg:left-64 right-0 z-30 transition-all duration-300 ease-in-out ${isScrolled ? "translate-y-0 opacity-100" : "-translate-y-full opacity-0 pointer-events-none"}`}>
-        <div className="bg-gradient-to-r from-green-600 via-emerald-600 to-teal-700 shadow-lg border-b border-green-500/30">
-          <div className="px-4 sm:px-6 py-2.5 flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center">
-                <GitMerge size={16} className="text-white" />
+        <div className="bg-gradient-to-r from-green-600 via-emerald-600 to-teal-700 shadow-lg">
+          {/* Riga 1: Titolo + Tabs + Stats */}
+          <div className="px-4 sm:px-6 py-2 flex items-center justify-between gap-3 border-b border-white/10">
+            <div className="flex items-center gap-2.5">
+              <div className="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center">
+                <GitMerge size={14} className="text-white" />
               </div>
-              <h1 className="text-base font-bold text-white">Abbinamento</h1>
+              <h1 className="text-sm font-bold text-white">Abbinamento</h1>
             </div>
             <div className="flex items-center gap-1 bg-white/15 backdrop-blur-sm rounded-lg p-0.5">
               <button onClick={() => setTab("cerca")} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${tab === "cerca" ? "bg-white/25 text-white" : "text-white/70 hover:text-white"}`}>
@@ -225,12 +226,43 @@ export default function MatchingPage() {
               <button onClick={() => setTab("lavoro")} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${tab === "lavoro" ? "bg-white/25 text-white" : "text-white/70 hover:text-white"}`}>
                 <Building2 size={12} />Lavoro <span className="bg-white/20 px-1.5 py-0.5 rounded text-[10px]">{matchLavoro.length}</span></button>
             </div>
-            <div className="hidden sm:flex items-center gap-2 text-white text-xs font-medium">
-              <span className="bg-white/15 px-2.5 py-1 rounded-lg">{matchAlloggi.length} <span className="text-white/70">alloggi</span></span>
-              <span className="bg-white/15 px-2.5 py-1 rounded-lg">{matchLavoro.length} <span className="text-white/70">lavoro</span></span>
-              <span className="bg-white/15 px-2.5 py-1 rounded-lg">{beneficiari.length} <span className="text-white/70">in uscita</span></span>
+            {/* Step indicator compatto */}
+            <div className="hidden md:flex items-center gap-1.5 text-[11px] font-medium">
+              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full ${!selectedBen ? "bg-white/25 text-white" : "bg-white/10 text-white/60"}`}>
+                <span className={`w-4 h-4 rounded-full text-[9px] font-bold flex items-center justify-center ${!selectedBen ? "bg-white text-green-700" : "bg-white/20 text-white/70"}`}>1</span>
+                Seleziona
+              </span>
+              <ChevronRight size={10} className="text-white/40" />
+              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full ${selectedBen && !loadingSug ? "bg-white/25 text-white" : "bg-white/10 text-white/60"}`}>
+                <span className={`w-4 h-4 rounded-full text-[9px] font-bold flex items-center justify-center ${selectedBen && !loadingSug ? "bg-white text-green-700" : "bg-white/20 text-white/70"}`}>2</span>
+                Confronta
+              </span>
+              <ChevronRight size={10} className="text-white/40" />
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/10 text-white/60">
+                <span className="w-4 h-4 rounded-full text-[9px] font-bold flex items-center justify-center bg-white/20 text-white/70">3</span>
+                Abbina
+              </span>
             </div>
           </div>
+          {/* Riga 2: Beneficiario selezionato (condizionale) */}
+          {selectedBen && tab === "cerca" && (
+            <div className="px-4 sm:px-6 py-1.5 flex items-center gap-3 bg-white/5 border-b border-white/10">
+              <div className="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center text-white text-[10px] font-bold shrink-0">
+                {selectedBen.cognome?.[0]}{selectedBen.nome?.[0]}
+              </div>
+              <div className="flex items-center gap-3 flex-1 min-w-0 text-white">
+                <span className="font-semibold text-sm truncate">{selectedBen.cognome} {selectedBen.nome}</span>
+                <span className="hidden sm:inline-flex items-center gap-1 text-[11px] text-white/70"><MapPin size={10} />{selectedBen.comune}</span>
+                <span className="hidden sm:inline-flex items-center gap-1 text-[11px] text-white/70"><Users size={10} />{selectedBen.n_componenti_nucleo} comp.</span>
+                <span className="hidden md:inline-flex items-center gap-1 text-[11px] text-white/70"><Clock size={10} />Uscita {formatDate(selectedBen.data_uscita_sai)}</span>
+              </div>
+              <div className="flex items-center gap-1.5 shrink-0">
+                <span className="px-2 py-0.5 rounded-md bg-white/15 text-white text-[10px] font-semibold">{selectedBen.area_intervento}</span>
+                {sugAlloggi.length > 0 && <span className="px-1.5 py-0.5 rounded bg-orange-400/30 text-white text-[10px] font-semibold"><Home size={9} className="inline mr-0.5" />{sugAlloggi.length}</span>}
+                {sugAziende.length > 0 && <span className="px-1.5 py-0.5 rounded bg-indigo-400/30 text-white text-[10px] font-semibold"><Building2 size={9} className="inline mr-0.5" />{sugAziende.length}</span>}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
