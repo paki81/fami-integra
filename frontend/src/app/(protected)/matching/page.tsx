@@ -259,8 +259,8 @@ export default function MatchingPage() {
           </div>
 
           {/* Lista beneficiari - pannello sinistro */}
-          <div className="lg:col-span-4">
-            <div className="bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden sticky top-4">
+          <div className="lg:col-span-4 flex flex-col">
+            <div className="bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden flex flex-col flex-1">
               <div className="p-4 border-b border-gray-100 bg-gradient-to-b from-gray-50/80 to-white">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
@@ -274,7 +274,7 @@ export default function MatchingPage() {
                   <Input placeholder="Nome, cognome o comune..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9 bg-white border-gray-200 rounded-xl h-9 text-sm focus:ring-green-500 focus:border-green-500" />
                 </div>
               </div>
-              <div className="max-h-[520px] overflow-y-auto divide-y divide-gray-50">
+              <div className="flex-1 overflow-y-auto divide-y divide-gray-50">
                 {filteredBen.map(b => {
                   const isSelected = selectedBen?.id === b.id;
                   return (
@@ -306,10 +306,10 @@ export default function MatchingPage() {
           </div>
 
           {/* Pannello suggerimenti - destra */}
-          <div className="lg:col-span-8">
+          <div className="lg:col-span-8 flex flex-col">
             {!selectedBen ? (
-              <div className="bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden">
-                <div className="px-8 py-16 text-center">
+              <div className="bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden flex-1 flex flex-col">
+                <div className="flex-1 flex flex-col items-center justify-center px-8 py-16 text-center">
                   <div className="w-24 h-24 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-green-50 to-emerald-100 flex items-center justify-center">
                     <GitMerge size={40} className="text-green-400" />
                   </div>
@@ -324,8 +324,8 @@ export default function MatchingPage() {
                 </div>
               </div>
             ) : loadingSug ? (
-              <div className="bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden">
-                <div className="px-8 py-16 text-center">
+              <div className="bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden flex-1 flex flex-col">
+                <div className="flex-1 flex flex-col items-center justify-center px-8 py-16 text-center">
                   <div className="relative w-16 h-16 mx-auto mb-5">
                     <div className="absolute inset-0 rounded-full border-[3px] border-green-100" />
                     <div className="absolute inset-0 rounded-full border-[3px] border-transparent border-t-green-600 animate-spin" />
@@ -338,7 +338,7 @@ export default function MatchingPage() {
                 </div>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-4 flex flex-col flex-1">
                 {/* Card profilo beneficiario */}
                 <div className="bg-white rounded-2xl border border-gray-200/80 shadow-sm p-5">
                   <div className="flex items-start gap-4">
@@ -371,7 +371,7 @@ export default function MatchingPage() {
                   const showBoth = hasAlloggi && hasAziende;
                   const activeSubTab = showBoth ? sugTab : (hasAlloggi ? "alloggi" : "aziende");
                   return (
-                    <div className="bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden">
+                    <div className="bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden flex flex-col flex-1">
                       {/* Sub-tab header */}
                       {showBoth && (
                         <div className="flex border-b border-gray-100">
@@ -401,7 +401,7 @@ export default function MatchingPage() {
 
                       {/* Contenuto suggerimenti alloggi */}
                       {activeSubTab === "alloggi" && (
-                        <div className="p-3 space-y-2 max-h-[480px] overflow-y-auto">
+                        <div className="p-3 space-y-2 flex-1 overflow-y-auto">
                           {sugAlloggi.length === 0 ? (
                             <div className="py-10 text-center"><Home size={28} className="mx-auto text-gray-300 mb-2" /><p className="text-sm text-gray-400">Nessun alloggio compatibile trovato</p></div>
                           ) : sugAlloggi.map((s: any) => (
@@ -447,7 +447,7 @@ export default function MatchingPage() {
 
                       {/* Contenuto suggerimenti aziende */}
                       {activeSubTab === "aziende" && (
-                        <div className="p-3 space-y-2 max-h-[480px] overflow-y-auto">
+                        <div className="p-3 space-y-2 flex-1 overflow-y-auto">
                           {sugAziende.length === 0 ? (
                             <div className="py-10 text-center"><Building2 size={28} className="mx-auto text-gray-300 mb-2" /><p className="text-sm text-gray-400">Nessuna azienda compatibile trovata</p></div>
                           ) : sugAziende.map((s: any) => (
