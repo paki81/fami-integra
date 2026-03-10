@@ -1,15 +1,18 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import dynamic from "next/dynamic";
 import { beneficiariApi, matchingApi } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatDate, formatCurrency, getScoreColor, getStatoColor } from "@/lib/utils";
-import { GitMerge, Home, Building2, Search, Check, ChevronLeft, ChevronRight, XCircle, Trash2, Pencil, Save, X } from "lucide-react";
+import { GitMerge, Home, Building2, Search, Check, ChevronLeft, ChevronRight, XCircle, Trash2, Pencil, Save, X, MapPin, Phone, Mail, Euro, Layers, Users, Clock } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+
+const MappaLeaflet = dynamic(() => import("@/components/MappaLeaflet"), { ssr: false });
 
 export default function MatchingPage() {
   const { user } = useAuth();
@@ -25,6 +28,8 @@ export default function MatchingPage() {
   const [editingMatch, setEditingMatch] = useState<any>(null);
   const [editForm, setEditForm] = useState<any>({});
   const [savingMatch, setSavingMatch] = useState(false);
+  const [detailAlloggio, setDetailAlloggio] = useState<any>(null);
+  const [detailAzienda, setDetailAzienda] = useState<any>(null);
 
   useEffect(() => {
     beneficiariApi.list({ limit: 200, stato: "In Corso,Abbinato Alloggio,Abbinato Lavoro" }).then(r => setBeneficiari(r.data.data)).catch(console.error);
@@ -258,7 +263,7 @@ export default function MatchingPage() {
                       {sugAlloggi.length === 0 ? (
                         <p className="text-sm text-gray-400">Nessun alloggio compatibile trovato</p>
                       ) : sugAlloggi.map((s: any) => (
-                        <div key={s.alloggio.id} className="flex items-center justify-between p-3 rounded-lg border border-gray-100 hover:border-gray-200">
+                        <div key={s.alloggio.id} className="flex items-center justify-between p-3 rounded-lg border border-gray-100 hover:border-gray-200 cursor-pointer" onClick={() => setDetailAlloggio(s)}>
                           <div className="flex-1">
                             <div className="flex items-center gap-2">
                               <span className={`px-2 py-0.5 rounded text-xs font-bold ${getScoreColor(s.score)}`}>{s.score}%</span>
@@ -274,7 +279,7 @@ export default function MatchingPage() {
                               {s.canoneOk === false && <span className="text-red-500 ml-1">✗ Fuori budget</span>}
                             </p>
                           </div>
-                          <Button size="sm" onClick={() => creaMatchAlloggio(s.alloggio.id)}>
+                          <Button size="sm" onClick={(e) => { e.stopPropagation(); creaMatchAlloggio(s.alloggio.id); }}>
                             <Check size={14} className="mr-1" />Abbina
                           </Button>
                         </div>
@@ -296,7 +301,7 @@ export default function MatchingPage() {
                       {sugAziende.length === 0 ? (
                         <p className="text-sm text-gray-400">Nessuna azienda compatibile trovata</p>
                       ) : sugAziende.map((s: any) => (
-                        <div key={s.azienda.id} className="flex items-center justify-between p-3 rounded-lg border border-gray-100 hover:border-gray-200">
+                        <div key={s.azienda.id} className="flex items-center justify-between p-3 rounded-lg border border-gray-100 hover:border-gray-200 cursor-pointer" onClick={() => setDetailAzienda(s)}>
                           <div className="flex-1">
                             <div className="flex items-center gap-2">
                               <span className={`px-2 py-0.5 rounded text-xs font-bold ${getScoreColor(s.score)}`}>{s.score}%</span>
@@ -310,7 +315,7 @@ export default function MatchingPage() {
                               {s.azienda.tirocinio === "S" && <span className="text-blue-600 ml-1">✓ Tirocinio</span>}
                             </p>
                           </div>
-                          <Button size="sm" onClick={() => creaMatchLavoro(s.azienda.id)}>
+                          <Button size="sm" onClick={(e) => { e.stopPropagation(); creaMatchLavoro(s.azienda.id); }}>
                             <Check size={14} className="mr-1" />Abbina
                           </Button>
                         </div>
@@ -525,6 +530,241 @@ export default function MatchingPage() {
           </CardContent>
         </Card>
       )}
+      {/* Modale Dettaglio Alloggio */}
+      {detailAlloggio && (() => {
+        const a = detailAlloggio.alloggio;
+        const s = detailAlloggio;
+        const hasCoords = a.latitudine && a.longitudine;
+        const markers = hasCoords ? [{
+          id: a.id, lat: parseFloat(a.latitudine), lng: parseFloat(a.longitudine),
+          label: a.id_alloggio,
+          popup: `<b>${a.id_alloggio}</b><br/>${a.indirizzo || ""}, ${a.comune}`,
+          color: "orange" as const
+        }] : [];
+        return (
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setDetailAlloggio(null)}>
+            <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+              <div className="flex items-center justify-between p-5 border-b border-gray-200">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center">
+                    <Home size={20} className="text-orange-600" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-bold text-gray-900">{a.id_alloggio}</h2>
+                    <p className="text-sm text-gray-500">{a.tipologia} · {a.comune}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className={`px-3 py-1 rounded-full text-sm font-bold ${getScoreColor(s.score)}`}>{s.score}%</span>
+                  <Button variant="ghost" size="icon" onClick={() => setDetailAlloggio(null)}><X size={18} /></Button>
+                </div>
+              </div>
+
+              <div className="p-5 space-y-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                  <div className="flex items-start gap-2">
+                    <MapPin size={15} className="text-gray-400 mt-0.5 shrink-0" />
+                    <div><p className="text-xs text-gray-400">Indirizzo</p><p className="text-sm font-medium">{a.indirizzo || "-"}</p></div>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <MapPin size={15} className="text-gray-400 mt-0.5 shrink-0" />
+                    <div><p className="text-xs text-gray-400">Comune</p><p className="text-sm font-medium">{a.comune || "-"}</p></div>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Layers size={15} className="text-gray-400 mt-0.5 shrink-0" />
+                    <div><p className="text-xs text-gray-400">Tipologia</p><p className="text-sm font-medium">{a.tipologia}</p></div>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Home size={15} className="text-gray-400 mt-0.5 shrink-0" />
+                    <div><p className="text-xs text-gray-400">Vani</p><p className="text-sm font-medium">{a.n_vani}</p></div>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Layers size={15} className="text-gray-400 mt-0.5 shrink-0" />
+                    <div><p className="text-xs text-gray-400">Piano</p><p className="text-sm font-medium">{a.piano || "-"}</p></div>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Euro size={15} className="text-gray-400 mt-0.5 shrink-0" />
+                    <div><p className="text-xs text-gray-400">Canone mensile</p><p className="text-sm font-medium">{formatCurrency(a.canone_mensile)}</p></div>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Euro size={15} className="text-gray-400 mt-0.5 shrink-0" />
+                    <div><p className="text-xs text-gray-400">Spese incluse</p><p className="text-sm font-medium">{a.spese_incluse === "S" ? "Sì" : a.spese_incluse === "Parziali" ? "Parziali" : "No"}</p></div>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Users size={15} className="text-gray-400 mt-0.5 shrink-0" />
+                    <div><p className="text-xs text-gray-400">Proprietario</p><p className="text-sm font-medium">{a.proprietario || a.agenzia || "-"}</p></div>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Phone size={15} className="text-gray-400 mt-0.5 shrink-0" />
+                    <div><p className="text-xs text-gray-400">Telefono</p><p className="text-sm font-medium">{a.telefono_referente || "-"}</p></div>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Mail size={15} className="text-gray-400 mt-0.5 shrink-0" />
+                    <div><p className="text-xs text-gray-400">Email</p><p className="text-sm font-medium break-all">{a.email_referente || "-"}</p></div>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Clock size={15} className="text-gray-400 mt-0.5 shrink-0" />
+                    <div><p className="text-xs text-gray-400">Disponibile da</p><p className="text-sm font-medium">{formatDate(a.disponibile_da)}</p></div>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Check size={15} className="text-gray-400 mt-0.5 shrink-0" />
+                    <div><p className="text-xs text-gray-400">Stato</p><p className="text-sm font-medium">{a.stato}</p></div>
+                  </div>
+                </div>
+
+                {a.note && (
+                  <div className="bg-gray-50 rounded-lg p-3">
+                    <p className="text-xs text-gray-400 mb-1">Note</p>
+                    <p className="text-sm text-gray-700">{a.note}</p>
+                  </div>
+                )}
+
+                <div className="flex flex-wrap gap-2 text-xs">
+                  {s.distanzaKm != null && <Badge className="bg-purple-100 text-purple-700"><MapPin size={12} className="mr-1" />{s.distanzaKm} km{s.durataMin ? ` (~${s.durataMin} min)` : ""}</Badge>}
+                  {s.stessoComune && <Badge className="bg-green-100 text-green-700">Stesso comune</Badge>}
+                  {s.canoneOk === true && <Badge className="bg-green-100 text-green-700">Nel budget</Badge>}
+                  {s.canoneOk === "parziale" && <Badge className="bg-amber-100 text-amber-700">Leggermente sopra budget</Badge>}
+                  {s.canoneOk === false && <Badge className="bg-red-100 text-red-700">Fuori budget</Badge>}
+                </div>
+
+                {hasCoords ? (
+                  <div className="rounded-lg overflow-hidden border border-gray-200">
+                    <MappaLeaflet markers={markers} height="250px" zoom={15} />
+                  </div>
+                ) : (
+                  <div className="h-40 bg-gray-100 rounded-lg flex items-center justify-center text-gray-400 text-sm">
+                    <MapPin size={16} className="mr-2" />Coordinate non disponibili
+                  </div>
+                )}
+              </div>
+
+              <div className="flex justify-end gap-2 p-5 border-t border-gray-200">
+                <Button variant="outline" onClick={() => setDetailAlloggio(null)}>Chiudi</Button>
+                <Button onClick={() => { creaMatchAlloggio(a.id); setDetailAlloggio(null); }}>
+                  <Check size={14} className="mr-1" />Abbina alloggio
+                </Button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* Modale Dettaglio Azienda */}
+      {detailAzienda && (() => {
+        const az = detailAzienda.azienda;
+        const s = detailAzienda;
+        const hasCoords = az.latitudine && az.longitudine;
+        const markers = hasCoords ? [{
+          id: az.id, lat: parseFloat(az.latitudine), lng: parseFloat(az.longitudine),
+          label: az.nome_azienda,
+          popup: `<b>${az.nome_azienda}</b><br/>${az.indirizzo || ""}, ${az.comune}`,
+          color: "blue" as const
+        }] : [];
+        return (
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setDetailAzienda(null)}>
+            <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+              <div className="flex items-center justify-between p-5 border-b border-gray-200">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center">
+                    <Building2 size={20} className="text-indigo-600" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-bold text-gray-900">{az.nome_azienda}</h2>
+                    <p className="text-sm text-gray-500">{az.settore} · {az.comune}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className={`px-3 py-1 rounded-full text-sm font-bold ${getScoreColor(s.score)}`}>{s.score}%</span>
+                  <Button variant="ghost" size="icon" onClick={() => setDetailAzienda(null)}><X size={18} /></Button>
+                </div>
+              </div>
+
+              <div className="p-5 space-y-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                  <div className="flex items-start gap-2">
+                    <Building2 size={15} className="text-gray-400 mt-0.5 shrink-0" />
+                    <div><p className="text-xs text-gray-400">ID Azienda</p><p className="text-sm font-medium">{az.id_azienda}</p></div>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <MapPin size={15} className="text-gray-400 mt-0.5 shrink-0" />
+                    <div><p className="text-xs text-gray-400">Indirizzo</p><p className="text-sm font-medium">{az.indirizzo || "-"}</p></div>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <MapPin size={15} className="text-gray-400 mt-0.5 shrink-0" />
+                    <div><p className="text-xs text-gray-400">Comune</p><p className="text-sm font-medium">{az.comune || "-"}</p></div>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Layers size={15} className="text-gray-400 mt-0.5 shrink-0" />
+                    <div><p className="text-xs text-gray-400">Settore</p><p className="text-sm font-medium">{az.settore || "-"}</p></div>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Users size={15} className="text-gray-400 mt-0.5 shrink-0" />
+                    <div><p className="text-xs text-gray-400">Mansione/Profilo</p><p className="text-sm font-medium">{az.mansione_profilo || "-"}</p></div>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Clock size={15} className="text-gray-400 mt-0.5 shrink-0" />
+                    <div><p className="text-xs text-gray-400">Tipo contratto</p><p className="text-sm font-medium">{az.tipo_contratto || "-"}</p></div>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Clock size={15} className="text-gray-400 mt-0.5 shrink-0" />
+                    <div><p className="text-xs text-gray-400">Orario</p><p className="text-sm font-medium">{az.orario || "-"}</p></div>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Users size={15} className="text-gray-400 mt-0.5 shrink-0" />
+                    <div><p className="text-xs text-gray-400">Referente</p><p className="text-sm font-medium">{az.referente || "-"}</p></div>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Phone size={15} className="text-gray-400 mt-0.5 shrink-0" />
+                    <div><p className="text-xs text-gray-400">Telefono</p><p className="text-sm font-medium">{az.telefono || "-"}</p></div>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Mail size={15} className="text-gray-400 mt-0.5 shrink-0" />
+                    <div><p className="text-xs text-gray-400">Email</p><p className="text-sm font-medium break-all">{az.email || "-"}</p></div>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Check size={15} className="text-gray-400 mt-0.5 shrink-0" />
+                    <div><p className="text-xs text-gray-400">Disponibile</p><p className="text-sm font-medium">{az.disponibile === "S" ? "Sì" : "No"}</p></div>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Check size={15} className="text-gray-400 mt-0.5 shrink-0" />
+                    <div><p className="text-xs text-gray-400">Tirocinio</p><p className="text-sm font-medium">{az.tirocinio === "S" ? "Sì" : "No"}</p></div>
+                  </div>
+                </div>
+
+                {az.note && (
+                  <div className="bg-gray-50 rounded-lg p-3">
+                    <p className="text-xs text-gray-400 mb-1">Note</p>
+                    <p className="text-sm text-gray-700">{az.note}</p>
+                  </div>
+                )}
+
+                <div className="flex flex-wrap gap-2 text-xs">
+                  {s.distanzaKm != null && <Badge className="bg-purple-100 text-purple-700"><MapPin size={12} className="mr-1" />{s.distanzaKm} km{s.durataMin ? ` (~${s.durataMin} min)` : ""}</Badge>}
+                  {s.stessoComune && <Badge className="bg-green-100 text-green-700">Stesso comune</Badge>}
+                  {az.tirocinio === "S" && <Badge className="bg-blue-100 text-blue-700">Tirocinio disponibile</Badge>}
+                </div>
+
+                {hasCoords ? (
+                  <div className="rounded-lg overflow-hidden border border-gray-200">
+                    <MappaLeaflet markers={markers} height="250px" zoom={15} />
+                  </div>
+                ) : (
+                  <div className="h-40 bg-gray-100 rounded-lg flex items-center justify-center text-gray-400 text-sm">
+                    <MapPin size={16} className="mr-2" />Coordinate non disponibili
+                  </div>
+                )}
+              </div>
+
+              <div className="flex justify-end gap-2 p-5 border-t border-gray-200">
+                <Button variant="outline" onClick={() => setDetailAzienda(null)}>Chiudi</Button>
+                <Button onClick={() => { creaMatchLavoro(az.id); setDetailAzienda(null); }}>
+                  <Check size={14} className="mr-1" />Abbina azienda
+                </Button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }

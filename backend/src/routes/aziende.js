@@ -18,18 +18,17 @@ async function autoGeocode(id, indirizzo, comune) {
 
 router.get('/', authenticate, async (req, res) => {
   try {
-    const { comune, cap, settore, disponibile, search, page = 1, limit = 25, sort = 'id', order = 'DESC' } = req.query;
-    const allowedSort = ['id', 'id_azienda', 'nome_azienda', 'settore', 'comune', 'cap', 'disponibile'];
+    const { comune, settore, disponibile, search, page = 1, limit = 25, sort = 'id', order = 'DESC' } = req.query;
+    const allowedSort = ['id', 'id_azienda', 'nome_azienda', 'settore', 'comune', 'disponibile'];
     const sortCol = allowedSort.includes(sort) ? sort : 'id';
     const sortOrder = order.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
     const offset = (Math.max(1, parseInt(page)) - 1) * parseInt(limit);
 
     let where = ['1=1'], params = [];
     if (comune) { where.push('comune = ?'); params.push(comune); }
-    if (cap) { where.push('cap = ?'); params.push(cap); }
     if (settore) { where.push('settore = ?'); params.push(settore); }
     if (disponibile) { where.push('disponibile = ?'); params.push(disponibile); }
-    if (search) { where.push('(nome_azienda LIKE ? OR mansione_profilo LIKE ? OR comune LIKE ? OR cap LIKE ? OR referente LIKE ?)'); params.push(`%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`); }
+    if (search) { where.push('(nome_azienda LIKE ? OR mansione_profilo LIKE ? OR comune LIKE ? OR referente LIKE ?)'); params.push(`%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`); }
 
     const whereClause = where.join(' AND ');
     const [[{ total }]] = await pool.query(`SELECT COUNT(*) as total FROM aziende WHERE ${whereClause}`, params);

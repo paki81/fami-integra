@@ -79,13 +79,12 @@ router.post('/alloggi', authenticate, authorize('superadmin', 'admin'), upload.s
         const stato = statiValidi.includes(statoRaw) ? statoRaw : 'Disponibile – da verificare';
 
         await pool.query(
-          `INSERT INTO alloggi (id_alloggio, comune, cap, indirizzo, tipologia, n_vani, piano, canone_mensile, spese_incluse, proprietario, telefono_referente, email_referente, data_primo_contatto, disponibile_da, stato, note)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-           ON DUPLICATE KEY UPDATE comune=VALUES(comune), cap=VALUES(cap), indirizzo=VALUES(indirizzo), tipologia=VALUES(tipologia), n_vani=VALUES(n_vani), piano=VALUES(piano), canone_mensile=VALUES(canone_mensile), spese_incluse=VALUES(spese_incluse), proprietario=VALUES(proprietario), telefono_referente=VALUES(telefono_referente), email_referente=VALUES(email_referente), data_primo_contatto=VALUES(data_primo_contatto), disponibile_da=VALUES(disponibile_da), stato=VALUES(stato), note=VALUES(note)`,
+          `INSERT INTO alloggi (id_alloggio, comune, indirizzo, tipologia, n_vani, piano, canone_mensile, spese_incluse, proprietario, telefono_referente, email_referente, data_primo_contatto, disponibile_da, stato, note)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+           ON DUPLICATE KEY UPDATE comune=VALUES(comune), indirizzo=VALUES(indirizzo), tipologia=VALUES(tipologia), n_vani=VALUES(n_vani), piano=VALUES(piano), canone_mensile=VALUES(canone_mensile), spese_incluse=VALUES(spese_incluse), proprietario=VALUES(proprietario), telefono_referente=VALUES(telefono_referente), email_referente=VALUES(email_referente), data_primo_contatto=VALUES(data_primo_contatto), disponibile_da=VALUES(disponibile_da), stato=VALUES(stato), note=VALUES(note)`,
           [
             idAlloggio,
             row['Comune'] || null,
-            row['CAP'] ? String(row['CAP']) : null,
             row['Indirizzo'] || null,
             tipologia,
             parseInt(row['N° Vani'] || 1) || 1,
@@ -137,9 +136,9 @@ router.post('/aziende', authenticate, authorize('superadmin', 'admin'), upload.s
         const disponibile = 'S';
 
         await pool.query(
-          `INSERT INTO aziende (id_azienda, nome_azienda, settore, mansione_profilo, tipo_contratto, orario, indirizzo, comune, cap, referente, telefono, email, data_primo_contatto, esito_contatto, disponibile, tirocinio, note)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-           ON DUPLICATE KEY UPDATE nome_azienda=VALUES(nome_azienda), settore=VALUES(settore), mansione_profilo=VALUES(mansione_profilo), tipo_contratto=VALUES(tipo_contratto), orario=VALUES(orario), indirizzo=VALUES(indirizzo), comune=VALUES(comune), cap=VALUES(cap), referente=VALUES(referente), telefono=VALUES(telefono), email=VALUES(email), data_primo_contatto=VALUES(data_primo_contatto), esito_contatto=VALUES(esito_contatto), disponibile=VALUES(disponibile), tirocinio=VALUES(tirocinio), note=VALUES(note)`,
+          `INSERT INTO aziende (id_azienda, nome_azienda, settore, mansione_profilo, tipo_contratto, orario, indirizzo, comune, referente, telefono, email, data_primo_contatto, esito_contatto, disponibile, tirocinio, note)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+           ON DUPLICATE KEY UPDATE nome_azienda=VALUES(nome_azienda), settore=VALUES(settore), mansione_profilo=VALUES(mansione_profilo), tipo_contratto=VALUES(tipo_contratto), orario=VALUES(orario), indirizzo=VALUES(indirizzo), comune=VALUES(comune), referente=VALUES(referente), telefono=VALUES(telefono), email=VALUES(email), data_primo_contatto=VALUES(data_primo_contatto), esito_contatto=VALUES(esito_contatto), disponibile=VALUES(disponibile), tirocinio=VALUES(tirocinio), note=VALUES(note)`,
           [
             idAzienda, nomeAzienda,
             row['Settore'] || null,
@@ -148,7 +147,6 @@ router.post('/aziende', authenticate, authorize('superadmin', 'admin'), upload.s
             normalizeOrario(row['Orario']),
             row['Indirizzo / Comune'] || null,
             extractComune(row['Indirizzo / Comune']),
-            row['CAP'] ? String(row['CAP']) : null,
             row['Referente'] || null,
             row['Telefono'] ? String(row['Telefono']) : null,
             row['Email'] || null,

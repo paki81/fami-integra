@@ -18,18 +18,17 @@ async function autoGeocode(id, indirizzo, comune) {
 
 router.get('/', authenticate, async (req, res) => {
   try {
-    const { comune, cap, stato, tipologia, search, page = 1, limit = 25, sort = 'id', order = 'DESC' } = req.query;
-    const allowedSort = ['id', 'id_alloggio', 'comune', 'cap', 'tipologia', 'n_vani', 'canone_mensile', 'stato', 'disponibile_da'];
+    const { comune, stato, tipologia, search, page = 1, limit = 25, sort = 'id', order = 'DESC' } = req.query;
+    const allowedSort = ['id', 'id_alloggio', 'comune', 'tipologia', 'n_vani', 'canone_mensile', 'stato', 'disponibile_da'];
     const sortCol = allowedSort.includes(sort) ? sort : 'id';
     const sortOrder = order.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
     const offset = (Math.max(1, parseInt(page)) - 1) * parseInt(limit);
 
     let where = ['1=1'], params = [];
     if (comune) { where.push('comune = ?'); params.push(comune); }
-    if (cap) { where.push('cap = ?'); params.push(cap); }
     if (stato) { where.push('stato = ?'); params.push(stato); }
     if (tipologia) { where.push('tipologia = ?'); params.push(tipologia); }
-    if (search) { where.push('(id_alloggio LIKE ? OR indirizzo LIKE ? OR comune LIKE ? OR cap LIKE ? OR proprietario LIKE ? OR note LIKE ?)'); params.push(`%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`); }
+    if (search) { where.push('(id_alloggio LIKE ? OR indirizzo LIKE ? OR comune LIKE ? OR proprietario LIKE ? OR note LIKE ?)'); params.push(`%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`); }
 
     const whereClause = where.join(' AND ');
     const [[{ total }]] = await pool.query(`SELECT COUNT(*) as total FROM alloggi WHERE ${whereClause}`, params);

@@ -22,7 +22,7 @@ const STATI = ["Disponibile – da verificare", "Contattato – risposta positiv
 const SPESE = ["S", "N", "Parziali"];
 
 const emptyAlloggio = {
-  id_alloggio: "", comune: "", cap: "", indirizzo: "", tipologia: "Altro", n_vani: 1, piano: "",
+  id_alloggio: "", comune: "", indirizzo: "", tipologia: "Altro", n_vani: 1, piano: "",
   canone_mensile: "", spese_incluse: "N", proprietario: "", agenzia: "",
   telefono_referente: "", email_referente: "", data_primo_contatto: "", disponibile_da: "", stato: "Disponibile – da verificare", note: ""
 };
@@ -200,7 +200,7 @@ export default function AlloggiPage() {
   const handleEdit = (a: any) => {
     setEditId(a.id);
     setForm({
-      id_alloggio: a.id_alloggio || "", comune: a.comune || "", cap: a.cap || "", indirizzo: a.indirizzo || "",
+      id_alloggio: a.id_alloggio || "", comune: a.comune || "", indirizzo: a.indirizzo || "",
       tipologia: a.tipologia || "Altro", n_vani: a.n_vani || 1, piano: a.piano || "",
       canone_mensile: a.canone_mensile || "", spese_incluse: a.spese_incluse || "N",
       proprietario: a.proprietario || "", agenzia: a.agenzia || "",
@@ -300,7 +300,7 @@ export default function AlloggiPage() {
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="relative flex-1">
               <Search size={16} className="absolute left-3 top-3 text-gray-400" />
-              <Input placeholder="Cerca per ID, indirizzo, comune, CAP..." className="pl-9"
+              <Input placeholder="Cerca per ID, indirizzo, comune, proprietario..." className="pl-9"
                 value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} />
             </div>
             <select className="h-10 px-3 rounded-md border border-gray-300 text-sm bg-white"
@@ -331,8 +331,6 @@ export default function AlloggiPage() {
                 <Input value={form.id_alloggio} onChange={e => setForm({...form, id_alloggio: e.target.value})} placeholder="es. ALG01" disabled={!!editId} /></div>
               <div><label className="text-xs font-medium text-gray-500">Comune</label>
                 <ComuneAutocomplete value={form.comune} onChange={v => setForm({...form, comune: v})} /></div>
-              <div><label className="text-xs font-medium text-gray-500">CAP</label>
-                <Input value={form.cap} onChange={e => setForm({...form, cap: e.target.value})} placeholder="es. 71021" maxLength={5} /></div>
               <div><label className="text-xs font-medium text-gray-500">Indirizzo</label>
                 <Input value={form.indirizzo} onChange={e => setForm({...form, indirizzo: e.target.value})} /></div>
               <div><label className="text-xs font-medium text-gray-500">Tipologia</label>
@@ -442,7 +440,6 @@ export default function AlloggiPage() {
                 <tr>
                   <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">ID</th>
                   <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">Comune</th>
-                  <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">CAP</th>
                   <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">Indirizzo</th>
                   <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">Tipologia</th>
                   <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">Vani</th>
@@ -459,14 +456,13 @@ export default function AlloggiPage() {
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {loading ? (
-                  <tr><td colSpan={canEdit ? 15 : 14} className="px-4 py-8 text-center text-gray-400">Caricamento...</td></tr>
+                  <tr><td colSpan={canEdit ? 14 : 13} className="px-4 py-8 text-center text-gray-400">Caricamento...</td></tr>
                 ) : data.length === 0 ? (
-                  <tr><td colSpan={canEdit ? 15 : 14} className="px-4 py-8 text-center text-gray-400">Nessun alloggio trovato</td></tr>
+                  <tr><td colSpan={canEdit ? 14 : 13} className="px-4 py-8 text-center text-gray-400">Nessun alloggio trovato</td></tr>
                 ) : data.map((a) => (
                   <tr key={a.id} className="hover:bg-gray-50 transition-colors cursor-pointer" onClick={() => setSelectedAlloggio(a)}>
                     <td className="px-3 py-3 font-mono text-gray-600 text-xs">{a.id_alloggio}</td>
                     <td className="px-3 py-3 text-gray-700 text-xs whitespace-nowrap">{a.comune || "-"}</td>
-                    <td className="px-3 py-3 text-gray-600 text-xs">{a.cap || "-"}</td>
                     <td className="px-3 py-3 text-gray-600 text-xs">{a.indirizzo || "-"}</td>
                     <td className="px-3 py-3"><Badge variant="secondary" className="text-xs">{a.tipologia}</Badge></td>
                     <td className="px-3 py-3 text-gray-600 text-xs text-center">{a.n_vani}</td>
