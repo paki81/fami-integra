@@ -21,7 +21,7 @@ const ESITI_CONTATTO = ["Da contattare", "Contattato – risposta positiva", "Co
 
 const emptyAzienda = {
   id_azienda: "", nome_azienda: "", settore: "", mansione_profilo: "", tipo_contratto: "",
-  orario: "Full-time", indirizzo: "", comune: "", referente: "", telefono: "", email: "",
+  orario: "Full-time", indirizzo: "", comune: "", cap: "", referente: "", telefono: "", email: "",
   data_primo_contatto: "", esito_contatto: "", disponibile: "S", tirocinio: "N", note: ""
 };
 
@@ -94,7 +94,7 @@ export default function AziendePage() {
     setForm({
       id_azienda: a.id_azienda || "", nome_azienda: a.nome_azienda || "", settore: a.settore || "",
       mansione_profilo: a.mansione_profilo || "", tipo_contratto: a.tipo_contratto || "",
-      orario: a.orario || "Full-time", indirizzo: a.indirizzo || "", comune: a.comune || "",
+      orario: a.orario || "Full-time", indirizzo: a.indirizzo || "", comune: a.comune || "", cap: a.cap || "",
       referente: a.referente || "", telefono: a.telefono || "", email: a.email || "",
       data_primo_contatto: a.data_primo_contatto ? a.data_primo_contatto.split("T")[0] : "",
       esito_contatto: a.esito_contatto || "",
@@ -180,7 +180,7 @@ export default function AziendePage() {
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="relative flex-1">
               <Search size={16} className="absolute left-3 top-3 text-gray-400" />
-              <Input placeholder="Cerca per nome, mansione, referente..." className="pl-9"
+              <Input placeholder="Cerca per nome, mansione, comune, CAP..." className="pl-9"
                 value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} />
             </div>
             <select className="h-10 px-3 rounded-md border border-gray-300 text-sm bg-white"
@@ -232,6 +232,8 @@ export default function AziendePage() {
                 <Input value={form.indirizzo} onChange={e => setForm({...form, indirizzo: e.target.value})} /></div>
               <div><label className="text-xs font-medium text-gray-500">Comune</label>
                 <ComuneAutocomplete value={form.comune} onChange={v => setForm({...form, comune: v})} /></div>
+              <div><label className="text-xs font-medium text-gray-500">CAP</label>
+                <Input value={form.cap} onChange={e => setForm({...form, cap: e.target.value})} placeholder="es. 71021" maxLength={5} /></div>
               <div><label className="text-xs font-medium text-gray-500">Referente</label>
                 <Input value={form.referente} onChange={e => setForm({...form, referente: e.target.value})} /></div>
               <div><label className="text-xs font-medium text-gray-500">Telefono</label>
@@ -319,6 +321,7 @@ export default function AziendePage() {
                   <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">Contratto</th>
                   <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">Orario</th>
                   <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">Comune</th>
+                  <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">CAP</th>
                   <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">Referente</th>
                   <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">Contatti</th>
                   <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">Data Contatto</th>
@@ -330,9 +333,9 @@ export default function AziendePage() {
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {loading ? (
-                  <tr><td colSpan={canEdit ? 14 : 13} className="px-4 py-8 text-center text-gray-400">Caricamento...</td></tr>
+                  <tr><td colSpan={canEdit ? 15 : 14} className="px-4 py-8 text-center text-gray-400">Caricamento...</td></tr>
                 ) : data.length === 0 ? (
-                  <tr><td colSpan={canEdit ? 14 : 13} className="px-4 py-8 text-center text-gray-400">Nessuna azienda trovata</td></tr>
+                  <tr><td colSpan={canEdit ? 15 : 14} className="px-4 py-8 text-center text-gray-400">Nessuna azienda trovata</td></tr>
                 ) : data.map((a) => (
                   <tr key={a.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-3 py-3 font-mono text-gray-600 text-xs">{a.id_azienda}</td>
@@ -342,6 +345,7 @@ export default function AziendePage() {
                     <td className="px-3 py-3 text-gray-600 text-xs">{a.tipo_contratto || "-"}</td>
                     <td className="px-3 py-3 text-gray-600 text-xs">{a.orario || "-"}</td>
                     <td className="px-3 py-3 text-gray-600 text-xs whitespace-nowrap">{a.comune || "-"}</td>
+                    <td className="px-3 py-3 text-gray-600 text-xs">{a.cap || "-"}</td>
                     <td className="px-3 py-3 text-gray-600 text-xs">{a.referente || "-"}</td>
                     <td className="px-3 py-3 text-xs">
                       {a.telefono && <div className="text-gray-600">{a.telefono}</div>}
