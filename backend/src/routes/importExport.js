@@ -129,10 +129,16 @@ router.post('/aziende', authenticate, authorize('superadmin', 'admin'), upload.s
         const nomeAzienda = row['Nome Azienda'] || '';
         if (!idAzienda || !nomeAzienda) continue;
 
+        const dataPrimoContattoAz = row['Data Primo Contatto'] ? excelDateToISO(row['Data Primo Contatto']) : null;
+        const tirocinoRaw = (row['Disponibile Tirocinio?'] || '').toString().trim().toLowerCase();
+        const tirocinio = (tirocinoRaw === 'sì' || tirocinoRaw === 'si' || tirocinoRaw === 's') ? 'S' : 'N';
+        // Se non c'è info esplicita sulla disponibilità, default 'S'
+        const disponibile = 'S';
+
         await pool.query(
-          `INSERT INTO aziende (id_azienda, nome_azienda, settore, mansione_profilo, tipo_contratto, orario, indirizzo, comune, referente, telefono, email, esito_contatto, disponibile, tirocinio, note)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-           ON DUPLICATE KEY UPDATE nome_azienda=VALUES(nome_azienda), settore=VALUES(settore)`,
+          `INSERT INTO aziende (id_azienda, nome_azienda, settore, mansione_profilo, tipo_contratto, orario, indirizzo, comune, referente, telefono, email, data_primo_contatto, esito_contatto, disponibile, tirocinio, note)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+           ON DUPLICATE KEY UPDATE nome_azienda=VALUES(nome_azienda), settore=VALUES(settore), mansione_profilo=VALUES(mansione_profilo), tipo_contratto=VALUES(tipo_contratto), orario=VALUES(orario), indirizzo=VALUES(indirizzo), comune=VALUES(comune), referente=VALUES(referente), telefono=VALUES(telefono), email=VALUES(email), data_primo_contatto=VALUES(data_primo_contatto), esito_contatto=VALUES(esito_contatto), disponibile=VALUES(disponibile), tirocinio=VALUES(tirocinio), note=VALUES(note)`,
           [
             idAzienda, nomeAzienda,
             row['Settore'] || null,
@@ -142,11 +148,12 @@ router.post('/aziende', authenticate, authorize('superadmin', 'admin'), upload.s
             row['Indirizzo / Comune'] || null,
             extractComune(row['Indirizzo / Comune']),
             row['Referente'] || null,
-            row['Telefono'] || null,
+            row['Telefono'] ? String(row['Telefono']) : null,
             row['Email'] || null,
+            dataPrimoContattoAz,
             row['Esito Contatto'] || null,
-            row['Disponibile Tirocinio?'] === 'Sì' ? 'S' : 'N',
-            row['Disponibile Tirocinio?'] === 'Sì' ? 'S' : 'N',
+            disponibile,
+            tirocinio,
             row['Note'] || null
           ]
         );
