@@ -45,15 +45,17 @@ router.post('/svuota/:tabella', authenticate, authorize('superadmin'), async (re
     // Elimina dati correlati
     if (tabella === 'beneficiari') {
       await conn.query('DELETE FROM registro_note WHERE entita = "beneficiari"');
-      await conn.query('DELETE FROM matching');
+      await conn.query('DELETE FROM monitoraggio_contratti');
+      await conn.query('DELETE FROM matching_alloggi');
+      await conn.query('DELETE FROM matching_lavoro');
     } else if (tabella === 'alloggi') {
       await conn.query('DELETE FROM registro_note WHERE entita = "alloggi"');
       await conn.query('DELETE FROM foto_alloggi');
-      await conn.query('DELETE FROM contratti');
-      await conn.query('DELETE FROM matching');
+      await conn.query('DELETE FROM monitoraggio_contratti');
+      await conn.query('DELETE FROM matching_alloggi');
     } else if (tabella === 'aziende') {
       await conn.query('DELETE FROM registro_note WHERE entita = "aziende"');
-      await conn.query('DELETE FROM matching');
+      await conn.query('DELETE FROM matching_lavoro');
     }
 
     await conn.query(`DELETE FROM ${tabella}`);
@@ -79,14 +81,16 @@ router.get('/conteggi', authenticate, authorize('superadmin'), async (req, res) 
     const [ben] = await pool.query('SELECT COUNT(*) as tot FROM beneficiari');
     const [all] = await pool.query('SELECT COUNT(*) as tot FROM alloggi');
     const [az] = await pool.query('SELECT COUNT(*) as tot FROM aziende');
-    const [mat] = await pool.query('SELECT COUNT(*) as tot FROM matching');
-    const [con] = await pool.query('SELECT COUNT(*) as tot FROM contratti');
+    const [matAll] = await pool.query('SELECT COUNT(*) as tot FROM matching_alloggi');
+    const [matLav] = await pool.query('SELECT COUNT(*) as tot FROM matching_lavoro');
+    const [con] = await pool.query('SELECT COUNT(*) as tot FROM monitoraggio_contratti');
     const [note] = await pool.query('SELECT COUNT(*) as tot FROM registro_note');
     res.json({
       beneficiari: ben[0].tot,
       alloggi: all[0].tot,
       aziende: az[0].tot,
-      matching: mat[0].tot,
+      matching_alloggi: matAll[0].tot,
+      matching_lavoro: matLav[0].tot,
       contratti: con[0].tot,
       registro_note: note[0].tot
     });
