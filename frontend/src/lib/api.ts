@@ -178,4 +178,16 @@ export const registroNoteApi = {
   delete: (id: number) => api.delete(`/registro-note/${id}`),
 };
 
+// Strumenti (solo superadmin)
+export const strumentiApi = {
+  conteggi: () => api.get('/strumenti/conteggi'),
+  svuota: (tabella: string, conferma: string) => api.post(`/strumenti/svuota/${tabella}`, { conferma }),
+  creaBackup: () => api.post('/strumenti/backup'),
+  listaBackup: () => api.get('/strumenti/backup/lista'),
+  downloadBackup: (filename: string) => `${api.defaults.baseURL}/strumenti/backup/download/${filename}`,
+  eliminaBackup: (filename: string) => api.delete(`/strumenti/backup/${filename}`),
+  ripristino: (data: FormData) => api.post('/strumenti/ripristino', data, { headers: { 'Content-Type': 'multipart/form-data' }, timeout: 300000 }),
+  ripristinoDaFile: (filename: string, conferma: string) => api.post('/strumenti/ripristino', { filename, conferma }),
+};
+
 export default api;

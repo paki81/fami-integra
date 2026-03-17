@@ -7,7 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard, Users, Home, Building2, GitMerge,
-  FileText, Settings, LogOut, Menu, X, Upload, Shield, MapPin
+  FileText, Settings, LogOut, Menu, X, Upload, Shield, MapPin, Wrench
 } from "lucide-react";
 import { useState } from "react";
 
@@ -21,6 +21,7 @@ const navItems = [
   { href: "/report", label: "Report", icon: FileText, roles: ["superadmin", "admin", "tutor", "counselor", "viewer"] },
   { href: "/import", label: "Import/Export", icon: Upload, roles: ["superadmin", "admin"] },
   { href: "/utenti", label: "Utenti", icon: Shield, roles: ["superadmin"] },
+  { href: "/strumenti", label: "Strumenti", icon: Wrench, roles: ["superadmin"] },
 ];
 
 export default function Sidebar() {
