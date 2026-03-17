@@ -20,6 +20,7 @@ const fotoAlloggiRoutes = require('./routes/fotoAlloggi');
 const geocodingRoutes = require('./routes/geocoding');
 const comuniRoutes = require('./routes/comuni');
 const comuniProgettoRoutes = require('./routes/comuniProgetto');
+const registroNoteRoutes = require('./routes/registroNote');
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -73,6 +74,7 @@ app.use('/api/foto-alloggi', fotoAlloggiRoutes);
 app.use('/api/geocoding', geocodingRoutes);
 app.use('/api/comuni', comuniRoutes);
 app.use('/api/comuni-progetto', comuniProgettoRoutes);
+app.use('/api/registro-note', registroNoteRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });

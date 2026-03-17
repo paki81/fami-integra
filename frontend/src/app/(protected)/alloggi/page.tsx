@@ -13,6 +13,7 @@ import React from "react";
 import { Plus, Search, Edit, Trash2, ChevronLeft, ChevronRight, X, Save, Map, List, MapPin, Image as ImageIcon, FileText, Pencil } from "lucide-react";
 import GalleriaFoto from "@/components/GalleriaFoto";
 import ComuneAutocomplete from "@/components/ComuneAutocomplete";
+import RegistroNote from "@/components/RegistroNote";
 import { toast } from "sonner";
 
 const MappaLeaflet = dynamic(() => import("@/components/MappaLeaflet"), { ssr: false });
@@ -357,6 +358,11 @@ export default function AlloggiPage() {
               <div className="sm:col-span-2 lg:col-span-3"><label className="text-xs font-medium text-gray-500">Note</label>
                 <textarea className="w-full h-20 px-3 py-2 rounded-md border border-gray-300 text-sm resize-none focus:ring-2 focus:ring-green-500 focus:outline-none"
                   value={form.note} onChange={e => setForm({...form, note: e.target.value})} /></div>
+              {editId && (
+                <div className="sm:col-span-2 lg:col-span-3">
+                  <RegistroNote entita="alloggi" entitaId={editId} />
+                </div>
+              )}
             </div>
             <div className="flex justify-end gap-3 mt-4">
               <Button variant="outline" onClick={() => setShowForm(false)}>Annulla</Button>

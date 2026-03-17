@@ -170,4 +170,12 @@ export const fotoAlloggiApi = {
   delete: (id: number) => api.delete(`/foto-alloggi/foto/${id}`),
 };
 
+// Registro Note
+export const registroNoteApi = {
+  list: (entita: string, entitaId: number) => api.get(`/registro-note/${entita}/${entitaId}`),
+  create: (entita: string, entitaId: number, testo: string) => api.post(`/registro-note/${entita}/${entitaId}`, { testo }),
+  update: (id: number, testo: string) => api.put(`/registro-note/${id}`, { testo }),
+  delete: (id: number) => api.delete(`/registro-note/${id}`),
+};
+
 export default api;
