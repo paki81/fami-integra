@@ -238,6 +238,12 @@ export default function AlloggiPage() {
     if (!form.comune.trim()) errors.comune = "Il comune è obbligatorio";
     if (!form.indirizzo.trim()) errors.indirizzo = "L'indirizzo è obbligatorio";
     if (!form.tipologia) errors.tipologia = "Seleziona una tipologia";
+    if (!form.n_vani || form.n_vani < 1) errors.n_vani = "Il numero di vani è obbligatorio";
+    if (!form.piano.trim()) errors.piano = "Il piano è obbligatorio";
+    if (!form.canone_mensile && String(form.canone_mensile) !== "0") errors.canone_mensile = "Il canone mensile è obbligatorio";
+    if (!form.proprietario.trim()) errors.proprietario = "Il proprietario è obbligatorio";
+    if (!form.telefono_referente.trim()) errors.telefono_referente = "Il telefono referente è obbligatorio";
+    if (!form.email_referente.trim()) errors.email_referente = "L'email referente è obbligatoria";
     setFormErrors(errors);
     if (Object.keys(errors).length > 0) { toast.error("Compila tutti i campi obbligatori"); return; }
     setSaving(true);
@@ -342,22 +348,28 @@ export default function AlloggiPage() {
                   value={form.tipologia} onChange={e => { setForm({...form, tipologia: e.target.value}); setFormErrors(p => ({...p, tipologia: ""})); }}>
                   {TIPOLOGIE.map(t => <option key={t} value={t}>{t}</option>)}</select>
                 {formErrors.tipologia && <p className="text-[11px] text-red-500 mt-0.5">{formErrors.tipologia}</p>}</div>
-              <div><label className="text-xs font-medium text-gray-500">N° Vani</label>
-                <Input type="number" min={1} value={form.n_vani} onChange={e => setForm({...form, n_vani: parseInt(e.target.value) || 1})} /></div>
-              <div><label className="text-xs font-medium text-gray-500">Piano</label>
-                <Input value={form.piano} onChange={e => setForm({...form, piano: e.target.value})} /></div>
-              <div><label className="text-xs font-medium text-gray-500">Canone Mensile (€)</label>
-                <Input type="number" step="0.01" value={form.canone_mensile} onChange={e => setForm({...form, canone_mensile: e.target.value})} /></div>
-              <div><label className="text-xs font-medium text-gray-500">Spese Incluse</label>
-                <select className="h-10 w-full px-3 rounded-md border border-gray-300 text-sm bg-white"
-                  value={form.spese_incluse} onChange={e => setForm({...form, spese_incluse: e.target.value})}>
+              <div><label className="text-xs font-medium text-gray-500">N° Vani *</label>
+                <Input type="number" min={1} value={form.n_vani} onChange={e => { setForm({...form, n_vani: parseInt(e.target.value) || 1}); setFormErrors(p => ({...p, n_vani: ""})); }} className={formErrors.n_vani ? "border-red-400 focus:ring-red-500" : ""} />
+                {formErrors.n_vani && <p className="text-[11px] text-red-500 mt-0.5">{formErrors.n_vani}</p>}</div>
+              <div><label className="text-xs font-medium text-gray-500">Piano *</label>
+                <Input value={form.piano} onChange={e => { setForm({...form, piano: e.target.value}); setFormErrors(p => ({...p, piano: ""})); }} className={formErrors.piano ? "border-red-400 focus:ring-red-500" : ""} />
+                {formErrors.piano && <p className="text-[11px] text-red-500 mt-0.5">{formErrors.piano}</p>}</div>
+              <div><label className="text-xs font-medium text-gray-500">Canone Mensile (€) *</label>
+                <Input type="number" step="0.01" value={form.canone_mensile} onChange={e => { setForm({...form, canone_mensile: e.target.value}); setFormErrors(p => ({...p, canone_mensile: ""})); }} className={formErrors.canone_mensile ? "border-red-400 focus:ring-red-500" : ""} />
+                {formErrors.canone_mensile && <p className="text-[11px] text-red-500 mt-0.5">{formErrors.canone_mensile}</p>}</div>
+              <div><label className="text-xs font-medium text-gray-500">Spese Incluse *</label>
+                <select className={`h-10 w-full px-3 rounded-md border text-sm bg-white ${formErrors.spese_incluse ? "border-red-400" : "border-gray-300"}`}
+                  value={form.spese_incluse} onChange={e => { setForm({...form, spese_incluse: e.target.value}); setFormErrors(p => ({...p, spese_incluse: ""})); }}>
                   {SPESE.map(s => <option key={s} value={s}>{s}</option>)}</select></div>
-              <div><label className="text-xs font-medium text-gray-500">Proprietario</label>
-                <Input value={form.proprietario} onChange={e => setForm({...form, proprietario: e.target.value})} /></div>
-              <div><label className="text-xs font-medium text-gray-500">Telefono Referente</label>
-                <Input value={form.telefono_referente} onChange={e => setForm({...form, telefono_referente: e.target.value})} /></div>
-              <div><label className="text-xs font-medium text-gray-500">Email Referente</label>
-                <Input value={form.email_referente} onChange={e => setForm({...form, email_referente: e.target.value})} /></div>
+              <div><label className="text-xs font-medium text-gray-500">Proprietario *</label>
+                <Input value={form.proprietario} onChange={e => { setForm({...form, proprietario: e.target.value}); setFormErrors(p => ({...p, proprietario: ""})); }} className={formErrors.proprietario ? "border-red-400 focus:ring-red-500" : ""} />
+                {formErrors.proprietario && <p className="text-[11px] text-red-500 mt-0.5">{formErrors.proprietario}</p>}</div>
+              <div><label className="text-xs font-medium text-gray-500">Telefono Referente *</label>
+                <Input value={form.telefono_referente} onChange={e => { setForm({...form, telefono_referente: e.target.value}); setFormErrors(p => ({...p, telefono_referente: ""})); }} className={formErrors.telefono_referente ? "border-red-400 focus:ring-red-500" : ""} />
+                {formErrors.telefono_referente && <p className="text-[11px] text-red-500 mt-0.5">{formErrors.telefono_referente}</p>}</div>
+              <div><label className="text-xs font-medium text-gray-500">Email Referente *</label>
+                <Input value={form.email_referente} onChange={e => { setForm({...form, email_referente: e.target.value}); setFormErrors(p => ({...p, email_referente: ""})); }} className={formErrors.email_referente ? "border-red-400 focus:ring-red-500" : ""} />
+                {formErrors.email_referente && <p className="text-[11px] text-red-500 mt-0.5">{formErrors.email_referente}</p>}</div>
               <div><label className="text-xs font-medium text-gray-500">Data Primo Contatto</label>
                 <Input type="date" value={form.data_primo_contatto} onChange={e => setForm({...form, data_primo_contatto: e.target.value})} /></div>
               <div><label className="text-xs font-medium text-gray-500">Disponibile da</label>

@@ -128,7 +128,11 @@ export default function AziendePage() {
     const errors: Record<string, string> = {};
     if (!form.id_azienda.trim()) errors.id_azienda = "L'ID azienda è obbligatorio";
     if (!form.nome_azienda.trim()) errors.nome_azienda = "Il nome azienda è obbligatorio";
+    if (!form.indirizzo.trim()) errors.indirizzo = "L'indirizzo è obbligatorio";
     if (!form.comune.trim()) errors.comune = "Il comune è obbligatorio";
+    if (!form.referente.trim()) errors.referente = "Il referente è obbligatorio";
+    if (!form.telefono.trim()) errors.telefono = "Il telefono è obbligatorio";
+    if (!form.email.trim()) errors.email = "L'email è obbligatoria";
     setFormErrors(errors);
     if (Object.keys(errors).length > 0) { toast.error("Compila tutti i campi obbligatori"); return; }
     setSaving(true);
@@ -237,17 +241,21 @@ export default function AziendePage() {
                 <select className="h-10 w-full px-3 rounded-md border border-gray-300 text-sm bg-white"
                   value={form.orario} onChange={e => setForm({...form, orario: e.target.value})}>
                   {ORARI.map(o => <option key={o} value={o}>{o}</option>)}</select></div>
-              <div><label className="text-xs font-medium text-gray-500">Indirizzo</label>
-                <Input value={form.indirizzo} onChange={e => setForm({...form, indirizzo: e.target.value})} /></div>
+              <div><label className="text-xs font-medium text-gray-500">Indirizzo *</label>
+                <Input value={form.indirizzo} onChange={e => { setForm({...form, indirizzo: e.target.value}); setFormErrors(p => ({...p, indirizzo: ""})); }} className={formErrors.indirizzo ? "border-red-400 focus:ring-red-500" : ""} />
+                {formErrors.indirizzo && <p className="text-[11px] text-red-500 mt-0.5">{formErrors.indirizzo}</p>}</div>
               <div><label className="text-xs font-medium text-gray-500">Comune *</label>
                 <ComuneAutocomplete value={form.comune} onChange={v => { setForm({...form, comune: v}); setFormErrors(p => ({...p, comune: ""})); }} />
                 {formErrors.comune && <p className="text-[11px] text-red-500 mt-0.5">{formErrors.comune}</p>}</div>
-              <div><label className="text-xs font-medium text-gray-500">Referente</label>
-                <Input value={form.referente} onChange={e => setForm({...form, referente: e.target.value})} /></div>
-              <div><label className="text-xs font-medium text-gray-500">Telefono</label>
-                <Input value={form.telefono} onChange={e => setForm({...form, telefono: e.target.value})} /></div>
-              <div><label className="text-xs font-medium text-gray-500">Email</label>
-                <Input value={form.email} onChange={e => setForm({...form, email: e.target.value})} /></div>
+              <div><label className="text-xs font-medium text-gray-500">Referente *</label>
+                <Input value={form.referente} onChange={e => { setForm({...form, referente: e.target.value}); setFormErrors(p => ({...p, referente: ""})); }} className={formErrors.referente ? "border-red-400 focus:ring-red-500" : ""} />
+                {formErrors.referente && <p className="text-[11px] text-red-500 mt-0.5">{formErrors.referente}</p>}</div>
+              <div><label className="text-xs font-medium text-gray-500">Telefono *</label>
+                <Input value={form.telefono} onChange={e => { setForm({...form, telefono: e.target.value}); setFormErrors(p => ({...p, telefono: ""})); }} className={formErrors.telefono ? "border-red-400 focus:ring-red-500" : ""} />
+                {formErrors.telefono && <p className="text-[11px] text-red-500 mt-0.5">{formErrors.telefono}</p>}</div>
+              <div><label className="text-xs font-medium text-gray-500">Email *</label>
+                <Input value={form.email} onChange={e => { setForm({...form, email: e.target.value}); setFormErrors(p => ({...p, email: ""})); }} className={formErrors.email ? "border-red-400 focus:ring-red-500" : ""} />
+                {formErrors.email && <p className="text-[11px] text-red-500 mt-0.5">{formErrors.email}</p>}</div>
               <div><label className="text-xs font-medium text-gray-500">Data Primo Contatto</label>
                 <Input type="date" value={form.data_primo_contatto} onChange={e => setForm({...form, data_primo_contatto: e.target.value})} /></div>
               <div><label className="text-xs font-medium text-gray-500">Esito Contatto</label>

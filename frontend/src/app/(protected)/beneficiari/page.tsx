@@ -80,6 +80,12 @@ export default function BeneficiariPage() {
     if (!form.area_intervento) errors.area_intervento = "Seleziona un'area di intervento";
     if (!form.comune.trim()) errors.comune = "Il comune è obbligatorio";
     if (form.n_componenti_nucleo < 1) errors.n_componenti_nucleo = "Min. 1 componente";
+    if (!form.budget_alloggio && String(form.budget_alloggio) !== "0") errors.budget_alloggio = "Il budget alloggio è obbligatorio";
+    if (!form.nazionalita.trim()) errors.nazionalita = "La nazionalità è obbligatoria";
+    if (!form.livello_italiano.trim()) errors.livello_italiano = "Il livello di italiano è obbligatorio";
+    if (!form.telefono.trim()) errors.telefono = "Il telefono è obbligatorio";
+    if (!form.email.trim()) errors.email = "L'email è obbligatoria";
+    if (!form.competenze.trim()) errors.competenze = "Le competenze sono obbligatorie";
     setFormErrors(errors);
     if (Object.keys(errors).length > 0) { toast.error("Compila tutti i campi obbligatori"); return; }
     setSaving(true);
@@ -187,25 +193,31 @@ export default function BeneficiariPage() {
               <div><label className="text-xs font-medium text-gray-500">Comune *</label>
                 <ComuneAutocomplete value={form.comune} onChange={v => { setForm({...form, comune: v}); setFormErrors(p => ({...p, comune: ""})); }} />
                 {formErrors.comune && <p className="text-[11px] text-red-500 mt-0.5">{formErrors.comune}</p>}</div>
-              <div><label className="text-xs font-medium text-gray-500">Budget Alloggio (€/mese)</label>
+              <div><label className="text-xs font-medium text-gray-500">Budget Alloggio (€/mese) *</label>
                 <Input type="number" min={0} step={50} value={form.budget_alloggio}
-                  onChange={e => setForm({...form, budget_alloggio: e.target.value})} placeholder="es. 400" /></div>
+                  onChange={e => { setForm({...form, budget_alloggio: e.target.value}); setFormErrors(p => ({...p, budget_alloggio: ""})); }} placeholder="es. 400" className={formErrors.budget_alloggio ? "border-red-400 focus:ring-red-500" : ""} />
+                {formErrors.budget_alloggio && <p className="text-[11px] text-red-500 mt-0.5">{formErrors.budget_alloggio}</p>}</div>
               <div><label className="text-xs font-medium text-gray-500">Data Uscita SAI</label>
                 <Input type="date" value={form.data_uscita_sai} onChange={e => setForm({...form, data_uscita_sai: e.target.value})} /></div>
               <div><label className="text-xs font-medium text-gray-500">Stato</label>
                 <select className="h-10 w-full px-3 rounded-md border border-gray-300 text-sm bg-white"
                   value={form.stato} onChange={e => setForm({...form, stato: e.target.value})}>
                   {STATI.map(s => <option key={s} value={s}>{s}</option>)}</select></div>
-              <div><label className="text-xs font-medium text-gray-500">Nazionalità</label>
-                <Input value={form.nazionalita} onChange={e => setForm({...form, nazionalita: e.target.value})} /></div>
-              <div><label className="text-xs font-medium text-gray-500">Livello Italiano</label>
-                <Input value={form.livello_italiano} onChange={e => setForm({...form, livello_italiano: e.target.value})} placeholder="es. A1, A2, B1..." /></div>
-              <div><label className="text-xs font-medium text-gray-500">Telefono</label>
-                <Input value={form.telefono} onChange={e => setForm({...form, telefono: e.target.value})} /></div>
-              <div><label className="text-xs font-medium text-gray-500">Email</label>
-                <Input type="email" value={form.email} onChange={e => setForm({...form, email: e.target.value})} /></div>
-              <div className="sm:col-span-2"><label className="text-xs font-medium text-gray-500">Competenze</label>
-                <Input value={form.competenze} onChange={e => setForm({...form, competenze: e.target.value})} placeholder="es. Ristorazione, cucina, edilizia..." /></div>
+              <div><label className="text-xs font-medium text-gray-500">Nazionalità *</label>
+                <Input value={form.nazionalita} onChange={e => { setForm({...form, nazionalita: e.target.value}); setFormErrors(p => ({...p, nazionalita: ""})); }} className={formErrors.nazionalita ? "border-red-400 focus:ring-red-500" : ""} />
+                {formErrors.nazionalita && <p className="text-[11px] text-red-500 mt-0.5">{formErrors.nazionalita}</p>}</div>
+              <div><label className="text-xs font-medium text-gray-500">Livello Italiano *</label>
+                <Input value={form.livello_italiano} onChange={e => { setForm({...form, livello_italiano: e.target.value}); setFormErrors(p => ({...p, livello_italiano: ""})); }} placeholder="es. A1, A2, B1..." className={formErrors.livello_italiano ? "border-red-400 focus:ring-red-500" : ""} />
+                {formErrors.livello_italiano && <p className="text-[11px] text-red-500 mt-0.5">{formErrors.livello_italiano}</p>}</div>
+              <div><label className="text-xs font-medium text-gray-500">Telefono *</label>
+                <Input value={form.telefono} onChange={e => { setForm({...form, telefono: e.target.value}); setFormErrors(p => ({...p, telefono: ""})); }} className={formErrors.telefono ? "border-red-400 focus:ring-red-500" : ""} />
+                {formErrors.telefono && <p className="text-[11px] text-red-500 mt-0.5">{formErrors.telefono}</p>}</div>
+              <div><label className="text-xs font-medium text-gray-500">Email *</label>
+                <Input type="email" value={form.email} onChange={e => { setForm({...form, email: e.target.value}); setFormErrors(p => ({...p, email: ""})); }} className={formErrors.email ? "border-red-400 focus:ring-red-500" : ""} />
+                {formErrors.email && <p className="text-[11px] text-red-500 mt-0.5">{formErrors.email}</p>}</div>
+              <div className="sm:col-span-2"><label className="text-xs font-medium text-gray-500">Competenze *</label>
+                <Input value={form.competenze} onChange={e => { setForm({...form, competenze: e.target.value}); setFormErrors(p => ({...p, competenze: ""})); }} placeholder="es. Ristorazione, cucina, edilizia..." className={formErrors.competenze ? "border-red-400 focus:ring-red-500" : ""} />
+                {formErrors.competenze && <p className="text-[11px] text-red-500 mt-0.5">{formErrors.competenze}</p>}</div>
               <div className="sm:col-span-2 lg:col-span-3"><label className="text-xs font-medium text-gray-500">Note</label>
                 <textarea className="w-full h-20 px-3 py-2 rounded-md border border-gray-300 text-sm resize-none focus:ring-2 focus:ring-green-500 focus:outline-none"
                   value={form.note} onChange={e => setForm({...form, note: e.target.value})} /></div>
