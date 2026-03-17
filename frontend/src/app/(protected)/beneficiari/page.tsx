@@ -37,6 +37,7 @@ export default function BeneficiariPage() {
   const [editId, setEditId] = useState<number | null>(null);
   const [form, setForm] = useState({ ...emptyBen });
   const [saving, setSaving] = useState(false);
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -73,8 +74,14 @@ export default function BeneficiariPage() {
   const handleNew = () => { setEditId(null); setForm({ ...emptyBen }); setShowForm(true); };
 
   const handleSave = async () => {
-    if (!form.cognome || !form.nome) { toast.error("Inserisci cognome e nome per continuare"); return; }
-    if (form.n_componenti_nucleo < 1) { toast.error("Il numero di componenti deve essere almeno 1"); return; }
+    const errors: Record<string, string> = {};
+    if (!form.cognome.trim()) errors.cognome = "Il cognome è obbligatorio";
+    if (!form.nome.trim()) errors.nome = "Il nome è obbligatorio";
+    if (!form.area_intervento) errors.area_intervento = "Seleziona un'area di intervento";
+    if (!form.comune.trim()) errors.comune = "Il comune è obbligatorio";
+    if (form.n_componenti_nucleo < 1) errors.n_componenti_nucleo = "Min. 1 componente";
+    setFormErrors(errors);
+    if (Object.keys(errors).length > 0) { toast.error("Compila tutti i campi obbligatori"); return; }
     setSaving(true);
     try {
       if (editId) {
@@ -156,9 +163,11 @@ export default function BeneficiariPage() {
           <CardContent>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               <div><label className="text-xs font-medium text-gray-500">Cognome *</label>
-                <Input value={form.cognome} onChange={e => setForm({...form, cognome: e.target.value})} /></div>
+                <Input value={form.cognome} onChange={e => { setForm({...form, cognome: e.target.value}); setFormErrors(p => ({...p, cognome: ""})); }} className={formErrors.cognome ? "border-red-400 focus:ring-red-500" : ""} />
+                {formErrors.cognome && <p className="text-[11px] text-red-500 mt-0.5">{formErrors.cognome}</p>}</div>
               <div><label className="text-xs font-medium text-gray-500">Nome *</label>
-                <Input value={form.nome} onChange={e => setForm({...form, nome: e.target.value})} /></div>
+                <Input value={form.nome} onChange={e => { setForm({...form, nome: e.target.value}); setFormErrors(p => ({...p, nome: ""})); }} className={formErrors.nome ? "border-red-400 focus:ring-red-500" : ""} />
+                {formErrors.nome && <p className="text-[11px] text-red-500 mt-0.5">{formErrors.nome}</p>}</div>
               <div><label className="text-xs font-medium text-gray-500">Tipo Permesso</label>
                 <Input value={form.tipo_permesso} onChange={e => setForm({...form, tipo_permesso: e.target.value})} /></div>
               <div><label className="text-xs font-medium text-gray-500">Nucleo/Singolo</label>
@@ -168,14 +177,16 @@ export default function BeneficiariPage() {
               <div><label className="text-xs font-medium text-gray-500">N° Componenti</label>
                 <Input type="number" min={1} value={form.n_componenti_nucleo}
                   onChange={e => setForm({...form, n_componenti_nucleo: parseInt(e.target.value) || 1})} /></div>
-              <div><label className="text-xs font-medium text-gray-500">Area Intervento</label>
-                <select className="h-10 w-full px-3 rounded-md border border-gray-300 text-sm bg-white"
-                  value={form.area_intervento} onChange={e => setForm({...form, area_intervento: e.target.value})}>
-                  <option value="">-</option><option value="LAVORATIVO">LAVORATIVO</option>
+              <div><label className="text-xs font-medium text-gray-500">Area Intervento *</label>
+                <select className={`h-10 w-full px-3 rounded-md border text-sm bg-white ${formErrors.area_intervento ? "border-red-400" : "border-gray-300"}`}
+                  value={form.area_intervento} onChange={e => { setForm({...form, area_intervento: e.target.value}); setFormErrors(p => ({...p, area_intervento: ""})); }}>
+                  <option value="">- Seleziona -</option><option value="LAVORATIVO">LAVORATIVO</option>
                   <option value="ALLOGGIO">ALLOGGIO</option><option value="LAVORATIVO-ALLOGGIO">LAVORATIVO-ALLOGGIO</option>
-                </select></div>
-              <div><label className="text-xs font-medium text-gray-500">Comune</label>
-                <ComuneAutocomplete value={form.comune} onChange={v => setForm({...form, comune: v})} /></div>
+                </select>
+                {formErrors.area_intervento && <p className="text-[11px] text-red-500 mt-0.5">{formErrors.area_intervento}</p>}</div>
+              <div><label className="text-xs font-medium text-gray-500">Comune *</label>
+                <ComuneAutocomplete value={form.comune} onChange={v => { setForm({...form, comune: v}); setFormErrors(p => ({...p, comune: ""})); }} />
+                {formErrors.comune && <p className="text-[11px] text-red-500 mt-0.5">{formErrors.comune}</p>}</div>
               <div><label className="text-xs font-medium text-gray-500">Budget Alloggio (€/mese)</label>
                 <Input type="number" min={0} step={50} value={form.budget_alloggio}
                   onChange={e => setForm({...form, budget_alloggio: e.target.value})} placeholder="es. 400" /></div>

@@ -43,6 +43,7 @@ export default function AziendePage() {
   const [editId, setEditId] = useState<number | null>(null);
   const [form, setForm] = useState({ ...emptyAzienda });
   const [saving, setSaving] = useState(false);
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [viewTab, setViewTab] = useState<"lista" | "mappa">("lista");
   const [mapMarkers, setMapMarkers] = useState<any[]>([]);
   const [loadingMap, setLoadingMap] = useState(false);
@@ -124,7 +125,12 @@ export default function AziendePage() {
   };
 
   const handleSave = async () => {
-    if (!form.id_azienda || !form.nome_azienda) { toast.error("Inserisci ID Azienda e Nome per continuare"); return; }
+    const errors: Record<string, string> = {};
+    if (!form.id_azienda.trim()) errors.id_azienda = "L'ID azienda è obbligatorio";
+    if (!form.nome_azienda.trim()) errors.nome_azienda = "Il nome azienda è obbligatorio";
+    if (!form.comune.trim()) errors.comune = "Il comune è obbligatorio";
+    setFormErrors(errors);
+    if (Object.keys(errors).length > 0) { toast.error("Compila tutti i campi obbligatori"); return; }
     setSaving(true);
     try {
       if (editId) {
@@ -210,9 +216,11 @@ export default function AziendePage() {
           <CardContent>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               <div><label className="text-xs font-medium text-gray-500">ID Azienda *</label>
-                <Input value={form.id_azienda} onChange={e => setForm({...form, id_azienda: e.target.value})} placeholder="es. AZ001" disabled={!!editId} /></div>
+                <Input value={form.id_azienda} onChange={e => { setForm({...form, id_azienda: e.target.value}); setFormErrors(p => ({...p, id_azienda: ""})); }} placeholder="es. AZ001" disabled={!!editId} className={formErrors.id_azienda ? "border-red-400 focus:ring-red-500" : ""} />
+                {formErrors.id_azienda && <p className="text-[11px] text-red-500 mt-0.5">{formErrors.id_azienda}</p>}</div>
               <div><label className="text-xs font-medium text-gray-500">Nome Azienda *</label>
-                <Input value={form.nome_azienda} onChange={e => setForm({...form, nome_azienda: e.target.value})} /></div>
+                <Input value={form.nome_azienda} onChange={e => { setForm({...form, nome_azienda: e.target.value}); setFormErrors(p => ({...p, nome_azienda: ""})); }} className={formErrors.nome_azienda ? "border-red-400 focus:ring-red-500" : ""} />
+                {formErrors.nome_azienda && <p className="text-[11px] text-red-500 mt-0.5">{formErrors.nome_azienda}</p>}</div>
               <div><label className="text-xs font-medium text-gray-500">Settore</label>
                 <select className="h-10 w-full px-3 rounded-md border border-gray-300 text-sm bg-white"
                   value={form.settore} onChange={e => setForm({...form, settore: e.target.value})}>
@@ -231,8 +239,9 @@ export default function AziendePage() {
                   {ORARI.map(o => <option key={o} value={o}>{o}</option>)}</select></div>
               <div><label className="text-xs font-medium text-gray-500">Indirizzo</label>
                 <Input value={form.indirizzo} onChange={e => setForm({...form, indirizzo: e.target.value})} /></div>
-              <div><label className="text-xs font-medium text-gray-500">Comune</label>
-                <ComuneAutocomplete value={form.comune} onChange={v => setForm({...form, comune: v})} /></div>
+              <div><label className="text-xs font-medium text-gray-500">Comune *</label>
+                <ComuneAutocomplete value={form.comune} onChange={v => { setForm({...form, comune: v}); setFormErrors(p => ({...p, comune: ""})); }} />
+                {formErrors.comune && <p className="text-[11px] text-red-500 mt-0.5">{formErrors.comune}</p>}</div>
               <div><label className="text-xs font-medium text-gray-500">Referente</label>
                 <Input value={form.referente} onChange={e => setForm({...form, referente: e.target.value})} /></div>
               <div><label className="text-xs font-medium text-gray-500">Telefono</label>

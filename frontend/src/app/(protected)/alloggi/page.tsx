@@ -43,6 +43,7 @@ export default function AlloggiPage() {
   const [editId, setEditId] = useState<number | null>(null);
   const [form, setForm] = useState({ ...emptyAlloggio });
   const [saving, setSaving] = useState(false);
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [mapMarkers, setMapMarkers] = useState<any[]>([]);
   const [loadingMap, setLoadingMap] = useState(false);
   const [geocodingMsg, setGeocodingMsg] = useState("");
@@ -232,7 +233,13 @@ export default function AlloggiPage() {
   };
 
   const handleSave = async () => {
-    if (!form.id_alloggio) { toast.error("Inserisci l'ID Alloggio per continuare"); return; }
+    const errors: Record<string, string> = {};
+    if (!form.id_alloggio.trim()) errors.id_alloggio = "L'ID alloggio è obbligatorio";
+    if (!form.comune.trim()) errors.comune = "Il comune è obbligatorio";
+    if (!form.indirizzo.trim()) errors.indirizzo = "L'indirizzo è obbligatorio";
+    if (!form.tipologia) errors.tipologia = "Seleziona una tipologia";
+    setFormErrors(errors);
+    if (Object.keys(errors).length > 0) { toast.error("Compila tutti i campi obbligatori"); return; }
     setSaving(true);
     try {
       const payload = { ...form, canone_mensile: form.canone_mensile ? parseFloat(String(form.canone_mensile)) : null };
@@ -322,15 +329,19 @@ export default function AlloggiPage() {
           <CardContent>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               <div><label className="text-xs font-medium text-gray-500">ID Alloggio *</label>
-                <Input value={form.id_alloggio} onChange={e => setForm({...form, id_alloggio: e.target.value})} placeholder="es. ALG01" disabled={!!editId} /></div>
-              <div><label className="text-xs font-medium text-gray-500">Comune</label>
-                <ComuneAutocomplete value={form.comune} onChange={v => setForm({...form, comune: v})} /></div>
-              <div><label className="text-xs font-medium text-gray-500">Indirizzo</label>
-                <Input value={form.indirizzo} onChange={e => setForm({...form, indirizzo: e.target.value})} /></div>
-              <div><label className="text-xs font-medium text-gray-500">Tipologia</label>
-                <select className="h-10 w-full px-3 rounded-md border border-gray-300 text-sm bg-white"
-                  value={form.tipologia} onChange={e => setForm({...form, tipologia: e.target.value})}>
-                  {TIPOLOGIE.map(t => <option key={t} value={t}>{t}</option>)}</select></div>
+                <Input value={form.id_alloggio} onChange={e => { setForm({...form, id_alloggio: e.target.value}); setFormErrors(p => ({...p, id_alloggio: ""})); }} placeholder="es. ALG01" disabled={!!editId} className={formErrors.id_alloggio ? "border-red-400 focus:ring-red-500" : ""} />
+                {formErrors.id_alloggio && <p className="text-[11px] text-red-500 mt-0.5">{formErrors.id_alloggio}</p>}</div>
+              <div><label className="text-xs font-medium text-gray-500">Comune *</label>
+                <ComuneAutocomplete value={form.comune} onChange={v => { setForm({...form, comune: v}); setFormErrors(p => ({...p, comune: ""})); }} />
+                {formErrors.comune && <p className="text-[11px] text-red-500 mt-0.5">{formErrors.comune}</p>}</div>
+              <div><label className="text-xs font-medium text-gray-500">Indirizzo *</label>
+                <Input value={form.indirizzo} onChange={e => { setForm({...form, indirizzo: e.target.value}); setFormErrors(p => ({...p, indirizzo: ""})); }} className={formErrors.indirizzo ? "border-red-400 focus:ring-red-500" : ""} />
+                {formErrors.indirizzo && <p className="text-[11px] text-red-500 mt-0.5">{formErrors.indirizzo}</p>}</div>
+              <div><label className="text-xs font-medium text-gray-500">Tipologia *</label>
+                <select className={`h-10 w-full px-3 rounded-md border text-sm bg-white ${formErrors.tipologia ? "border-red-400" : "border-gray-300"}`}
+                  value={form.tipologia} onChange={e => { setForm({...form, tipologia: e.target.value}); setFormErrors(p => ({...p, tipologia: ""})); }}>
+                  {TIPOLOGIE.map(t => <option key={t} value={t}>{t}</option>)}</select>
+                {formErrors.tipologia && <p className="text-[11px] text-red-500 mt-0.5">{formErrors.tipologia}</p>}</div>
               <div><label className="text-xs font-medium text-gray-500">N° Vani</label>
                 <Input type="number" min={1} value={form.n_vani} onChange={e => setForm({...form, n_vani: parseInt(e.target.value) || 1})} /></div>
               <div><label className="text-xs font-medium text-gray-500">Piano</label>
