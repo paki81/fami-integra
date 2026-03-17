@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const pool = require('../config/database');
+const pool = require('../models/db');
 const { authenticate, authorize } = require('../middleware/auth');
 const { logAudit } = require('../utils/auditLog');
 const { execSync } = require('child_process');
