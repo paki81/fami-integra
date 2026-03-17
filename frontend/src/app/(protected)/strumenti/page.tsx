@@ -93,7 +93,7 @@ export default function StrumentiPage() {
   };
 
   const handleDownload = (filename: string) => {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("fami_token");
     const url = `${api.defaults.baseURL}/strumenti/backup/download/${filename}`;
     const a = document.createElement("a");
     a.href = url;
