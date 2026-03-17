@@ -77,7 +77,13 @@ router.post('/', authenticate, authorize('superadmin', 'admin', 'tutor', 'counse
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
     const fields = ['cognome', 'nome', 'tipo_permesso', 'nucleo_singolo', 'n_componenti_nucleo', 'area_intervento', 'comune', 'latitudine', 'longitudine', 'budget_alloggio', 'note', 'data_uscita_sai', 'stato', 'competenze', 'nazionalita', 'livello_italiano', 'telefono', 'email', 'assegnato_a'];
-    const values = fields.map(f => req.body[f] !== undefined ? req.body[f] : null);
+    const numFields = ['n_componenti_nucleo', 'budget_alloggio', 'latitudine', 'longitudine', 'assegnato_a'];
+    const dateFields = ['data_uscita_sai'];
+    const values = fields.map(f => {
+      let v = req.body[f] !== undefined ? req.body[f] : null;
+      if (v === '' && (numFields.includes(f) || dateFields.includes(f))) v = null;
+      return v;
+    });
     const placeholders = fields.map(() => '?').join(', ');
 
     const [result] = await pool.query(
