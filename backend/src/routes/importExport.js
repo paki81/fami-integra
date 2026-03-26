@@ -8,6 +8,16 @@ const { logAudit } = require('../utils/auditLog');
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
 
+function normalizzaArea(val) {
+  if (!val) return null;
+  const v = val.toString().toUpperCase().replace(/[–—]/g, '-').replace(/\s+/g, '').trim();
+  if (v.includes('ALLOGGIO') && v.includes('LAVORATIVO')) return 'LAVORATIVO-ALLOGGIO';
+  if (v.includes('ALLOGGIO')) return 'ALLOGGIO';
+  if (v.includes('LAVORATIVO')) return 'LAVORATIVO';
+  if (v.includes('AFFIDAMENTO')) return 'AFFIDAMENTO';
+  return val.trim();
+}
+
 // POST /api/import/beneficiari
 router.post('/beneficiari', authenticate, authorize('superadmin', 'admin'), upload.single('file'), async (req, res) => {
   try {
@@ -36,7 +46,7 @@ router.post('/beneficiari', authenticate, authorize('superadmin', 'admin'), uplo
             row['Nucleo/Singolo'] || row['NUCLEO/SINGOLO'] || 'S',
             parseInt(row['N° Componenti'] || row['N° Componenti Nucleo'] || row['N COMPONENTI NUCLEO'] || row['N COMPONENTI'] || 1) || 1,
             row['Livello Italiano'] || row['LIVELLO ITALIANO'] || null,
-            row['Area Intervento'] || row['AREA INTERVENTO'] || null,
+            normalizzaArea(row['Area Intervento'] || row['AREA INTERVENTO'] || null),
             row['Comune'] || row['COMUNE'] || null,
             row['Tipo Patente'] || row['TIPO PATENTE'] || null,
             (row['Automunito/a'] || row['AUTOMUNITO/A'] || row['Automunita'] || '').toString().trim().toUpperCase() === 'SI' || (row['Automunito/a'] || row['AUTOMUNITO/A'] || row['Automunita'] || '').toString().trim().toUpperCase() === 'SÌ' ? 'SI' : ((row['Automunito/a'] || row['AUTOMUNITO/A'] || '') ? (row['Automunito/a'] || row['AUTOMUNITO/A'] || null) : null),

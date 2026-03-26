@@ -438,8 +438,9 @@ export default function MatchingPage() {
 
                 {/* Sub-tab Alloggi / Aziende */}
                 {(() => {
-                  const hasAlloggi = selectedBen.area_intervento?.includes("ALLOGGIO") || selectedBen.area_intervento?.includes("LAVORATIVO-ALLOGGIO");
-                  const hasAziende = selectedBen.area_intervento?.includes("LAVORATIVO");
+                  const areaUp = (selectedBen.area_intervento || "").toUpperCase().replace(/[–—]/g, "-");
+                  const hasAlloggi = areaUp.includes("ALLOGGIO");
+                  const hasAziende = areaUp.includes("LAVORATIVO");
                   const showBoth = hasAlloggi && hasAziende;
                   const activeSubTab = showBoth ? sugTab : (hasAlloggi ? "alloggi" : "aziende");
                   return (

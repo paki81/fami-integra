@@ -153,7 +153,8 @@ async function scoreAzienda(beneficiario, azienda) {
   const maxScore = 100;
 
   // Area intervento deve contenere LAVORATIVO
-  if (!beneficiario.area_intervento || !beneficiario.area_intervento.toUpperCase().includes('LAVORATIVO')) {
+  const areaUp = (beneficiario.area_intervento || '').toUpperCase().replace(/[–—]/g, '-');
+  if (!areaUp.includes('LAVORATIVO')) {
     return { score: 0, motivo: 'Beneficiario non cerca lavoro', compatibile: false };
   }
 
