@@ -172,6 +172,7 @@ export default function BeneficiariPage() {
               <option value="LAVORATIVO">LAVORATIVO</option>
               <option value="ALLOGGIO">ALLOGGIO</option>
               <option value="LAVORATIVO-ALLOGGIO">LAVORATIVO-ALLOGGIO</option>
+              <option value="AFFIDAMENTO">AFFIDAMENTO</option>
             </select>
             <select className="h-10 px-3 rounded-md border border-gray-300 text-sm bg-white"
               value={filtroProgetto} onChange={e => { setFiltroProgetto(e.target.value); setPage(1); }}>
@@ -227,7 +228,7 @@ export default function BeneficiariPage() {
                 <select className={`h-10 w-full px-3 rounded-md border text-sm bg-white ${formErrors.area_intervento ? "border-red-400" : "border-gray-300"}`}
                   value={form.area_intervento} onChange={e => { setForm({...form, area_intervento: e.target.value}); setFormErrors(p => ({...p, area_intervento: ""})); }}>
                   <option value="">- Seleziona -</option><option value="LAVORATIVO">LAVORATIVO</option>
-                  <option value="ALLOGGIO">ALLOGGIO</option><option value="LAVORATIVO-ALLOGGIO">LAVORATIVO-ALLOGGIO</option>
+                  <option value="ALLOGGIO">ALLOGGIO</option><option value="LAVORATIVO-ALLOGGIO">LAVORATIVO-ALLOGGIO</option><option value="AFFIDAMENTO">AFFIDAMENTO</option>
                 </select>
                 {formErrors.area_intervento && <p className="text-[11px] text-red-500 mt-0.5">{formErrors.area_intervento}</p>}</div>
               <div><label className="text-xs font-medium text-gray-500">Comune *</label>
