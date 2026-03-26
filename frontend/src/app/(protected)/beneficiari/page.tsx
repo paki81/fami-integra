@@ -17,8 +17,8 @@ const STATI = ["In Corso", "Abbinato Alloggio", "Abbinato Lavoro", "Abbinato Ent
 const NUCLEI = ["S", "N", "NUCLEO", "SINGOLO"];
 
 const emptyBen = {
-  cognome: "", nome: "", tipo_permesso: "", progetto_provenienza: "", nucleo_singolo: "S", n_componenti_nucleo: 1,
-  area_intervento: "", comune: "", tipo_progetto: "", budget_alloggio: "", note: "", data_uscita_sai: "", stato: "In Corso",
+  codice_id: "", cognome: "", nome: "", tipo_permesso: "", progetto_provenienza: "", nucleo_singolo: "S", n_componenti_nucleo: 1,
+  area_intervento: "", comune: "", tipo_patente: "", automunito: "", budget_alloggio: "", note: "", data_uscita_sai: "", stato: "In Corso",
   competenze: "", nazionalita: "", livello_italiano: "", telefono: "", email: ""
 };
 
@@ -60,11 +60,12 @@ export default function BeneficiariPage() {
   const handleEdit = (ben: any) => {
     setEditId(ben.id);
     setForm({
+      codice_id: ben.codice_id || "",
       cognome: ben.cognome || "", nome: ben.nome || "", tipo_permesso: ben.tipo_permesso || "",
       progetto_provenienza: ben.progetto_provenienza || "",
       nucleo_singolo: ben.nucleo_singolo || "S", n_componenti_nucleo: ben.n_componenti_nucleo || 1,
       area_intervento: ben.area_intervento || "", comune: ben.comune || "",
-      tipo_progetto: ben.tipo_progetto || "",
+      tipo_patente: ben.tipo_patente || "", automunito: ben.automunito || "",
       budget_alloggio: ben.budget_alloggio || "", note: ben.note || "",
       data_uscita_sai: ben.data_uscita_sai ? ben.data_uscita_sai.split("T")[0] : "",
       stato: ben.stato || "In Corso", competenze: ben.competenze || "", nazionalita: ben.nazionalita || "",
@@ -170,6 +171,8 @@ export default function BeneficiariPage() {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div><label className="text-xs font-medium text-gray-500">Codice ID</label>
+                <Input value={form.codice_id} onChange={e => setForm({...form, codice_id: e.target.value})} placeholder="es. FAMI-BEN-001" /></div>
               <div><label className="text-xs font-medium text-gray-500">Cognome *</label>
                 <Input value={form.cognome} onChange={e => { setForm({...form, cognome: e.target.value}); setFormErrors(p => ({...p, cognome: ""})); }} className={formErrors.cognome ? "border-red-400 focus:ring-red-500" : ""} />
                 {formErrors.cognome && <p className="text-[11px] text-red-500 mt-0.5">{formErrors.cognome}</p>}</div>
@@ -197,8 +200,13 @@ export default function BeneficiariPage() {
               <div><label className="text-xs font-medium text-gray-500">Comune *</label>
                 <ComuneAutocomplete value={form.comune} onChange={v => { setForm({...form, comune: v}); setFormErrors(p => ({...p, comune: ""})); }} />
                 {formErrors.comune && <p className="text-[11px] text-red-500 mt-0.5">{formErrors.comune}</p>}</div>
-              <div><label className="text-xs font-medium text-gray-500">Tipo Progetto</label>
-                <Input value={form.tipo_progetto} onChange={e => setForm({...form, tipo_progetto: e.target.value})} /></div>
+              <div><label className="text-xs font-medium text-gray-500">Tipo Patente</label>
+                <Input value={form.tipo_patente} onChange={e => setForm({...form, tipo_patente: e.target.value})} placeholder="es. B" /></div>
+              <div><label className="text-xs font-medium text-gray-500">Automunito/a</label>
+                <select className="h-10 w-full px-3 rounded-md border border-gray-300 text-sm bg-white"
+                  value={form.automunito} onChange={e => setForm({...form, automunito: e.target.value})}>
+                  <option value="">- Seleziona -</option><option value="SI">Sì</option><option value="NO">No</option>
+                </select></div>
               <div><label className="text-xs font-medium text-gray-500">Budget Alloggio (€/mese) *</label>
                 <Input type="number" min={0} step={50} value={form.budget_alloggio}
                   onChange={e => { setForm({...form, budget_alloggio: e.target.value}); setFormErrors(p => ({...p, budget_alloggio: ""})); }} placeholder="es. 400" className={formErrors.budget_alloggio ? "border-red-400 focus:ring-red-500" : ""} />

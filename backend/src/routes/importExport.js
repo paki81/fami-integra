@@ -23,11 +23,14 @@ router.post('/beneficiari', authenticate, authorize('superadmin', 'admin'), uplo
         const nome = row['Nome'] || row['NOME'] || '';
         if (!cognome && !nome) continue;
 
+        const codiceId = row['Codice ID'] || row['CODICE ID'] || null;
+
         await pool.query(
-          `INSERT INTO beneficiari (cognome, nome, tipo_permesso, progetto_provenienza, nucleo_singolo, n_componenti_nucleo, livello_italiano, area_intervento, comune, tipo_progetto, note)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          `INSERT INTO beneficiari (codice_id, cognome, nome, tipo_permesso, progetto_provenienza, nucleo_singolo, n_componenti_nucleo, livello_italiano, area_intervento, comune, tipo_patente, automunito, note)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+           ON DUPLICATE KEY UPDATE cognome=VALUES(cognome), nome=VALUES(nome), tipo_permesso=VALUES(tipo_permesso), progetto_provenienza=VALUES(progetto_provenienza), nucleo_singolo=VALUES(nucleo_singolo), n_componenti_nucleo=VALUES(n_componenti_nucleo), livello_italiano=VALUES(livello_italiano), area_intervento=VALUES(area_intervento), comune=VALUES(comune), tipo_patente=VALUES(tipo_patente), automunito=VALUES(automunito), note=VALUES(note)`,
           [
-            cognome, nome,
+            codiceId, cognome, nome,
             row['Tipo Permesso'] || row['TIPO PERMESSO'] || null,
             row['Progetto Provenienza'] || row['PROGETTO PROVENIENZA'] || null,
             row['Nucleo/Singolo'] || row['NUCLEO/SINGOLO'] || 'S',
@@ -35,7 +38,8 @@ router.post('/beneficiari', authenticate, authorize('superadmin', 'admin'), uplo
             row['Livello Italiano'] || row['LIVELLO ITALIANO'] || null,
             row['Area Intervento'] || row['AREA INTERVENTO'] || null,
             row['Comune'] || row['COMUNE'] || null,
-            row['Tipo Progetto'] || row['TIPO PROGETTO'] || null,
+            row['Tipo Patente'] || row['TIPO PATENTE'] || null,
+            (row['Automunito/a'] || row['AUTOMUNITO/A'] || row['Automunita'] || '').toString().trim().toUpperCase() === 'SI' || (row['Automunito/a'] || row['AUTOMUNITO/A'] || row['Automunita'] || '').toString().trim().toUpperCase() === 'SÌ' ? 'SI' : ((row['Automunito/a'] || row['AUTOMUNITO/A'] || '') ? (row['Automunito/a'] || row['AUTOMUNITO/A'] || null) : null),
             row['Note'] || row['NOTE'] || null
           ]
         );
