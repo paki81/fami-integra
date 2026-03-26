@@ -14,10 +14,16 @@ import RegistroNote from "@/components/RegistroNote";
 import { toast } from "sonner";
 
 const STATI = ["In Corso", "Abbinato Alloggio", "Abbinato Lavoro", "Abbinato Entrambi", "Completato", "Annullato"];
-const NUCLEI = ["S", "N", "NUCLEO", "SINGOLO"];
+const NUCLEI = ["Singolo", "Nucleo"];
+const TIPI_PERMESSO = ["Protezione Internazionale", "Protezione Speciale", "Proseguio Amministrativo", "Richiedente Asilo", "Protezione Temporanea", "P.d.S. – Integrazione", "P.d.S. – Minore Età", "P.d.S. – Affidamento"];
+const PROGETTI = ["SAI Ordinari", "SAI MSNA"];
+const LIVELLI_ITALIANO = ["A1", "A2", "A2 in corso", "B1", "B1 in corso", "A2 – B1 in corso", "B2", "C1"];
+const AREE_INTERVENTO = ["Lavorativo", "Alloggio", "Alloggio – Lavorativo", "Integrazione", "Minore – Età", "Affidamento", "Sociale", "Sanitario", "Legale"];
+const TIPI_PATENTE = ["Nessuna", "AM", "A1", "A2", "A", "B", "BE", "C", "CE", "D", "In corso di conseguimento"];
+const OPZIONI_AUTOMUNITO = ["Si", "No", "Non disponibile al momento"];
 
 const emptyBen = {
-  codice_id: "", cognome: "", nome: "", tipo_permesso: "", progetto_provenienza: "", nucleo_singolo: "S", n_componenti_nucleo: 1,
+  codice_id: "", cognome: "", nome: "", tipo_permesso: "", progetto_provenienza: "", nucleo_singolo: "Singolo", n_componenti_nucleo: 1,
   area_intervento: "", comune: "", tipo_patente: "", automunito: "", budget_alloggio: "", note: "", data_uscita_sai: "", stato: "In Corso",
   competenze: "", nazionalita: "", livello_italiano: "", telefono: "", email: ""
 };
@@ -169,26 +175,22 @@ export default function BeneficiariPage() {
             <select className="h-10 px-3 rounded-md border border-gray-300 text-sm bg-white"
               value={filtroArea} onChange={e => { setFiltroArea(e.target.value); setPage(1); }}>
               <option value="">Tutte le aree</option>
-              <option value="LAVORATIVO">LAVORATIVO</option>
-              <option value="ALLOGGIO">ALLOGGIO</option>
-              <option value="LAVORATIVO-ALLOGGIO">LAVORATIVO-ALLOGGIO</option>
-              <option value="AFFIDAMENTO">AFFIDAMENTO</option>
+              {AREE_INTERVENTO.map(a => <option key={a} value={a}>{a}</option>)}
             </select>
             <select className="h-10 px-3 rounded-md border border-gray-300 text-sm bg-white"
               value={filtroProgetto} onChange={e => { setFiltroProgetto(e.target.value); setPage(1); }}>
               <option value="">Tutti i progetti</option>
-              {Array.from(new Set(data.map(b => b.progetto_provenienza).filter(Boolean))).sort().map(p => <option key={p} value={p}>{p}</option>)}
+              {PROGETTI.map(p => <option key={p} value={p}>{p}</option>)}
             </select>
             <select className="h-10 px-3 rounded-md border border-gray-300 text-sm bg-white"
               value={filtroLivello} onChange={e => { setFiltroLivello(e.target.value); setPage(1); }}>
               <option value="">Tutti i livelli italiano</option>
-              {["A1", "A2", "B1", "B2", "C1", "C2"].map(l => <option key={l} value={l}>{l}</option>)}
+              {LIVELLI_ITALIANO.map(l => <option key={l} value={l}>{l}</option>)}
             </select>
             <select className="h-10 px-3 rounded-md border border-gray-300 text-sm bg-white"
               value={filtroAutomunito} onChange={e => { setFiltroAutomunito(e.target.value); setPage(1); }}>
               <option value="">Automunito: tutti</option>
-              <option value="SI">Sì</option>
-              <option value="NO">No</option>
+              {OPZIONI_AUTOMUNITO.map(o => <option key={o} value={o}>{o}</option>)}
             </select>
           </div>
         </CardContent>
@@ -214,9 +216,17 @@ export default function BeneficiariPage() {
                 <Input value={form.nome} onChange={e => { setForm({...form, nome: e.target.value}); setFormErrors(p => ({...p, nome: ""})); }} className={formErrors.nome ? "border-red-400 focus:ring-red-500" : ""} />
                 {formErrors.nome && <p className="text-[11px] text-red-500 mt-0.5">{formErrors.nome}</p>}</div>
               <div><label className="text-xs font-medium text-gray-500">Tipo Permesso</label>
-                <Input value={form.tipo_permesso} onChange={e => setForm({...form, tipo_permesso: e.target.value})} /></div>
+                <select className="h-10 w-full px-3 rounded-md border border-gray-300 text-sm bg-white"
+                  value={form.tipo_permesso} onChange={e => setForm({...form, tipo_permesso: e.target.value})}>
+                  <option value="">- Seleziona -</option>
+                  {TIPI_PERMESSO.map(t => <option key={t} value={t}>{t}</option>)}
+                </select></div>
               <div><label className="text-xs font-medium text-gray-500">Progetto Provenienza</label>
-                <Input value={form.progetto_provenienza} onChange={e => setForm({...form, progetto_provenienza: e.target.value})} /></div>
+                <select className="h-10 w-full px-3 rounded-md border border-gray-300 text-sm bg-white"
+                  value={form.progetto_provenienza} onChange={e => setForm({...form, progetto_provenienza: e.target.value})}>
+                  <option value="">- Seleziona -</option>
+                  {PROGETTI.map(p => <option key={p} value={p}>{p}</option>)}
+                </select></div>
               <div><label className="text-xs font-medium text-gray-500">Nucleo/Singolo</label>
                 <select className="h-10 w-full px-3 rounded-md border border-gray-300 text-sm bg-white"
                   value={form.nucleo_singolo} onChange={e => setForm({...form, nucleo_singolo: e.target.value})}>
@@ -227,19 +237,24 @@ export default function BeneficiariPage() {
               <div><label className="text-xs font-medium text-gray-500">Area Intervento *</label>
                 <select className={`h-10 w-full px-3 rounded-md border text-sm bg-white ${formErrors.area_intervento ? "border-red-400" : "border-gray-300"}`}
                   value={form.area_intervento} onChange={e => { setForm({...form, area_intervento: e.target.value}); setFormErrors(p => ({...p, area_intervento: ""})); }}>
-                  <option value="">- Seleziona -</option><option value="LAVORATIVO">LAVORATIVO</option>
-                  <option value="ALLOGGIO">ALLOGGIO</option><option value="LAVORATIVO-ALLOGGIO">LAVORATIVO-ALLOGGIO</option><option value="AFFIDAMENTO">AFFIDAMENTO</option>
+                  <option value="">- Seleziona -</option>
+                  {AREE_INTERVENTO.map(a => <option key={a} value={a}>{a}</option>)}
                 </select>
                 {formErrors.area_intervento && <p className="text-[11px] text-red-500 mt-0.5">{formErrors.area_intervento}</p>}</div>
               <div><label className="text-xs font-medium text-gray-500">Comune *</label>
                 <ComuneAutocomplete value={form.comune} onChange={v => { setForm({...form, comune: v}); setFormErrors(p => ({...p, comune: ""})); }} />
                 {formErrors.comune && <p className="text-[11px] text-red-500 mt-0.5">{formErrors.comune}</p>}</div>
               <div><label className="text-xs font-medium text-gray-500">Tipo Patente</label>
-                <Input value={form.tipo_patente} onChange={e => setForm({...form, tipo_patente: e.target.value})} placeholder="es. B" /></div>
+                <select className="h-10 w-full px-3 rounded-md border border-gray-300 text-sm bg-white"
+                  value={form.tipo_patente} onChange={e => setForm({...form, tipo_patente: e.target.value})}>
+                  <option value="">- Seleziona -</option>
+                  {TIPI_PATENTE.map(t => <option key={t} value={t}>{t}</option>)}
+                </select></div>
               <div><label className="text-xs font-medium text-gray-500">Automunito/a</label>
                 <select className="h-10 w-full px-3 rounded-md border border-gray-300 text-sm bg-white"
                   value={form.automunito} onChange={e => setForm({...form, automunito: e.target.value})}>
-                  <option value="">- Seleziona -</option><option value="SI">Sì</option><option value="NO">No</option>
+                  <option value="">- Seleziona -</option>
+                  {OPZIONI_AUTOMUNITO.map(o => <option key={o} value={o}>{o}</option>)}
                 </select></div>
               <div><label className="text-xs font-medium text-gray-500">Budget Alloggio (€/mese) *</label>
                 <Input type="number" min={0} step={50} value={form.budget_alloggio}
@@ -255,7 +270,11 @@ export default function BeneficiariPage() {
                 <Input value={form.nazionalita} onChange={e => { setForm({...form, nazionalita: e.target.value}); setFormErrors(p => ({...p, nazionalita: ""})); }} className={formErrors.nazionalita ? "border-red-400 focus:ring-red-500" : ""} />
                 {formErrors.nazionalita && <p className="text-[11px] text-red-500 mt-0.5">{formErrors.nazionalita}</p>}</div>
               <div><label className="text-xs font-medium text-gray-500">Livello Italiano *</label>
-                <Input value={form.livello_italiano} onChange={e => { setForm({...form, livello_italiano: e.target.value}); setFormErrors(p => ({...p, livello_italiano: ""})); }} placeholder="es. A1, A2, B1..." className={formErrors.livello_italiano ? "border-red-400 focus:ring-red-500" : ""} />
+                <select className={`h-10 w-full px-3 rounded-md border text-sm bg-white ${formErrors.livello_italiano ? "border-red-400" : "border-gray-300"}`}
+                  value={form.livello_italiano} onChange={e => { setForm({...form, livello_italiano: e.target.value}); setFormErrors(p => ({...p, livello_italiano: ""})); }}>
+                  <option value="">- Seleziona -</option>
+                  {LIVELLI_ITALIANO.map(l => <option key={l} value={l}>{l}</option>)}
+                </select>
                 {formErrors.livello_italiano && <p className="text-[11px] text-red-500 mt-0.5">{formErrors.livello_italiano}</p>}</div>
               <div><label className="text-xs font-medium text-gray-500">Telefono *</label>
                 <Input value={form.telefono} onChange={e => { setForm({...form, telefono: e.target.value}); setFormErrors(p => ({...p, telefono: ""})); }} className={formErrors.telefono ? "border-red-400 focus:ring-red-500" : ""} />

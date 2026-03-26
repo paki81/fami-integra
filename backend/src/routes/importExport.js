@@ -11,10 +11,15 @@ const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 
 function normalizzaArea(val) {
   if (!val) return null;
   const v = val.toString().toUpperCase().replace(/[–—]/g, '-').replace(/\s+/g, '').trim();
-  if (v.includes('ALLOGGIO') && v.includes('LAVORATIVO')) return 'LAVORATIVO-ALLOGGIO';
-  if (v.includes('ALLOGGIO')) return 'ALLOGGIO';
-  if (v.includes('LAVORATIVO')) return 'LAVORATIVO';
-  if (v.includes('AFFIDAMENTO')) return 'AFFIDAMENTO';
+  if (v.includes('ALLOGGIO') && v.includes('LAVORATIVO')) return 'Alloggio – Lavorativo';
+  if (v.includes('ALLOGGIO')) return 'Alloggio';
+  if (v.includes('LAVORATIVO')) return 'Lavorativo';
+  if (v.includes('AFFIDAMENTO')) return 'Affidamento';
+  if (v.includes('INTEGRAZIONE')) return 'Integrazione';
+  if (v.includes('SOCIALE')) return 'Sociale';
+  if (v.includes('SANITARIO')) return 'Sanitario';
+  if (v.includes('LEGALE')) return 'Legale';
+  if (v.includes('MINORE')) return 'Minore – Età';
   return val.trim();
 }
 
