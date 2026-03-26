@@ -31,6 +31,10 @@ export default function BeneficiariPage() {
   const [search, setSearch] = useState("");
   const [filtroComune, setFiltroComune] = useState("");
   const [filtroStato, setFiltroStato] = useState("");
+  const [filtroArea, setFiltroArea] = useState("");
+  const [filtroProgetto, setFiltroProgetto] = useState("");
+  const [filtroLivello, setFiltroLivello] = useState("");
+  const [filtroAutomunito, setFiltroAutomunito] = useState("");
   const [comuni, setComuni] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -46,13 +50,17 @@ export default function BeneficiariPage() {
       if (search) params.search = search;
       if (filtroComune) params.comune = filtroComune;
       if (filtroStato) params.stato = filtroStato;
+      if (filtroArea) params.area_intervento = filtroArea;
+      if (filtroProgetto) params.progetto_provenienza = filtroProgetto;
+      if (filtroLivello) params.livello_italiano = filtroLivello;
+      if (filtroAutomunito) params.automunito = filtroAutomunito;
       const res = await beneficiariApi.list(params);
       setData(res.data.data);
       setTotal(res.data.total);
       setPages(res.data.pages);
     } catch (err) { console.error(err); }
     setLoading(false);
-  }, [page, search, filtroComune, filtroStato]);
+  }, [page, search, filtroComune, filtroStato, filtroArea, filtroProgetto, filtroLivello, filtroAutomunito]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
   useEffect(() => { beneficiariApi.comuni().then(r => setComuni(r.data)).catch(() => {}); }, []);
@@ -139,11 +147,11 @@ export default function BeneficiariPage() {
 
       {/* Filtri */}
       <Card>
-        <CardContent className="p-4">
+        <CardContent className="p-4 space-y-3">
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="relative flex-1">
               <Search size={16} className="absolute left-3 top-3 text-gray-400" />
-              <Input placeholder="Cerca per cognome, nome, note..." className="pl-9"
+              <Input placeholder="Cerca per codice, cognome, nome, competenze, nazionalità, note..." className="pl-9"
                 value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} />
             </div>
             <select className="h-10 px-3 rounded-md border border-gray-300 text-sm bg-white"
@@ -155,6 +163,31 @@ export default function BeneficiariPage() {
               value={filtroStato} onChange={e => { setFiltroStato(e.target.value); setPage(1); }}>
               <option value="">Tutti gli stati</option>
               {STATI.map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <select className="h-10 px-3 rounded-md border border-gray-300 text-sm bg-white"
+              value={filtroArea} onChange={e => { setFiltroArea(e.target.value); setPage(1); }}>
+              <option value="">Tutte le aree</option>
+              <option value="LAVORATIVO">LAVORATIVO</option>
+              <option value="ALLOGGIO">ALLOGGIO</option>
+              <option value="LAVORATIVO-ALLOGGIO">LAVORATIVO-ALLOGGIO</option>
+            </select>
+            <select className="h-10 px-3 rounded-md border border-gray-300 text-sm bg-white"
+              value={filtroProgetto} onChange={e => { setFiltroProgetto(e.target.value); setPage(1); }}>
+              <option value="">Tutti i progetti</option>
+              {Array.from(new Set(data.map(b => b.progetto_provenienza).filter(Boolean))).sort().map(p => <option key={p} value={p}>{p}</option>)}
+            </select>
+            <select className="h-10 px-3 rounded-md border border-gray-300 text-sm bg-white"
+              value={filtroLivello} onChange={e => { setFiltroLivello(e.target.value); setPage(1); }}>
+              <option value="">Tutti i livelli italiano</option>
+              {["A1", "A2", "B1", "B2", "C1", "C2"].map(l => <option key={l} value={l}>{l}</option>)}
+            </select>
+            <select className="h-10 px-3 rounded-md border border-gray-300 text-sm bg-white"
+              value={filtroAutomunito} onChange={e => { setFiltroAutomunito(e.target.value); setPage(1); }}>
+              <option value="">Automunito: tutti</option>
+              <option value="SI">Sì</option>
+              <option value="NO">No</option>
             </select>
           </div>
         </CardContent>
@@ -258,32 +291,38 @@ export default function BeneficiariPage() {
             <table className="w-full text-sm">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">ID</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">Cognome Nome</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">Permesso</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">Nucleo</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">Area</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">Comune</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">Uscita SAI</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">Stato</th>
-                  {canEdit && <th className="px-4 py-3 text-right font-medium text-gray-500">Azioni</th>}
+                  <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">Codice</th>
+                  <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">Cognome Nome</th>
+                  <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">Permesso</th>
+                  <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">Progetto</th>
+                  <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">Nucleo</th>
+                  <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">Liv. Italiano</th>
+                  <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">Area</th>
+                  <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">Comune</th>
+                  <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">Patente</th>
+                  <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">Autom.</th>
+                  <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs">Stato</th>
+                  {canEdit && <th className="px-3 py-3 text-right font-medium text-gray-500 text-xs">Azioni</th>}
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {loading ? (
-                  <tr><td colSpan={9} className="px-4 py-8 text-center text-gray-400">Caricamento...</td></tr>
+                  <tr><td colSpan={12} className="px-4 py-8 text-center text-gray-400">Caricamento...</td></tr>
                 ) : data.length === 0 ? (
-                  <tr><td colSpan={9} className="px-4 py-8 text-center text-gray-400">Nessun beneficiario trovato</td></tr>
+                  <tr><td colSpan={12} className="px-4 py-8 text-center text-gray-400">Nessun beneficiario trovato</td></tr>
                 ) : data.map((b) => (
                   <tr key={b.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-4 py-3 text-gray-500">{b.id}</td>
-                    <td className="px-4 py-3 font-medium text-gray-900">{b.cognome} {b.nome}</td>
-                    <td className="px-4 py-3 text-gray-600 text-xs">{b.tipo_permesso || "-"}</td>
-                    <td className="px-4 py-3 text-gray-600">{b.nucleo_singolo} ({b.n_componenti_nucleo})</td>
-                    <td className="px-4 py-3"><Badge variant="secondary" className="text-xs">{b.area_intervento || "-"}</Badge></td>
-                    <td className="px-4 py-3 text-gray-600">{b.comune || "-"}</td>
-                    <td className="px-4 py-3 text-gray-600">{formatDate(b.data_uscita_sai)}</td>
-                    <td className="px-4 py-3"><Badge className={getStatoColor(b.stato)}>{b.stato}</Badge></td>
+                    <td className="px-3 py-3 text-gray-500 text-xs font-mono">{b.codice_id || b.id}</td>
+                    <td className="px-3 py-3 font-medium text-gray-900 whitespace-nowrap">{b.cognome} {b.nome}</td>
+                    <td className="px-3 py-3 text-gray-600 text-xs">{b.tipo_permesso || "-"}</td>
+                    <td className="px-3 py-3 text-gray-600 text-xs">{b.progetto_provenienza || "-"}</td>
+                    <td className="px-3 py-3 text-gray-600 text-xs">{b.nucleo_singolo} ({b.n_componenti_nucleo})</td>
+                    <td className="px-3 py-3 text-gray-600 text-xs">{b.livello_italiano || "-"}</td>
+                    <td className="px-3 py-3"><Badge variant="secondary" className="text-[10px]">{b.area_intervento || "-"}</Badge></td>
+                    <td className="px-3 py-3 text-gray-600 text-xs">{b.comune || "-"}</td>
+                    <td className="px-3 py-3 text-gray-600 text-xs">{b.tipo_patente || "-"}</td>
+                    <td className="px-3 py-3 text-gray-600 text-xs">{b.automunito || "-"}</td>
+                    <td className="px-3 py-3"><Badge className={getStatoColor(b.stato)}>{b.stato}</Badge></td>
                     {canEdit && (
                       <td className="px-4 py-3 text-right">
                         <div className="flex justify-end gap-1">

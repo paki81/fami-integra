@@ -8,8 +8,8 @@ const { logAudit } = require('../utils/auditLog');
 // GET /api/beneficiari
 router.get('/', authenticate, async (req, res) => {
   try {
-    const { comune, stato, area_intervento, search, page = 1, limit = 25, sort = 'id', order = 'DESC' } = req.query;
-    const allowedSort = ['id', 'cognome', 'nome', 'comune', 'data_uscita_sai', 'stato', 'n_componenti_nucleo', 'creato_il'];
+    const { comune, stato, area_intervento, progetto_provenienza, livello_italiano, automunito, search, page = 1, limit = 25, sort = 'id', order = 'DESC' } = req.query;
+    const allowedSort = ['id', 'codice_id', 'cognome', 'nome', 'comune', 'data_uscita_sai', 'stato', 'n_componenti_nucleo', 'livello_italiano', 'progetto_provenienza', 'creato_il'];
     const sortCol = allowedSort.includes(sort) ? sort : 'id';
     const sortOrder = order.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
     const offset = (Math.max(1, parseInt(page)) - 1) * parseInt(limit);
@@ -24,7 +24,10 @@ router.get('/', authenticate, async (req, res) => {
       else if (stati.length > 1) { where.push(`stato IN (${stati.map(() => '?').join(',')})`); params.push(...stati); }
     }
     if (area_intervento) { where.push('area_intervento LIKE ?'); params.push(`%${area_intervento}%`); }
-    if (search) { where.push('(cognome LIKE ? OR nome LIKE ? OR note LIKE ?)'); params.push(`%${search}%`, `%${search}%`, `%${search}%`); }
+    if (progetto_provenienza) { where.push('progetto_provenienza = ?'); params.push(progetto_provenienza); }
+    if (livello_italiano) { where.push('livello_italiano = ?'); params.push(livello_italiano); }
+    if (automunito) { where.push('automunito = ?'); params.push(automunito); }
+    if (search) { where.push('(codice_id LIKE ? OR cognome LIKE ? OR nome LIKE ? OR progetto_provenienza LIKE ? OR tipo_patente LIKE ? OR competenze LIKE ? OR nazionalita LIKE ? OR note LIKE ?)'); params.push(`%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`); }
 
     if (req.user.ruolo === 'tutor' || req.user.ruolo === 'counselor') {
       where.push('(assegnato_a = ? OR assegnato_a IS NULL)');
