@@ -24,15 +24,18 @@ router.post('/beneficiari', authenticate, authorize('superadmin', 'admin'), uplo
         if (!cognome && !nome) continue;
 
         await pool.query(
-          `INSERT INTO beneficiari (cognome, nome, tipo_permesso, nucleo_singolo, n_componenti_nucleo, area_intervento, comune, note)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+          `INSERT INTO beneficiari (cognome, nome, tipo_permesso, progetto_provenienza, nucleo_singolo, n_componenti_nucleo, livello_italiano, area_intervento, comune, tipo_progetto, note)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [
             cognome, nome,
             row['Tipo Permesso'] || row['TIPO PERMESSO'] || null,
+            row['Progetto Provenienza'] || row['PROGETTO PROVENIENZA'] || null,
             row['Nucleo/Singolo'] || row['NUCLEO/SINGOLO'] || 'S',
-            parseInt(row['N° Componenti Nucleo'] || row['N COMPONENTI NUCLEO'] || 1) || 1,
+            parseInt(row['N° Componenti'] || row['N° Componenti Nucleo'] || row['N COMPONENTI NUCLEO'] || row['N COMPONENTI'] || 1) || 1,
+            row['Livello Italiano'] || row['LIVELLO ITALIANO'] || null,
             row['Area Intervento'] || row['AREA INTERVENTO'] || null,
             row['Comune'] || row['COMUNE'] || null,
+            row['Tipo Progetto'] || row['TIPO PROGETTO'] || null,
             row['Note'] || row['NOTE'] || null
           ]
         );
