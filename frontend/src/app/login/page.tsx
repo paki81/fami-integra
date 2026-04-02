@@ -83,9 +83,21 @@ export default function LoginPage() {
                 Password dimenticata?
               </Link>
             </div>
-            <p className="text-xs text-gray-400 text-center mt-3">
-              Cooperativa Sociale Aladino - PROG-705
-            </p>
+            <div className="mt-6 space-y-1 text-center">
+              <p className="text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                COMUNE DI MONTELEONE DI PUGLIA
+              </p>
+              <p className="text-xs text-gray-500 leading-relaxed px-4">
+                PROGETTO <span className="font-medium text-gray-600">&ldquo;INTEGRA_Azioni&rdquo;</span><br/>
+                (Sistema territoriale) per l&apos;Autonomia Economica e Sociale
+              </p>
+              <p className="text-xs text-gray-500 leading-relaxed px-4">
+                FONDO ASILO MIGRAZIONE E INTEGRAZIONE (FAMI) 2021-2027
+              </p>
+              <p className="text-xs text-gray-400 leading-relaxed px-4">
+                O.S. 1 – Asilo – CUP G61H25000270006 – PROG-705
+              </p>
+            </div>
           </form>
         </CardContent>
       </Card>
