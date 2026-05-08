@@ -15,7 +15,7 @@ const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 100
 
 // POST /api/strumenti/svuota/:tabella - Svuota una tabella (SOLO superadmin)
 router.post('/svuota/:tabella', authenticate, authorize('superadmin'), async (req, res) => {
-  const tabelleConsentite = ['beneficiari', 'alloggi', 'aziende'];
+  const tabelleConsentite = ['beneficiari', 'alloggi', 'aziende', 'enti_welfare'];
   const { tabella } = req.params;
   const { conferma } = req.body;
 
@@ -43,7 +43,9 @@ router.post('/svuota/:tabella', authenticate, authorize('superadmin'), async (re
     }
 
     // Elimina dati correlati
-    if (tabella === 'beneficiari') {
+    if (tabella === 'enti_welfare') {
+      await conn.query('DELETE FROM servizi_welfare');
+    } else if (tabella === 'beneficiari') {
       await conn.query('DELETE FROM registro_note WHERE entita = "beneficiari"');
       await conn.query('DELETE FROM monitoraggio_contratti');
       await conn.query('DELETE FROM matching_alloggi');
@@ -85,6 +87,8 @@ router.get('/conteggi', authenticate, authorize('superadmin'), async (req, res) 
     const [matLav] = await pool.query('SELECT COUNT(*) as tot FROM matching_lavoro');
     const [con] = await pool.query('SELECT COUNT(*) as tot FROM monitoraggio_contratti');
     const [note] = await pool.query('SELECT COUNT(*) as tot FROM registro_note');
+    const [entiW] = await pool.query('SELECT COUNT(*) as tot FROM enti_welfare');
+    const [servW] = await pool.query('SELECT COUNT(*) as tot FROM servizi_welfare');
     res.json({
       beneficiari: ben[0].tot,
       alloggi: all[0].tot,
@@ -92,7 +96,9 @@ router.get('/conteggi', authenticate, authorize('superadmin'), async (req, res) 
       matching_alloggi: matAll[0].tot,
       matching_lavoro: matLav[0].tot,
       contratti: con[0].tot,
-      registro_note: note[0].tot
+      registro_note: note[0].tot,
+      enti_welfare: entiW[0].tot,
+      servizi_welfare: servW[0].tot
     });
   } catch (err) {
     console.error(err);

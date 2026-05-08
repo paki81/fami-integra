@@ -190,4 +190,21 @@ export const strumentiApi = {
   ripristinoDaFile: (filename: string, conferma: string) => api.post('/strumenti/ripristino', { filename, conferma }),
 };
 
+// Servizi Welfare
+export const serviziWelfareApi = {
+  list: (params?: Record<string, any>) => api.get("/servizi-welfare", { params }),
+  get: (id: number) => api.get(`/servizi-welfare/${id}`),
+  create: (data: any) => api.post("/servizi-welfare", data),
+  update: (id: number, data: any) => api.put(`/servizi-welfare/${id}`, data),
+  delete: (id: number) => api.delete(`/servizi-welfare/${id}`),
+  categorie: () => api.get("/servizi-welfare/categorie"),
+  comuni: (params?: Record<string, any>) => api.get("/servizi-welfare/comuni", { params }),
+  perComune: (comune: string, params?: Record<string, any>) => api.get(`/servizi-welfare/per-comune/${encodeURIComponent(comune)}`, { params }),
+  mappa: () => api.get("/servizi-welfare/mappa"),
+  importa: (file: File, modalita: string = 'aggiungi') => {
+    const fd = new FormData(); fd.append("file", file); fd.append("modalita", modalita);
+    return api.post("/servizi-welfare/importa", fd, { headers: { "Content-Type": "multipart/form-data" } });
+  },
+};
+
 export default api;

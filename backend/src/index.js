@@ -22,6 +22,7 @@ const comuniRoutes = require('./routes/comuni');
 const comuniProgettoRoutes = require('./routes/comuniProgetto');
 const registroNoteRoutes = require('./routes/registroNote');
 const strumentiRoutes = require('./routes/strumenti');
+const serviziWelfareRoutes = require('./routes/serviziWelfare');
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -77,6 +78,7 @@ app.use('/api/comuni', comuniRoutes);
 app.use('/api/comuni-progetto', comuniProgettoRoutes);
 app.use('/api/registro-note', registroNoteRoutes);
 app.use('/api/strumenti', strumentiRoutes);
+app.use('/api/servizi-welfare', serviziWelfareRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });

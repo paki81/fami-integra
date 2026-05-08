@@ -7,7 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard, Users, Home, Building2, GitMerge,
-  FileText, Settings, LogOut, Menu, X, Upload, Shield, MapPin, Wrench
+  FileText, Settings, LogOut, Menu, X, Upload, Shield, MapPin, Wrench, HeartHandshake, ChevronDown, ChevronRight
 } from "lucide-react";
 import { useState } from "react";
 
@@ -16,7 +16,11 @@ const navItems = [
   { href: "/beneficiari", label: "Beneficiari", icon: Users, roles: ["superadmin", "admin", "tutor", "counselor", "viewer"] },
   { href: "/alloggi", label: "Alloggi", icon: Home, roles: ["superadmin", "admin", "tutor", "viewer"] },
   { href: "/aziende", label: "Aziende", icon: Building2, roles: ["superadmin", "admin", "counselor", "viewer"] },
-  { href: "/comuni", label: "Comuni", icon: MapPin, roles: ["superadmin", "admin", "tutor", "counselor", "viewer"] },
+  { href: "/comuni", label: "Comuni", icon: MapPin, roles: ["superadmin", "admin", "tutor", "counselor", "viewer"],
+    children: [
+      { href: "/servizi-welfare", label: "Servizi Welfare", icon: HeartHandshake, roles: ["superadmin", "admin", "tutor", "counselor", "viewer"] },
+    ]
+  },
   { href: "/matching", label: "Abbinamento", icon: GitMerge, roles: ["superadmin", "admin", "tutor", "counselor"] },
   { href: "/report", label: "Report", icon: FileText, roles: ["superadmin", "admin", "tutor", "counselor", "viewer"] },
   { href: "/import", label: "Import/Export", icon: Upload, roles: ["superadmin", "admin"] },
@@ -28,6 +32,11 @@ export default function Sidebar() {
   const pathname = usePathname();
   const { user, logout } = useAuth();
   const [open, setOpen] = useState(false);
+  const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({});
+
+  const toggleMenu = (href: string) => {
+    setExpandedMenus(prev => ({ ...prev, [href]: !prev[href] }));
+  };
 
   if (!user) return null;
 
@@ -71,6 +80,7 @@ export default function Sidebar() {
         <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
           {filtered.map((item) => {
             const isActive = pathname === item.href || pathname?.startsWith(item.href + "/");
+            const hasActiveChild = (item as any).children?.some((c: any) => pathname === c.href || pathname?.startsWith(c.href + "/"));
             const isMatching = item.href === "/matching";
             if (isMatching) {
               return (
@@ -106,21 +116,48 @@ export default function Sidebar() {
                 </React.Fragment>
               );
             }
+            const children = (item as any).children?.filter((c: any) => c.roles.includes(user.ruolo)) || [];
+            const isExpanded = expandedMenus[item.href] || hasActiveChild;
             return (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={() => setOpen(false)}
-                className={cn(
-                  "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
-                  isActive
-                    ? "bg-green-50 text-green-800 border border-green-200"
-                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                )}
-              >
-                <item.icon size={18} />
-                {item.label}
-              </Link>
+              <React.Fragment key={item.href}>
+                <Link
+                  href={item.href}
+                  onClick={() => { if (children.length > 0) toggleMenu(item.href); setOpen(false); }}
+                  className={cn(
+                    "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
+                    isActive || hasActiveChild
+                      ? "bg-green-50 text-green-800 border border-green-200"
+                      : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                  )}
+                >
+                  <item.icon size={18} />
+                  {item.label}
+                  {children.length > 0 && (
+                    <span className="ml-auto text-gray-400">
+                      {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                    </span>
+                  )}
+                </Link>
+                {children.length > 0 && isExpanded && children.map((child: any) => {
+                  const childActive = pathname === child.href || pathname?.startsWith(child.href + "/");
+                  return (
+                    <Link
+                      key={child.href}
+                      href={child.href}
+                      onClick={() => setOpen(false)}
+                      className={cn(
+                        "flex items-center gap-3 ml-5 pl-4 py-2 rounded-lg text-sm font-medium transition-colors border-l-2",
+                        childActive
+                          ? "bg-green-50 text-green-700 border-green-500"
+                          : "text-gray-500 hover:bg-gray-50 hover:text-gray-700 border-gray-200"
+                      )}
+                    >
+                      <child.icon size={16} />
+                      {child.label}
+                    </Link>
+                  );
+                })}
+              </React.Fragment>
             );
           })}
         </nav>

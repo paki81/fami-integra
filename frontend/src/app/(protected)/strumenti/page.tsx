@@ -168,6 +168,7 @@ export default function StrumentiPage() {
     beneficiari: { label: "Beneficiari", icon: "👤", color: "blue", desc: "Elimina tutti i beneficiari, matching e note correlate" },
     alloggi: { label: "Alloggi", icon: "🏠", color: "green", desc: "Elimina tutti gli alloggi, foto, contratti, matching e note correlate" },
     aziende: { label: "Aziende", icon: "🏢", color: "purple", desc: "Elimina tutte le aziende, matching e note correlate" },
+    enti_welfare: { label: "Enti Welfare", icon: "💚", color: "emerald", desc: "Elimina tutti gli enti welfare e i servizi associati" },
   };
 
   return (
@@ -264,7 +265,7 @@ export default function StrumentiPage() {
           <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
             <p className="text-sm text-red-800 font-medium">Queste operazioni sono irreversibili. Verranno eliminati tutti i dati della tabella selezionata e i dati correlati (matching, note, foto, contratti). Si consiglia di creare un backup prima di procedere.</p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {Object.entries(tabelleInfo).map(([tabella, info]) => (
               <div key={tabella} className="border rounded-lg p-4 hover:border-red-300 transition-colors">
                 <div className="flex items-center gap-2 mb-2">
