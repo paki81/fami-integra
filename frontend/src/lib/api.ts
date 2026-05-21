@@ -207,4 +207,14 @@ export const serviziWelfareApi = {
   },
 };
 
+// Consultazioni Welfare
+export const consultazioniWelfareApi = {
+  list: (params?: Record<string, any>) => api.get("/welfare/consultazioni", { params }),
+  get: (id: number) => api.get(`/welfare/consultazioni/${id}`),
+  create: (data: any) => api.post("/welfare/consultazioni", data),
+  update: (id: number, data: any) => api.put(`/welfare/consultazioni/${id}`, data),
+  delete: (id: number) => api.delete(`/welfare/consultazioni/${id}`),
+  pdf: (id: number) => api.get(`/welfare/consultazioni/${id}/pdf`, { responseType: "blob" }),
+};
+
 export default api;

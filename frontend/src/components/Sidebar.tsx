@@ -7,7 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard, Users, Home, Building2, GitMerge,
-  FileText, Settings, LogOut, Menu, X, Upload, Shield, MapPin, Wrench, HeartHandshake, ChevronDown, ChevronRight
+  FileText, Settings, LogOut, Menu, X, Upload, Shield, MapPin, Wrench, HeartHandshake, ChevronDown, ChevronRight, ClipboardList
 } from "lucide-react";
 import { useState } from "react";
 
@@ -19,6 +19,7 @@ const navItems = [
   { href: "/comuni", label: "Comuni", icon: MapPin, roles: ["superadmin", "admin", "tutor", "counselor", "viewer"],
     children: [
       { href: "/servizi-welfare", label: "Servizi Welfare", icon: HeartHandshake, roles: ["superadmin", "admin", "tutor", "counselor", "viewer"] },
+      { href: "/servizi-welfare/consultazioni", label: "Consultazioni", icon: ClipboardList, roles: ["superadmin", "admin", "tutor", "counselor"] },
     ]
   },
   { href: "/matching", label: "Abbinamento", icon: GitMerge, roles: ["superadmin", "admin", "tutor", "counselor"] },
