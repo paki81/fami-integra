@@ -84,6 +84,8 @@ export default function ServiziWelfarePage() {
   const [importing, setImporting] = useState(false);
   const importFileRef = useRef<HTMLInputElement>(null);
   const detailRef = useRef<HTMLDivElement>(null);
+  const formRef = useRef<HTMLDivElement>(null);
+  const scrollToForm = () => setTimeout(() => formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 60);
 
   // --- Fetch ---
   const fetchComuni = useCallback(async () => {
@@ -149,7 +151,7 @@ export default function ServiziWelfarePage() {
   const handleNew = () => {
     setEditId(null);
     setForm({ ...emptyForm, comune_erogatore: vista === "dettaglio" ? comuneSelezionato : "", servizi: [{ categoria: "", descrizione: "" }] });
-    setFormErrors({}); setDetailItem(null); setShowForm(true);
+    setFormErrors({}); setDetailItem(null); setShowForm(true); scrollToForm();
   };
 
   const handleEdit = (ente: any) => {
@@ -167,7 +169,7 @@ export default function ServiziWelfarePage() {
       servizi: (ente.servizi || []).map((s: any) => ({ categoria: s.categoria || "", descrizione: s.descrizione || "" })),
     });
     if (form.servizi.length === 0) setForm(f => ({ ...f, servizi: [{ categoria: "", descrizione: "" }] }));
-    setFormErrors({}); setDetailItem(null); setShowForm(true);
+    setFormErrors({}); setDetailItem(null); setShowForm(true); scrollToForm();
   };
 
   const handleSave = async () => {
@@ -558,6 +560,7 @@ export default function ServiziWelfarePage() {
   // ===================== FORM ENTE + SERVIZI =====================
   function renderForm() {
     return (
+      <div ref={formRef} className="scroll-mt-20">
       <Card className="border-green-200 shadow-lg">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
@@ -672,6 +675,7 @@ export default function ServiziWelfarePage() {
           </div>
         </CardContent>
       </Card>
+      </div>
     );
   }
 }

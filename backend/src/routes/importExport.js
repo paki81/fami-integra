@@ -235,12 +235,41 @@ router.get('/export-csv/:tabella', authenticate, async (req, res) => {
   }
 });
 
+function isValidYmd(y, m, d) {
+  if (m < 1 || m > 12 || d < 1 || d > 31) return false;
+  const dt = new Date(Date.UTC(y, m - 1, d));
+  return dt.getUTCFullYear() === y && dt.getUTCMonth() === m - 1 && dt.getUTCDate() === d;
+}
+
 function excelDateToISO(val) {
+  if (val === null || val === undefined || val === '') return null;
+  // Numero seriale Excel
   if (typeof val === 'number') {
-    const date = new Date((val - 25569) * 86400 * 1000);
-    return date.toISOString().split('T')[0];
+    if (!isFinite(val)) return null;
+    const date = new Date(Math.round((val - 25569) * 86400 * 1000));
+    return isNaN(date.getTime()) ? null : date.toISOString().split('T')[0];
   }
-  return val || null;
+  // Oggetto Date (xlsx con cellDates)
+  if (val instanceof Date) {
+    return isNaN(val.getTime()) ? null : val.toISOString().split('T')[0];
+  }
+  const s = String(val).trim();
+  if (!s) return null;
+  // ISO: aaaa-mm-gg (eventuale orario a seguire)
+  let m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if (m) {
+    const y = +m[1], mo = +m[2], d = +m[3];
+    return isValidYmd(y, mo, d) ? `${y}-${String(mo).padStart(2, '0')}-${String(d).padStart(2, '0')}` : null;
+  }
+  // Formato italiano: gg/mm/aaaa, gg-mm-aaaa, gg.mm.aaaa (anno a 2 o 4 cifre)
+  m = s.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})$/);
+  if (m) {
+    let d = +m[1], mo = +m[2], y = +m[3];
+    if (y < 100) y += 2000;
+    return isValidYmd(y, mo, d) ? `${y}-${String(mo).padStart(2, '0')}-${String(d).padStart(2, '0')}` : null;
+  }
+  // Valore non interpretabile come data (es. 'no', 'Da verificare', '13/052026')
+  return null;
 }
 
 function normalizeOrario(val) {

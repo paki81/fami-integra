@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import dynamic from "next/dynamic";
 import { aziendeApi, geocodingApi } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
@@ -44,6 +44,8 @@ export default function AziendePage() {
   const [form, setForm] = useState({ ...emptyAzienda });
   const [saving, setSaving] = useState(false);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const formRef = useRef<HTMLDivElement>(null);
+  const scrollToForm = () => setTimeout(() => formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 60);
   const [viewTab, setViewTab] = useState<"lista" | "mappa">("lista");
   const [mapMarkers, setMapMarkers] = useState<any[]>([]);
   const [loadingMap, setLoadingMap] = useState(false);
@@ -103,9 +105,10 @@ export default function AziendePage() {
       disponibile: a.disponibile || "S", tirocinio: a.tirocinio || "N", note: a.note || ""
     });
     setShowForm(true);
+    scrollToForm();
   };
 
-  const handleNew = () => { setEditId(null); setForm({ ...emptyAzienda }); setMapClickResult(null); setShowForm(true); };
+  const handleNew = () => { setEditId(null); setForm({ ...emptyAzienda }); setMapClickResult(null); setShowForm(true); scrollToForm(); };
 
   const handleMapClick = (result: {lat:number,lng:number,indirizzo:string,comune:string,cap:string}) => {
     setMapClickResult(result);
@@ -210,6 +213,7 @@ export default function AziendePage() {
       </Card>
 
       {showForm && (
+        <div ref={formRef} className="scroll-mt-20">
         <Card className="border-green-200 shadow-lg">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
@@ -286,6 +290,7 @@ export default function AziendePage() {
             </div>
           </CardContent>
         </Card>
+        </div>
       )}
 
       {/* Mappa */}

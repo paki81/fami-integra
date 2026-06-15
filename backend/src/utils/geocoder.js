@@ -64,24 +64,36 @@ async function searchWithFallback(query) {
 
 async function geocodeAddress(indirizzo, comune) {
   // Step 0: geocodifica il comune per ottenere coordinate di riferimento
-  const comuneRef = await photonSearch(`${comune}, Italia`);
+  // (Photon puo' essere irraggiungibile: fallback su Nominatim)
+  const comuneRef = await searchWithFallback(`${comune}, Italia`);
   const comuneLat = comuneRef ? comuneRef.lat : null;
   const comuneLng = comuneRef ? comuneRef.lng : null;
   await delay(300);
 
-  // Tentativo 1: indirizzo completo + comune (con bias coordinate comune)
+  // Prova una query a livello stradale su entrambi i provider (Photon biased -> Nominatim)
+  // e accetta solo risultati vicini al comune di riferimento.
+  const tryQuery = async (q) => {
+    const rp = await photonSearchBiased(q, comuneLat, comuneLng);
+    if (rp && isNearComune(rp, comuneLat, comuneLng)) return rp;
+    await delay(1100);
+    const rn = await nominatimSearch(q);
+    if (rn && isNearComune(rn, comuneLat, comuneLng)) return rn;
+    return null;
+  };
+
+  // Tentativo 1: indirizzo completo + comune
   if (indirizzo) {
-    const r1 = await photonSearchBiased(`${indirizzo}, ${comune}, Italia`, comuneLat, comuneLng);
-    if (r1 && isNearComune(r1, comuneLat, comuneLng)) return r1;
+    const r1 = await tryQuery(`${indirizzo}, ${comune}, Italia`);
+    if (r1) return r1;
     await delay(300);
   }
 
   // Tentativo 2: solo via (senza numero civico) + comune
   if (indirizzo) {
     const viaSenza = indirizzo.replace(/[,]?\s*(N\.?\s*)?\d+\s*\/?[a-zA-Z]?\s*$/i,'').trim();
-    if (viaSenza !== indirizzo) {
-      const r2 = await photonSearchBiased(`${viaSenza}, ${comune}, Italia`, comuneLat, comuneLng);
-      if (r2 && isNearComune(r2, comuneLat, comuneLng)) return r2;
+    if (viaSenza && viaSenza !== indirizzo) {
+      const r2 = await tryQuery(`${viaSenza}, ${comune}, Italia`);
+      if (r2) return r2;
       await delay(300);
     }
   }
@@ -89,7 +101,7 @@ async function geocodeAddress(indirizzo, comune) {
   // Tentativo 3: restituisci le coordinate del comune
   if (comuneRef) return comuneRef;
 
-  // Tentativo 4: fallback Nominatim
+  // Tentativo 4: fallback Nominatim sul solo comune
   return await nominatimSearch(`${comune}, Italia`);
 }
 

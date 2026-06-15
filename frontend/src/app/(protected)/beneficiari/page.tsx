@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { beneficiariApi } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -48,6 +48,8 @@ export default function BeneficiariPage() {
   const [form, setForm] = useState({ ...emptyBen });
   const [saving, setSaving] = useState(false);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const formRef = useRef<HTMLDivElement>(null);
+  const scrollToForm = () => setTimeout(() => formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 60);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -86,9 +88,10 @@ export default function BeneficiariPage() {
       livello_italiano: ben.livello_italiano || "", telefono: ben.telefono || "", email: ben.email || ""
     });
     setShowForm(true);
+    scrollToForm();
   };
 
-  const handleNew = () => { setEditId(null); setForm({ ...emptyBen }); setShowForm(true); };
+  const handleNew = () => { setEditId(null); setForm({ ...emptyBen }); setShowForm(true); scrollToForm(); };
 
   const handleSave = async () => {
     const errors: Record<string, string> = {};
@@ -198,6 +201,7 @@ export default function BeneficiariPage() {
 
       {/* Form Modale */}
       {showForm && (
+        <div ref={formRef} className="scroll-mt-20">
         <Card className="border-green-200 shadow-lg">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
@@ -302,6 +306,7 @@ export default function BeneficiariPage() {
             </div>
           </CardContent>
         </Card>
+        </div>
       )}
 
       {/* Tabella */}

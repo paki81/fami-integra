@@ -84,11 +84,31 @@ export default function MappaLeaflet({ markers, center, zoom = 10, height = "500
     if (markers.length > 0) {
       const bounds = L.latLngBounds([]);
 
+      // Conta i marker che condividono le stesse coordinate (es. geocodifica a livello comune)
+      const coordKey = (m: MarkerData) => `${m.lat.toFixed(5)},${m.lng.toFixed(5)}`;
+      const groupTotal = new Map<string, number>();
+      markers.forEach((m) => groupTotal.set(coordKey(m), (groupTotal.get(coordKey(m)) || 0) + 1));
+      const groupIndex = new Map<string, number>();
+
       markers.forEach((m) => {
+        let lat = m.lat, lng = m.lng;
+        const key = coordKey(m);
+        const total = groupTotal.get(key) || 1;
+        if (total > 1) {
+          // Distribuisci a ventaglio i marker sovrapposti per renderli tutti cliccabili
+          const idx = groupIndex.get(key) || 0;
+          groupIndex.set(key, idx + 1);
+          const perRing = 8;
+          const ring = Math.floor(idx / perRing);
+          const radius = 0.0006 * (ring + 1); // ~65m per anello
+          const angle = (2 * Math.PI * (idx % perRing)) / Math.min(total - ring * perRing, perRing);
+          lat = m.lat + radius * Math.cos(angle);
+          lng = m.lng + (radius * Math.sin(angle)) / Math.cos((m.lat * Math.PI) / 180);
+        }
         const icon = createIcon(m.color || "blue");
-        const marker = L.marker([m.lat, m.lng], { icon }).addTo(map);
+        const marker = L.marker([lat, lng], { icon }).addTo(map);
         marker.bindPopup(`<div style="min-width:180px"><strong>${m.label}</strong><br/>${m.popup}</div>`);
-        bounds.extend([m.lat, m.lng]);
+        bounds.extend([lat, lng]);
       });
 
       if (markers.length > 1) {
