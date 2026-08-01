@@ -361,16 +361,35 @@ router.get(
         } catch (_) { /* ignore */ }
       }
 
-      doc.fillColor('#15803d').font('Helvetica-Bold').fontSize(11)
-        .text('COMUNE DI MONTELEONE DI PUGLIA', textX, headerTop, { width: textWidth });
-      doc.fillColor('#111').font('Helvetica-Bold').fontSize(10)
-        .text('PROGETTO “INTEGRA_Azioni”', textX, doc.y + 1, { width: textWidth });
-      doc.font('Helvetica').fontSize(9).fillColor('#333')
-        .text('(Sistema territoriale) per l\'Autonomia Economica e Sociale', textX, doc.y + 1, { width: textWidth });
-      doc.fontSize(8).fillColor('#555')
-        .text('FONDO ASILO MIGRAZIONE E INTEGRAZIONE (FAMI) 2021-2027', textX, doc.y + 2, { width: textWidth });
-      doc.fontSize(8).fillColor('#555')
-        .text('O.S. 1 – Asilo – CUP G61H25000270006 – PROG-705', textX, doc.y + 1, { width: textWidth });
+      // Intestazione parametrizzabile via query string (ente, progetto, sottotitolo, fondo, cup)
+      const defaultHeader = {
+        ente: 'COMUNE DI MONTELEONE DI PUGLIA',
+        progetto: 'PROGETTO “INTEGRA_Azioni”',
+        sottotitolo: '(Sistema territoriale) per l\'Autonomia Economica e Sociale',
+        fondo: 'FONDO ASILO MIGRAZIONE E INTEGRAZIONE (FAMI) 2021-2027',
+        cup: 'O.S. 1 – Asilo – CUP G61H25000270006 – PROG-705',
+      };
+
+      const header = { ...defaultHeader };
+      for (const key of Object.keys(defaultHeader)) {
+        if (req.query[key] !== undefined) header[key] = req.query[key];
+      }
+
+      const headerLines = [
+        { text: header.ente, color: '#15803d', font: 'Helvetica-Bold', size: 11, dy: 0 },
+        { text: header.progetto, color: '#111', font: 'Helvetica-Bold', size: 10, dy: 1 },
+        { text: header.sottotitolo, color: '#333', font: 'Helvetica', size: 9, dy: 1 },
+        { text: header.fondo, color: '#555', font: 'Helvetica', size: 8, dy: 2 },
+        { text: header.cup, color: '#555', font: 'Helvetica', size: 8, dy: 1 },
+      ];
+
+      let lineY = headerTop;
+      for (const line of headerLines) {
+        if (!line.text) continue;
+        doc.fillColor(line.color).font(line.font).fontSize(line.size)
+          .text(line.text, textX, lineY + line.dy, { width: textWidth });
+        lineY = doc.y;
+      }
 
       // Allinea cursore sotto il blocco intestazione
       const headerBottom = Math.max(doc.y, headerTop + logoSize);
