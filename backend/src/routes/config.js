@@ -14,7 +14,7 @@ const DEFAULTS = {
   cup: 'O.S. 1 – Asilo – CUP G61H25000270006 – PROG-705',
   app_name: 'FAMI INTEGRA',
   app_slogan: 'Piattaforma Centro Sportello',
-  org_name: 'Cooperativa Sociale Aladino',
+  org_name: 'Ente gestore',
   portal_url: 'https://integra.aswell.eu',
   smtp_host: 'smtp.gmail.com',
   smtp_port: '587',
