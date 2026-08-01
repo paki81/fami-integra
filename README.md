@@ -184,3 +184,32 @@ mysql fami_integra < backend/migrations/002_seed.sql
 - `POST /api/import/aziende`
 - `GET /api/import/export/:tabella` (xlsx)
 - `GET /api/import/export-csv/:tabella` (csv)
+
+## Personalizzazione PDF Consultazioni Welfare
+
+L'endpoint `GET /api/welfare-consultazioni/:id/pdf` genera il PDF della consultazione con intestazione personalizzabile via query string.
+
+### Parametri disponibili
+
+| Parametro | Default | Descrizione |
+|-----------|---------|-------------|
+| `ente` | `COMUNE DI [INSERIRE COMUNE]` | Nome dell'ente |
+| `progetto` | `PROGETTO “INTEGRA_Azioni”` | Titolo progetto |
+| `sottotitolo` | `(Sistema territoriale) per l'Autonomia Economica e Sociale` | Sottotitolo |
+| `fondo` | `FONDO ASILO MIGRAZIONE E INTEGRAZIONE (FAMI) 2021-2027` | Riferimento fondo |
+| `cup` | `O.S. 1 – Asilo – CUP G61H25000270006 – PROG-705` | Codice CUP/progetto |
+
+Se un parametro viene omesso viene usato il default; se viene passato vuoto la riga non viene stampata.
+
+### Esempi
+
+```bash
+# PDF con ente personalizzato
+GET /api/welfare-consultazioni/123/pdf?ente=COMUNE%20DI%20ROMA
+
+# PDF con più campi personalizzati
+GET /api/welfare-consultazioni/123/pdf?ente=COMUNE%20DI%20ROMA&progetto=PROGETTO%20XYZ&cup=CUP%20ABC123
+
+# PDF senza riga CUP
+GET /api/welfare-consultazioni/123/pdf?cup=
+```
