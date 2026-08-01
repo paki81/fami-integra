@@ -351,6 +351,10 @@ export default function StrumentiPage() {
               { key: 'sottotitolo', label: 'Sottotitolo', placeholder: 'Sottotitolo progetto' },
               { key: 'fondo', label: 'Fondo', placeholder: 'FONDO ASILO MIGRAZIONE E INTEGRAZIONE (FAMI) 2021-2027' },
               { key: 'cup', label: 'CUP / Riferimento', placeholder: 'O.S. 1 – Asilo – CUP ...' },
+              { key: 'app_name', label: 'Nome App', placeholder: 'FAMI INTEGRA' },
+              { key: 'app_slogan', label: 'Slogan / Sottotitolo App', placeholder: 'Piattaforma Centro Sportello' },
+              { key: 'org_name', label: 'Organizzazione', placeholder: 'Cooperativa Sociale Aladino' },
+              { key: 'portal_url', label: 'URL Portale', placeholder: 'https://integra.aswell.eu' },
             ].map((field) => (
               <div key={field.key} className="space-y-1">
                 <label className="text-sm font-medium text-gray-700">{field.label}</label>

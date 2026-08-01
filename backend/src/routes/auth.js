@@ -8,6 +8,7 @@ const pool = require('../models/db');
 const { authenticate, JWT_SECRET } = require('../middleware/auth');
 const { logAudit } = require('../utils/auditLog');
 const { sendMail, resetPasswordTemplate } = require('../utils/mailer');
+const { getConfig } = require('../routes/config');
 
 // POST /api/auth/login
 router.post('/login', [
@@ -106,13 +107,13 @@ router.post('/forgot-password', [
     );
 
     // Invia email
-    const frontendUrl = process.env.FRONTEND_URL || 'https://integra.aswell.eu';
-    const resetUrl = `${frontendUrl}/reset-password?token=${token}`;
+    const cfg = await getConfig();
+    const resetUrl = `${cfg.portal_url}/reset-password?token=${token}`;
 
     await sendMail(
       user.email,
-      'Ripristino Password - FAMI INTEGRA',
-      resetPasswordTemplate(user.nome, resetUrl)
+      `Ripristino Password - ${cfg.app_name}`,
+      await resetPasswordTemplate(user.nome, resetUrl)
     );
 
     await logAudit(user, 'RICHIESTA_RESET_PASSWORD', 'utenti', user.id, null, null, req.ip);

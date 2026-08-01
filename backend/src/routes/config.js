@@ -12,6 +12,10 @@ const DEFAULTS = {
   sottotitolo: '(Sistema territoriale) per l\'Autonomia Economica e Sociale',
   fondo: 'FONDO ASILO MIGRAZIONE E INTEGRAZIONE (FAMI) 2021-2027',
   cup: 'O.S. 1 – Asilo – CUP G61H25000270006 – PROG-705',
+  app_name: 'FAMI INTEGRA',
+  app_slogan: 'Piattaforma Centro Sportello',
+  org_name: 'Cooperativa Sociale Aladino',
+  portal_url: 'https://integra.aswell.eu',
 };
 
 async function ensureConfig() {

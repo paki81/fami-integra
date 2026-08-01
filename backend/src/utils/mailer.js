@@ -1,4 +1,5 @@
 const nodemailer = require('nodemailer');
+const { getConfig } = require('../routes/config');
 
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST || 'smtp.gmail.com',
@@ -23,14 +24,15 @@ async function sendMail(to, subject, html) {
   }
 }
 
-function emailLayout(content) {
+async function emailLayout(content) {
   const year = new Date().getFullYear();
+  const cfg = await getConfig();
   return `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="it">
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>FAMI INTEGRA</title>
+  <title>${cfg.app_name}</title>
   <!--[if mso]>
   <style type="text/css">
     body, table, td { font-family: Segoe UI, Arial, sans-serif !important; }
@@ -47,12 +49,12 @@ function emailLayout(content) {
             <table role="presentation" cellpadding="0" cellspacing="0">
               <tr>
                 <td align="center">
-                  <h1 style="margin:0;font-family:'Segoe UI',Arial,sans-serif;font-size:24px;font-weight:700;color:#ffffff;letter-spacing:1px;">FAMI INTEGRA</h1>
+                  <h1 style="margin:0;font-family:'Segoe UI',Arial,sans-serif;font-size:24px;font-weight:700;color:#ffffff;letter-spacing:1px;">${cfg.app_name}</h1>
                 </td>
               </tr>
               <tr>
                 <td align="center" style="padding-top:6px;">
-                  <p style="margin:0;font-family:'Segoe UI',Arial,sans-serif;font-size:12px;color:#bbf7d0;">Piattaforma Centro Sportello</p>
+                  <p style="margin:0;font-family:'Segoe UI',Arial,sans-serif;font-size:12px;color:#bbf7d0;">${cfg.app_slogan}</p>
                 </td>
               </tr>
             </table>
@@ -72,13 +74,13 @@ function emailLayout(content) {
             <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
               <tr>
                 <td align="center">
-                  <p style="margin:0;font-family:'Segoe UI',Arial,sans-serif;font-size:12px;color:#9ca3af;">&copy; ${year} FAMI INTEGRA &ndash; Cooperativa Sociale Aladino</p>
+                  <p style="margin:0;font-family:'Segoe UI',Arial,sans-serif;font-size:12px;color:#9ca3af;">&copy; ${year} ${cfg.app_name} &ndash; ${cfg.org_name}</p>
                 </td>
               </tr>
               <tr>
                 <td align="center" style="padding-top:8px;">
                   <p style="margin:0;font-family:'Segoe UI',Arial,sans-serif;font-size:11px;color:#d1d5db;">
-                    <a href="https://integra.aswell.eu" style="color:#166534;text-decoration:none;">integra.aswell.eu</a>
+                    <a href="${cfg.portal_url}" style="color:#166534;text-decoration:none;">${cfg.portal_url}</a>
                   </p>
                 </td>
               </tr>
@@ -92,13 +94,14 @@ function emailLayout(content) {
 </html>`;
 }
 
-function resetPasswordTemplate(nome, resetUrl) {
+async function resetPasswordTemplate(nome, resetUrl) {
+  const cfg = await getConfig();
   return emailLayout(`
     <p style="margin:0 0 16px;font-family:'Segoe UI',Arial,sans-serif;font-size:15px;line-height:1.6;color:#374151;">
       Ciao <strong style="color:#111827;">${nome}</strong>,
     </p>
     <p style="margin:0 0 24px;font-family:'Segoe UI',Arial,sans-serif;font-size:15px;line-height:1.6;color:#374151;">
-      Hai richiesto il ripristino della password del tuo account FAMI INTEGRA. Clicca il pulsante qui sotto per impostare una nuova password:
+      Hai richiesto il ripristino della password del tuo account ${cfg.app_name}. Clicca il pulsante qui sotto per impostare una nuova password:
     </p>
     <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
       <tr><td align="center" style="padding:8px 0 28px;">
@@ -127,7 +130,8 @@ function resetPasswordTemplate(nome, resetUrl) {
   `);
 }
 
-function notificaTemplate(nome, titolo, messaggio) {
+async function notificaTemplate(nome, titolo, messaggio) {
+  const cfg = await getConfig();
   return emailLayout(`
     <p style="margin:0 0 16px;font-family:'Segoe UI',Arial,sans-serif;font-size:15px;line-height:1.6;color:#374151;">
       Ciao <strong style="color:#111827;">${nome}</strong>,
@@ -143,13 +147,13 @@ function notificaTemplate(nome, titolo, messaggio) {
     <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin-top:28px;">
       <tr><td align="center">
         <!--[if mso]>
-        <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="https://integra.aswell.eu" style="height:44px;v-text-anchor:middle;width:200px;" arcsize="15%" stroke="f" fillcolor="#166534">
+        <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="${cfg.portal_url}" style="height:44px;v-text-anchor:middle;width:200px;" arcsize="15%" stroke="f" fillcolor="#166534">
           <w:anchorlock/>
           <center style="color:#ffffff;font-family:Segoe UI,Arial,sans-serif;font-size:14px;font-weight:bold;">Vai al Portale</center>
         </v:roundrect>
         <![endif]-->
         <!--[if !mso]><!---->
-        <a href="https://integra.aswell.eu" style="display:inline-block;background-color:#166534;color:#ffffff;font-family:'Segoe UI',Arial,sans-serif;font-size:14px;font-weight:600;text-decoration:none;padding:12px 32px;border-radius:6px;">Vai al Portale</a>
+        <a href="${cfg.portal_url}" style="display:inline-block;background-color:#166534;color:#ffffff;font-family:'Segoe UI',Arial,sans-serif;font-size:14px;font-weight:600;text-decoration:none;padding:12px 32px;border-radius:6px;">Vai al Portale</a>
         <!--<![endif]-->
       </td></tr>
     </table>
