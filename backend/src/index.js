@@ -51,8 +51,10 @@ app.use(cors({
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 200,
-  message: { error: 'Troppe richieste, riprova tra 15 minuti' }
+  message: { error: 'Troppe richieste, riprova tra 15 minuti' },
+  validate: { xForwardedForHeader: false }
 });
+app.set('trust proxy', 1);
 app.use('/api/auth/login', limiter);
 
 app.use(express.json({ limit: '10mb' }));
