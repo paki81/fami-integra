@@ -1,19 +1,32 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { authApi } from "@/lib/api";
+import { authApi, configApi } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+
+interface Config {
+  ente: string;
+  progetto: string;
+  sottotitolo: string;
+  fondo: string;
+  cup: string;
+}
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [config, setConfig] = useState<Config | null>(null);
   const router = useRouter();
+
+  useEffect(() => {
+    configApi.get().then(res => setConfig(res.data)).catch(() => setConfig(null));
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,9 +96,25 @@ export default function LoginPage() {
                 Password dimenticata?
               </Link>
             </div>
-            <div className="mt-6 space-y-1 text-center">
-              
-            </div>
+            {config && (
+              <div className="mt-6 space-y-1 text-center">
+                <p className="text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                  {config.ente}
+                </p>
+                <p className="text-xs text-gray-500 leading-relaxed px-4">
+                  {config.progetto}
+                </p>
+                <p className="text-xs text-gray-500 leading-relaxed px-4">
+                  {config.sottotitolo}
+                </p>
+                <p className="text-xs text-gray-500 leading-relaxed px-4">
+                  {config.fondo}
+                </p>
+                <p className="text-xs text-gray-400 leading-relaxed px-4">
+                  {config.cup}
+                </p>
+              </div>
+            )}
           </form>
         </CardContent>
       </Card>

@@ -178,6 +178,11 @@ export const registroNoteApi = {
   delete: (id: number) => api.delete(`/registro-note/${id}`),
 };
 
+// Configurazione pubblica (branding)
+export const configApi = {
+  get: () => api.get('/config'),
+};
+
 // Strumenti (solo superadmin)
 export const strumentiApi = {
   conteggi: () => api.get('/strumenti/conteggi'),
@@ -188,6 +193,8 @@ export const strumentiApi = {
   eliminaBackup: (filename: string) => api.delete(`/strumenti/backup/${filename}`),
   ripristino: (data: FormData) => api.post('/strumenti/ripristino', data, { headers: { 'Content-Type': 'multipart/form-data' }, timeout: 300000 }),
   ripristinoDaFile: (filename: string, conferma: string) => api.post('/strumenti/ripristino', { filename, conferma }),
+  getConfig: () => api.get('/strumenti/config'),
+  updateConfig: (data: any) => api.put('/strumenti/config', data),
 };
 
 // Servizi Welfare

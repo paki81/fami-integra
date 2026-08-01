@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../models/db');
 const { authenticate, authorize } = require('../middleware/auth');
+const { getConfig, DEFAULTS } = require('./config');
 const { logAudit } = require('../utils/auditLog');
 const { execSync } = require('child_process');
 const fs = require('fs');
@@ -248,6 +249,33 @@ router.post('/ripristino', authenticate, authorize('superadmin'), upload.single(
   } catch (err) {
     console.error('Errore ripristino:', err);
     res.status(500).json({ error: 'Errore durante il ripristino del database' });
+  }
+});
+
+// GET /api/strumenti/config - Configurazione branding (SOLO superadmin)
+router.get('/config', authenticate, authorize('superadmin'), async (req, res) => {
+  try {
+    const config = await getConfig();
+    res.json(config);
+  } catch (err) {
+    console.error('Errore lettura config:', err);
+    res.status(500).json({ error: 'Errore server' });
+  }
+});
+
+// PUT /api/strumenti/config - Aggiorna branding (SOLO superadmin)
+router.put('/config', authenticate, authorize('superadmin'), async (req, res) => {
+  try {
+    for (const key of Object.keys(DEFAULTS)) {
+      if (req.body[key] !== undefined) {
+        await pool.query('UPDATE config SET valore = ? WHERE chiave = ?', [req.body[key], key]);
+      }
+    }
+    await logAudit(req.user, 'UPDATE', 'config', null, null, req.body, req.ip);
+    res.json({ message: 'Configurazione aggiornata' });
+  } catch (err) {
+    console.error('Errore aggiornamento config:', err);
+    res.status(500).json({ error: 'Errore server' });
   }
 });
 

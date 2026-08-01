@@ -6,6 +6,7 @@ const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
 const path = require('path');
 
+const configRoutes = require('./routes/config');
 const authRoutes = require('./routes/auth');
 const beneficiariRoutes = require('./routes/beneficiari');
 const alloggiRoutes = require('./routes/alloggi');
@@ -81,8 +82,9 @@ app.use('/api/registro-note', registroNoteRoutes);
 app.use('/api/strumenti', strumentiRoutes);
 app.use('/api/servizi-welfare', serviziWelfareRoutes);
 app.use('/api/welfare/consultazioni', consultazioniWelfareRoutes);
+app.use('/api/config', configRoutes);
 
-app.get('/api/health', (req, res) => {
+app.use('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 

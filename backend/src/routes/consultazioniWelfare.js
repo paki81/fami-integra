@@ -4,6 +4,7 @@ const path = require('path');
 const fs = require('fs');
 const PDFDocument = require('pdfkit');
 const pool = require('../models/db');
+const { getConfig } = require('./config');
 
 const LOGO_PATH = path.join(__dirname, '..', 'assets', 'logo.png');
 const LOGO_BUFFER = fs.existsSync(LOGO_PATH) ? fs.readFileSync(LOGO_PATH) : null;
@@ -362,13 +363,7 @@ router.get(
       }
 
       // Intestazione parametrizzabile via query string (ente, progetto, sottotitolo, fondo, cup)
-      const defaultHeader = {
-        ente: 'COMUNE DI [INSERIRE COMUNE]',
-        progetto: 'PROGETTO “INTEGRA_Azioni”',
-        sottotitolo: '(Sistema territoriale) per l\'Autonomia Economica e Sociale',
-        fondo: 'FONDO ASILO MIGRAZIONE E INTEGRAZIONE (FAMI) 2021-2027',
-        cup: 'O.S. 1 – Asilo – CUP G61H25000270006 – PROG-705',
-      };
+      const defaultHeader = await getConfig();
 
       const header = { ...defaultHeader };
       for (const key of Object.keys(defaultHeader)) {

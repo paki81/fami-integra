@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import {
   Wrench, Database, Trash2, AlertTriangle, Download, Upload, RefreshCw,
-  HardDrive, Shield, Clock, FileArchive, X
+  HardDrive, Shield, Clock, FileArchive, X, Settings, Info
 } from "lucide-react";
 import api from "@/lib/api";
 
@@ -36,6 +36,10 @@ export default function StrumentiPage() {
   const [loading, setLoading] = useState(true);
   const [operazione, setOperazione] = useState("");
 
+  // Configurazione branding
+  const [config, setConfig] = useState<Record<string, string>>({});
+  const [configLoading, setConfigLoading] = useState(false);
+
   // Conferma svuotamento
   const [svuotaDialog, setSvuotaDialog] = useState<string | null>(null);
   const [svuotaConferma, setSvuotaConferma] = useState("");
@@ -47,9 +51,14 @@ export default function StrumentiPage() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [c, b] = await Promise.all([strumentiApi.conteggi(), strumentiApi.listaBackup()]);
+      const [c, b, cfg] = await Promise.all([
+        strumentiApi.conteggi(),
+        strumentiApi.listaBackup(),
+        strumentiApi.getConfig()
+      ]);
       setConteggi(c.data);
       setBackups(b.data);
+      setConfig(cfg.data || {});
     } catch { toast.error("Errore nel caricamento dei dati"); }
     setLoading(false);
   };
@@ -164,6 +173,21 @@ export default function StrumentiPage() {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
+  const handleConfigChange = (key: string, value: string) => {
+    setConfig(prev => ({ ...prev, [key]: value }));
+  };
+
+  const handleConfigSave = async () => {
+    setConfigLoading(true);
+    try {
+      await strumentiApi.updateConfig(config);
+      toast.success("Configurazione aggiornata");
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || "Errore durante il salvataggio");
+    }
+    setConfigLoading(false);
+  };
+
   const tabelleInfo: Record<string, { label: string; icon: any; color: string; desc: string }> = {
     beneficiari: { label: "Beneficiari", icon: "👤", color: "blue", desc: "Elimina tutti i beneficiari, matching e note correlate" },
     alloggi: { label: "Alloggi", icon: "🏠", color: "green", desc: "Elimina tutti gli alloggi, foto, contratti, matching e note correlate" },
@@ -253,6 +277,42 @@ export default function StrumentiPage() {
               ))}
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      {/* Personalizzazione progetto */}
+      <Card className="border-green-200">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-green-700"><Settings size={20} className="text-green-600" /> Personalizzazione Progetto</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {[
+              { key: 'ente', label: 'Ente', placeholder: 'COMUNE DI [INSERIRE COMUNE]' },
+              { key: 'progetto', label: 'Progetto', placeholder: 'PROGETTO “INTEGRA_Azioni”' },
+              { key: 'sottotitolo', label: 'Sottotitolo', placeholder: 'Sottotitolo progetto' },
+              { key: 'fondo', label: 'Fondo', placeholder: 'FONDO ASILO MIGRAZIONE E INTEGRAZIONE (FAMI) 2021-2027' },
+              { key: 'cup', label: 'CUP / Riferimento', placeholder: 'O.S. 1 – Asilo – CUP ...' },
+            ].map((field) => (
+              <div key={field.key} className="space-y-1">
+                <label className="text-sm font-medium text-gray-700">{field.label}</label>
+                <Input
+                  value={config[field.key] || ''}
+                  onChange={(e) => handleConfigChange(field.key, e.target.value)}
+                  placeholder={field.placeholder}
+                />
+              </div>
+            ))}
+          </div>
+          <div className="mt-4 flex items-center gap-2 text-xs text-gray-500">
+            <Info size={14} />
+            <span>Questi valori vengono mostrati nel login e nell&apos;intestazione dei PDF delle consultazioni welfare.</span>
+          </div>
+          <div className="mt-4 flex justify-end">
+            <Button onClick={handleConfigSave} disabled={configLoading}>
+              {configLoading ? 'Salvataggio...' : 'Salva Configurazione'}
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
