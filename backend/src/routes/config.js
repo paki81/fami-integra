@@ -1,6 +1,10 @@
 const express = require('express');
 const router = express.Router();
+const path = require('path');
+const fs = require('fs');
 const pool = require('../models/db');
+
+const FALLBACK_LOGO_PATH = path.join(__dirname, '..', 'assets', 'logo.png');
 
 const DEFAULTS = {
   ente: 'COMUNE DI [INSERIRE COMUNE]',
@@ -36,11 +40,33 @@ async function getConfig() {
     'SELECT chiave, valore FROM config WHERE chiave IN (?)',
     [keys]
   );
-  const config = { ...DEFAULTS };
+  const config = { ...DEFAULTS, logo_url: '/api/config/logo' };
   for (const row of rows) {
     config[row.chiave] = row.valore;
   }
   return config;
+}
+
+async function getLogoBuffer() {
+  await ensureConfig();
+  const [rows] = await pool.query('SELECT valore FROM config WHERE chiave = "logo"');
+  if (rows.length && rows[0].valore) {
+    return Buffer.from(rows[0].valore, 'base64');
+  }
+  return fs.existsSync(FALLBACK_LOGO_PATH) ? fs.readFileSync(FALLBACK_LOGO_PATH) : null;
+}
+
+async function setLogo(base64) {
+  await ensureConfig();
+  await pool.query(
+    'INSERT INTO config (chiave, valore) VALUES ("logo", ?) ON DUPLICATE KEY UPDATE valore = VALUES(valore)',
+    [base64]
+  );
+}
+
+async function deleteLogo() {
+  await ensureConfig();
+  await pool.query('DELETE FROM config WHERE chiave = "logo"');
 }
 
 // Endpoint pubblico (usato dal login)
@@ -54,4 +80,18 @@ router.get('/', async (req, res) => {
   }
 });
 
-module.exports = { router, getConfig, DEFAULTS };
+// Endpoint pubblico per logo
+router.get('/logo', async (req, res) => {
+  try {
+    const buf = await getLogoBuffer();
+    if (!buf) return res.status(404).send('Logo non trovato');
+    res.setHeader('Content-Type', 'image/png');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.end(buf);
+  } catch (err) {
+    console.error('Errore lettura logo:', err);
+    res.status(500).send('Errore server');
+  }
+});
+
+module.exports = { router, getConfig, getLogoBuffer, setLogo, deleteLogo, DEFAULTS };

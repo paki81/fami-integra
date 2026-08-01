@@ -181,6 +181,7 @@ export const registroNoteApi = {
 // Configurazione pubblica (branding)
 export const configApi = {
   get: () => api.get('/config'),
+  logoUrl: (apiUrl?: string) => `${apiUrl || api.defaults.baseURL}/config/logo?t=${Date.now()}`,
 };
 
 // Strumenti (solo superadmin)
@@ -195,6 +196,11 @@ export const strumentiApi = {
   ripristinoDaFile: (filename: string, conferma: string) => api.post('/strumenti/ripristino', { filename, conferma }),
   getConfig: () => api.get('/strumenti/config'),
   updateConfig: (data: any) => api.put('/strumenti/config', data),
+  uploadLogo: (file: File) => {
+    const fd = new FormData(); fd.append('logo', file);
+    return api.post('/strumenti/logo', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+  },
+  deleteLogo: () => api.delete('/strumenti/logo'),
 };
 
 // Servizi Welfare

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { strumentiApi } from "@/lib/api";
+import { strumentiApi, configApi } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -39,6 +39,7 @@ export default function StrumentiPage() {
   // Configurazione branding
   const [config, setConfig] = useState<Record<string, string>>({});
   const [configLoading, setConfigLoading] = useState(false);
+  const [logoFile, setLogoFile] = useState<File | null>(null);
 
   // Conferma svuotamento
   const [svuotaDialog, setSvuotaDialog] = useState<string | null>(null);
@@ -188,6 +189,32 @@ export default function StrumentiPage() {
     setConfigLoading(false);
   };
 
+  const handleUploadLogo = async () => {
+    if (!logoFile) return;
+    setConfigLoading(true);
+    try {
+      await strumentiApi.uploadLogo(logoFile);
+      toast.success("Logo aggiornato");
+      setLogoFile(null);
+      fetchData();
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || "Errore upload logo");
+    }
+    setConfigLoading(false);
+  };
+
+  const handleDeleteLogo = async () => {
+    setConfigLoading(true);
+    try {
+      await strumentiApi.deleteLogo();
+      toast.success("Logo rimosso");
+      fetchData();
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || "Errore rimozione logo");
+    }
+    setConfigLoading(false);
+  };
+
   const tabelleInfo: Record<string, { label: string; icon: any; color: string; desc: string }> = {
     beneficiari: { label: "Beneficiari", icon: "👤", color: "blue", desc: "Elimina tutti i beneficiari, matching e note correlate" },
     alloggi: { label: "Alloggi", icon: "🏠", color: "green", desc: "Elimina tutti gli alloggi, foto, contratti, matching e note correlate" },
@@ -286,6 +313,37 @@ export default function StrumentiPage() {
           <CardTitle className="flex items-center gap-2 text-green-700"><Settings size={20} className="text-green-600" /> Personalizzazione Progetto</CardTitle>
         </CardHeader>
         <CardContent>
+          <div className="mb-6 flex flex-col sm:flex-row gap-4 items-start">
+            <div className="w-20 h-20 rounded-lg bg-green-700 p-[2px] shrink-0">
+              <img
+                src={config.logo_url || configApi.logoUrl()}
+                alt="Logo"
+                className="w-full h-full rounded-[6px] object-contain bg-white"
+                onError={(e) => { (e.target as HTMLImageElement).src = '/logo.png'; }}
+              />
+            </div>
+            <div className="flex-1 space-y-2">
+              <div>
+                <label className="text-sm font-medium text-gray-700">Logo progetto</label>
+                <p className="text-xs text-gray-500">Carica un file PNG o JPG. Se non caricato, viene usato il logo di default.</p>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <input
+                  type="file"
+                  accept=".png,.jpg,.jpeg"
+                  className="text-sm file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-sm file:font-medium file:bg-green-50 file:text-green-700 hover:file:bg-green-100"
+                  onChange={(e) => setLogoFile(e.target.files?.[0] || null)}
+                />
+                <Button size="sm" onClick={handleUploadLogo} disabled={!logoFile || configLoading}>
+                  {configLoading && logoFile ? 'Caricamento...' : 'Carica Logo'}
+                </Button>
+                <Button size="sm" variant="outline" onClick={handleDeleteLogo} disabled={configLoading}>
+                  Rimuovi
+                </Button>
+              </div>
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {[
               { key: 'ente', label: 'Ente', placeholder: 'COMUNE DI [INSERIRE COMUNE]' },
@@ -306,7 +364,7 @@ export default function StrumentiPage() {
           </div>
           <div className="mt-4 flex items-center gap-2 text-xs text-gray-500">
             <Info size={14} />
-            <span>Questi valori vengono mostrati nel login e nell&apos;intestazione dei PDF delle consultazioni welfare.</span>
+            <span>Questi valori e il logo vengono mostrati nel login e nell&apos;intestazione dei PDF delle consultazioni welfare.</span>
           </div>
           <div className="mt-4 flex justify-end">
             <Button onClick={handleConfigSave} disabled={configLoading}>

@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../models/db');
 const { authenticate, authorize } = require('../middleware/auth');
-const { getConfig, DEFAULTS } = require('./config');
+const { getConfig, DEFAULTS, setLogo, deleteLogo } = require('./config');
 const { logAudit } = require('../utils/auditLog');
 const { execSync } = require('child_process');
 const fs = require('fs');
@@ -276,6 +276,36 @@ router.put('/config', authenticate, authorize('superadmin'), async (req, res) =>
   } catch (err) {
     console.error('Errore aggiornamento config:', err);
     res.status(500).json({ error: 'Errore server' });
+  }
+});
+
+// POST /api/strumenti/logo - Carica logo (SOLO superadmin)
+router.post('/logo', authenticate, authorize('superadmin'), upload.single('logo'), async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'Nessun file caricato' });
+    const ext = path.extname(req.file.originalname).toLowerCase();
+    if (!['.png', '.jpg', '.jpeg'].includes(ext)) {
+      return res.status(400).json({ error: 'Solo PNG o JPG' });
+    }
+    const base64 = req.file.buffer.toString('base64');
+    await setLogo(base64);
+    await logAudit(req.user, 'UPLOAD_LOGO', 'config', null, null, { filename: req.file.originalname, size: req.file.size }, req.ip);
+    res.json({ message: 'Logo aggiornato' });
+  } catch (err) {
+    console.error('Errore upload logo:', err);
+    res.status(500).json({ error: 'Errore upload logo' });
+  }
+});
+
+// DELETE /api/strumenti/logo - Rimuovi logo (SOLO superadmin)
+router.delete('/logo', authenticate, authorize('superadmin'), async (req, res) => {
+  try {
+    await deleteLogo();
+    await logAudit(req.user, 'DELETE_LOGO', 'config', null, null, null, req.ip);
+    res.json({ message: 'Logo rimosso' });
+  } catch (err) {
+    console.error('Errore rimozione logo:', err);
+    res.status(500).json({ error: 'Errore rimozione logo' });
   }
 });
 

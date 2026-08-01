@@ -5,11 +5,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
+import { configApi } from "@/lib/api";
 import {
   LayoutDashboard, Users, Home, Building2, GitMerge,
   FileText, Settings, LogOut, Menu, X, Upload, Shield, MapPin, Wrench, HeartHandshake, ChevronDown, ChevronRight, ClipboardList
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ["superadmin", "admin", "tutor", "counselor", "viewer"] },
@@ -34,6 +35,11 @@ export default function Sidebar() {
   const { user, logout } = useAuth();
   const [open, setOpen] = useState(false);
   const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({});
+  const [logoUrl, setLogoUrl] = useState<string>("/logo.png");
+
+  useEffect(() => {
+    setLogoUrl(configApi.logoUrl());
+  }, []);
 
   const toggleMenu = (href: string) => {
     setExpandedMenus(prev => ({ ...prev, [href]: !prev[href] }));
@@ -68,7 +74,7 @@ export default function Sidebar() {
         <div className="p-6 border-b border-gray-100">
           <div className="flex items-center gap-2">
             <div className="w-9 h-9 rounded-lg bg-green-700 p-[2px]">
-              <img src="/logo.png" alt="FAMI INTEGRA" className="w-full h-full rounded-[6px] object-contain bg-white" />
+              <img src={logoUrl} alt="FAMI INTEGRA" className="w-full h-full rounded-[6px] object-contain bg-white" />
             </div>
             <div>
               <h1 className="font-bold text-gray-900 text-sm">FAMI INTEGRA</h1>

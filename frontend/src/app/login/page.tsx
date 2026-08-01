@@ -14,6 +14,7 @@ interface Config {
   sottotitolo: string;
   fondo: string;
   cup: string;
+  logo_url: string;
 }
 
 export default function LoginPage() {
@@ -49,7 +50,7 @@ export default function LoginPage() {
       <Card className="w-full max-w-md shadow-lg border-green-100">
         <CardHeader className="text-center space-y-4">
           <div className="mx-auto w-[68px] h-[68px] rounded-xl bg-green-700 p-[2px]">
-            <img src="/logo.png" alt="FAMI INTEGRA" className="w-full h-full rounded-[10px] object-contain bg-white" />
+            <img src={config?.logo_url || "/logo.png"} alt="FAMI INTEGRA" className="w-full h-full rounded-[10px] object-contain bg-white" />
           </div>
           <div>
             <CardTitle className="text-2xl">FAMI INTEGRA</CardTitle>

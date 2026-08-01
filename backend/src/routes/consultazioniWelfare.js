@@ -4,10 +4,7 @@ const path = require('path');
 const fs = require('fs');
 const PDFDocument = require('pdfkit');
 const pool = require('../models/db');
-const { getConfig } = require('./config');
-
-const LOGO_PATH = path.join(__dirname, '..', 'assets', 'logo.png');
-const LOGO_BUFFER = fs.existsSync(LOGO_PATH) ? fs.readFileSync(LOGO_PATH) : null;
+const { getConfig, getLogoBuffer } = require('./config');
 const { authenticate, authorize } = require('../middleware/auth');
 const { logAudit } = require('../utils/auditLog');
 
@@ -353,12 +350,13 @@ router.get(
       const today = new Date().toLocaleDateString('it-IT');
       const headerTop = 50;
       const logoSize = 70;
-      const textX = LOGO_BUFFER ? 50 + logoSize + 15 : 50;
+      const textX = logoBuffer ? 50 + logoSize + 15 : 50;
       const textWidth = 545 - textX;
 
-      if (LOGO_BUFFER) {
+      const logoBuffer = await getLogoBuffer();
+      if (logoBuffer) {
         try {
-          doc.image(LOGO_BUFFER, 50, headerTop, { fit: [logoSize, logoSize] });
+          doc.image(logoBuffer, 50, headerTop, { fit: [logoSize, logoSize] });
         } catch (_) { /* ignore */ }
       }
 
