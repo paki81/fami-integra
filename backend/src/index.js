@@ -84,7 +84,7 @@ app.use('/api/registro-note', registroNoteRoutes);
 app.use('/api/strumenti', strumentiRoutes);
 app.use('/api/servizi-welfare', serviziWelfareRoutes);
 app.use('/api/welfare/consultazioni', consultazioniWelfareRoutes);
-app.use('/api/config', configRoutes);
+app.use('/api/config', configRoutes.router);
 
 app.use('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
