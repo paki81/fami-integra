@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import {
   Wrench, Database, Trash2, AlertTriangle, Download, Upload, RefreshCw,
-  HardDrive, Shield, Clock, FileArchive, X, Settings, Info
+  HardDrive, Shield, Clock, FileArchive, X, Settings, Info, Mail
 } from "lucide-react";
 import api from "@/lib/api";
 
@@ -373,6 +373,54 @@ export default function StrumentiPage() {
           <div className="mt-4 flex justify-end">
             <Button onClick={handleConfigSave} disabled={configLoading}>
               {configLoading ? 'Salvataggio...' : 'Salva Configurazione'}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Configurazione SMTP */}
+      <Card className="border-blue-200">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-blue-700"><Mail size={20} className="text-blue-600" /> Server Email (SMTP)</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {[
+              { key: 'smtp_host', label: 'Host SMTP', placeholder: 'smtp.gmail.com' },
+              { key: 'smtp_port', label: 'Porta SMTP', placeholder: '587' },
+              { key: 'smtp_user', label: 'Utente SMTP', placeholder: 'email@esempio.it' },
+              { key: 'smtp_pass', label: 'Password SMTP', placeholder: '••••••••', type: 'password' },
+              { key: 'smtp_from', label: 'Indirizzo Mittente', placeholder: 'FAMI INTEGRA <noreply@esempio.it>' },
+            ].map((field) => (
+              <div key={field.key} className="space-y-1">
+                <label className="text-sm font-medium text-gray-700">{field.label}</label>
+                <Input
+                  type={field.type || 'text'}
+                  value={config[field.key] || ''}
+                  onChange={(e) => handleConfigChange(field.key, e.target.value)}
+                  placeholder={field.placeholder}
+                />
+              </div>
+            ))}
+            <div className="space-y-1">
+              <label className="text-sm font-medium text-gray-700">Connessione Sicura (SSL/TLS)</label>
+              <select
+                value={config['smtp_secure'] || 'false'}
+                onChange={(e) => handleConfigChange('smtp_secure', e.target.value)}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <option value="false">No (STARTTLS - porta 587)</option>
+                <option value="true">Sì (SSL - porta 465)</option>
+              </select>
+            </div>
+          </div>
+          <div className="mt-4 flex items-center gap-2 text-xs text-gray-500">
+            <Info size={14} />
+            <span>La password viene salvata in chiaro nel database. Si consiglia di usare un account SMTP dedicato.</span>
+          </div>
+          <div className="mt-4 flex justify-end">
+            <Button onClick={handleConfigSave} disabled={configLoading}>
+              {configLoading ? 'Salvataggio...' : 'Salva Configurazione SMTP'}
             </Button>
           </div>
         </CardContent>

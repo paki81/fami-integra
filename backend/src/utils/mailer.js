@@ -1,21 +1,28 @@
 const nodemailer = require('nodemailer');
 const { getConfig } = require('../routes/config');
 
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST || 'smtp.gmail.com',
-  port: parseInt(process.env.SMTP_PORT || '587'),
-  secure: process.env.SMTP_SECURE === 'true',
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS
-  }
-});
-
-const FROM = process.env.SMTP_FROM || 'FAMI INTEGRA <noreply@fami-integra.it>';
+async function getMailerConfig() {
+  const cfg = await getConfig();
+  return {
+    host: cfg.smtp_host || process.env.SMTP_HOST || 'smtp.gmail.com',
+    port: parseInt(cfg.smtp_port || process.env.SMTP_PORT || '587', 10),
+    secure: (cfg.smtp_secure === 'true' || cfg.smtp_secure === '1') || process.env.SMTP_SECURE === 'true',
+    user: cfg.smtp_user || process.env.SMTP_USER || '',
+    pass: cfg.smtp_pass || process.env.SMTP_PASS || '',
+    from: cfg.smtp_from || process.env.SMTP_FROM || 'FAMI INTEGRA <noreply@fami-integra.it>',
+  };
+}
 
 async function sendMail(to, subject, html) {
   try {
-    const info = await transporter.sendMail({ from: FROM, to, subject, html });
+    const c = await getMailerConfig();
+    const transporter = nodemailer.createTransport({
+      host: c.host,
+      port: c.port,
+      secure: c.secure,
+      auth: c.user ? { user: c.user, pass: c.pass } : undefined,
+    });
+    const info = await transporter.sendMail({ from: c.from, to, subject, html });
     console.log(`Email inviata a ${to}: ${info.messageId}`);
     return info;
   } catch (err) {
@@ -160,4 +167,4 @@ async function notificaTemplate(nome, titolo, messaggio) {
   `);
 }
 
-module.exports = { sendMail, resetPasswordTemplate, notificaTemplate, transporter };
+module.exports = { sendMail, resetPasswordTemplate, notificaTemplate };

@@ -16,6 +16,12 @@ const DEFAULTS = {
   app_slogan: 'Piattaforma Centro Sportello',
   org_name: 'Cooperativa Sociale Aladino',
   portal_url: 'https://integra.aswell.eu',
+  smtp_host: 'smtp.gmail.com',
+  smtp_port: '587',
+  smtp_secure: 'false',
+  smtp_user: '',
+  smtp_pass: '',
+  smtp_from: 'FAMI INTEGRA <noreply@fami-integra.it>',
 };
 
 async function ensureConfig() {
