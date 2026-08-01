@@ -11,7 +11,6 @@
 ![MariaDB](https://img.shields.io/badge/MariaDB-utf8mb4-003545?style=flat-square&logo=mariadb&logoColor=white)
 ![Tailwind](https://img.shields.io/badge/Tailwind-CSS-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)
 ![PM2](https://img.shields.io/badge/PM2-cluster-2B037A?style=flat-square&logo=pm2&logoColor=white)
-![Distribuzione](https://img.shields.io/badge/Distribuzione-Gratuita-brightgreen?style=flat-square)
 
 </div>
 
@@ -25,13 +24,11 @@ L'osservazione di partenza è semplice ma decisiva: **il momento più fragile de
 
 Da questa idea è nata la piattaforma, sviluppata da **[paki81](https://github.com/paki81)** come strumento operativo e non come semplice archivio: un motore che **suggerisce** abbinamenti, li **misura** con un punteggio e li **traccia** nel tempo.
 
-### 🎁 Distribuzione gratuita
+### 🎁 Riutilizzabile da chiunque
 
-FAMI INTEGRA è pensata per essere **distribuita gratuitamente** a enti locali, cooperative sociali ed enti gestori attraverso il canale istituzionale del Fondo Asilo Migrazione e Integrazione:
+FAMI INTEGRA è pensata per essere **riutilizzata liberamente** da enti locali, cooperative sociali ed enti gestori: l'obiettivo è che nessuno debba ripartire da zero.
 
-> 🔗 **[fami.dlci.interno.gov.it](https://fami.dlci.interno.gov.it)**
-
-L'obiettivo è che nessun ente debba ripartire da zero. La piattaforma è **interamente personalizzabile** — nome, logo, ente, testi dei documenti, server email — direttamente dal pannello **Strumenti**, senza toccare una riga di codice.
+Per questo la piattaforma è **interamente personalizzabile** — nome, logo, ente, testi dei documenti, server email — direttamente dal pannello **Strumenti**, senza toccare una riga di codice.
 
 ---
 
@@ -438,7 +435,6 @@ Tutte le rotte protette richiedono l'header `Authorization: Bearer <token>`.
 
 - **Idea originale**: Giovanni Campese, ex sindaco di Monteleone di Puglia
 - **Sviluppo**: [paki81](https://github.com/paki81)
-- **Distribuzione**: gratuita tramite [fami.dlci.interno.gov.it](https://fami.dlci.interno.gov.it)
 
 <div align="center">
 
