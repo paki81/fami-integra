@@ -363,7 +363,7 @@ router.get(
 
       // Intestazione parametrizzabile via query string (ente, progetto, sottotitolo, fondo, cup)
       const defaultHeader = {
-        ente: 'COMUNE DI MONTELEONE DI PUGLIA',
+        ente: 'COMUNE DI [INSERIRE COMUNE]',
         progetto: 'PROGETTO “INTEGRA_Azioni”',
         sottotitolo: '(Sistema territoriale) per l\'Autonomia Economica e Sociale',
         fondo: 'FONDO ASILO MIGRAZIONE E INTEGRAZIONE (FAMI) 2021-2027',
