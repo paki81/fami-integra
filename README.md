@@ -11,6 +11,7 @@
 ![MariaDB](https://img.shields.io/badge/MariaDB-utf8mb4-003545?style=flat-square&logo=mariadb&logoColor=white)
 ![Tailwind](https://img.shields.io/badge/Tailwind-CSS-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)
 ![PM2](https://img.shields.io/badge/PM2-cluster-2B037A?style=flat-square&logo=pm2&logoColor=white)
+![License](https://img.shields.io/badge/License-AGPL_v3-blue?style=flat-square&logo=gnu&logoColor=white)
 
 </div>
 
@@ -439,5 +440,15 @@ Tutte le rotte protette richiedono l'header `Authorization: Bearer <token>`.
 <div align="center">
 
 **Realizzato nell'ambito del Fondo Asilo Migrazione e Integrazione (FAMI) 2021-2027**
+
+---
+
+## 📄 Licenza
+
+Questo progetto è distribuito con licenza **GNU Affero General Public License v3.0** (AGPL-3.0).
+
+Chiunque può usare, modificare e distribuire il software, ma **deve rendere pubblico il codice sorgente** — anche se il software viene offerto come servizio web (SaaS).
+
+Vedi il file [LICENSE](LICENSE) per il testo completo della licenza.
 
 </div>
