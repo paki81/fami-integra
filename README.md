@@ -22,7 +22,7 @@ FAMI INTEGRA nasce da un'intuizione di **Giovanni Campese**, ex sindaco di **Mon
 
 L'osservazione di partenza è semplice ma decisiva: **il momento più fragile del percorso di integrazione non è l'accoglienza, è l'uscita.** Quando un beneficiario esce da un progetto SAI, le informazioni su di lui — competenze, nucleo familiare, comune di riferimento, data di uscita — sono già tutte disponibili. Ciò che manca è uno strumento che le metta *in relazione* con le opportunità reali del territorio: case sfitte, aziende che cercano personale, servizi welfare attivabili.
 
-Da questa idea è nata la piattaforma, sviluppata da **[paki81](https://github.com/paki81)** come strumento operativo e non come semplice archivio: un motore che **suggerisce** abbinamenti, li **misura** con un punteggio e li **traccia** nel tempo.
+La piattaforma è stata ideata, avviata e sviluppata da **[paki81](https://github.com/paki81)** sulla base di interlocuzioni con il Comune di Monteleone di Puglia e il Project Manager, parallelamente allo svolgimento dell'incarico professionale di counselor nel progetto. L'obiettivo: uno strumento operativo per migliorare l'efficienza dei servizi degli Sportelli **Casa**, **Lavoro** e **Welfare** verso i beneficiari e agevolare la co-progettazione dei **Piani Individuali di Inserimento Socio-Economico**. Non un semplice archivio, ma un motore che **suggerisce** abbinamenti, li **misura** con un punteggio e li **traccia** nel tempo.
 
 ### 🎁 Riutilizzabile da chiunque
 
