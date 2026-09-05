@@ -1,0 +1,71 @@
+publiccodeYmlVersion: '0.2'
+name: FAMI INTEGRA
+applicationSuite: FAMI INTEGRA
+url: 'https://github.com/paki81/fami-integra'
+landingURL: 'https://github.com/paki81/fami-integra'
+isBasedOn: ''
+softwareVersion: '1.0.0'
+releaseDate: '2026-09-05'
+logo: 'backend/src/assets/logo.png'
+platforms:
+  - linux
+  - web
+categories:
+  - welfare
+  - job-placement
+  - housing
+developmentStatus: stable
+softwareType: standalone/other
+description:
+  it:
+    localisedName: FAMI INTEGRA
+    genericName: Piattaforma per Centri Sportello
+    shortDescription: >-
+      Banca dati intelligente per matching di beneficiari in uscita da progetti SAI con alloggi e opportunità lavorative.
+    longDescription: >-
+      FAMI INTEGRA è una piattaforma web per Centri Sportello che gestisce l'anagrafica
+      dei beneficiari, il matching automatico con alloggi disponibili e opportunità
+      di lavoro, i servizi welfare con generazione PDF, e la co-progettazione dei
+      Piani Individuali di Inserimento Socio-Economico. Sviluppata da paki81 su
+      intuizione di Giovanni Campese, ex sindaco di Monteleone di Puglia.
+    features:
+      - Matching alloggi con punteggio 0-100
+      - Matching aziende su competenze e territorio
+      - Anagrafica beneficiari con nucleo familiare
+      - Geolocalizzazione su mappa Leaflet
+      - Galleria foto alloggi
+      - Registro note per beneficiari, alloggi, aziende
+      - Consultazioni welfare con PDF personalizzato
+      - Dashboard con statistiche in tempo reale
+      - Import Excel / Export XLSX e CSV
+      - RBAC con 5 ruoli e audit log
+      - Personalizzazione branding senza codice
+    screenshots: []
+    videos: []
+legal:
+  license: AGPL-3.0-or-later
+  mainCopyrightOwner: paki81
+  repoOwner: paki81
+maintenance:
+  type: internal
+  contacts:
+    - name: paki81
+      url: 'https://github.com/paki81'
+intendedAudience:
+  countries:
+    - it
+  scope:
+    - welfare
+localisation:
+  localisationReady: false
+  availableLanguages:
+    - it
+it:
+  conforme:
+    gdpr: true
+    lineeGuidaDesign: false
+    misureMinimeSicurezza: true
+    modelloInteroperabilita: false
+  pa:
+    pointOfConnection:
+      - https://github.com/paki81
