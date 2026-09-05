@@ -433,7 +433,7 @@ Tutte le rotte protette richiedono l'header `Authorization: Bearer <token>`.
 
 ## 🤝 Crediti
 
-- **Idea originale**: Giovanni Campese, ex sindaco di Monteleone di Puglia
+- **Intuizione**: Giovanni Campese, ex sindaco di Monteleone di Puglia
 - **Sviluppo**: [paki81](https://github.com/paki81)
 
 <div align="center">
