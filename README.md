@@ -15,6 +15,8 @@
 
 </div>
 
+> 🇬🇧 **English summary** — FAMI INTEGRA is an open-source platform (AGPL-3.0-or-later) for *Centri Sportello* and autonomy pathways. It manages the registry of beneficiaries leaving SAI asylum projects, automatically matches them with available housing and job opportunities in the area, supports welfare services and the co-design of individual socio-economic integration plans. Built for free reuse by local authorities, social cooperatives and managing bodies — fully customizable from the admin panel, no code changes required.
+
 ---
 
 ## 💡 L'idea
@@ -30,6 +32,18 @@ La piattaforma è stata ideata, avviata e sviluppata da **[paki81](https://githu
 FAMI INTEGRA è pensata per essere **riutilizzata liberamente** da enti locali, cooperative sociali ed enti gestori: l'obiettivo è che nessuno debba ripartire da zero.
 
 Per questo la piattaforma è **interamente personalizzabile** — nome, logo, ente, testi dei documenti, server email — direttamente dal pannello **Strumenti**, senza toccare una riga di codice.
+
+---
+
+## 🇮🇹 Riuso nella Pubblica Amministrazione
+
+Questo repository adotta lo standard [`publiccode.yml`](https://yml.publiccode.tools), il formato di metadatazione previsto dalle [Linee Guida su acquisizione e riuso di software per le PA](https://docs.italia.it/italia/developers-italia/lg-acquisizione-e-riuso-software-per-pa-docs/it/stabile/) per l'indicizzazione nel [Catalogo del software di Developers Italia](https://catalogo-software.developers.italia.it).
+
+Per un'amministrazione che voglia adottarlo:
+
+- licenza **AGPL-3.0-or-later**: uso, modifica e redistribuzione liberi, con obbligo di pubblicare il codice sorgente anche in caso di erogazione come servizio
+- personalizzazione completa da pannello (**Strumenti**): nome ente, logo, intestazioni dei documenti, server SMTP — nessuna modifica al codice
+- installazione autonoma con Node.js + MariaDB o con `docker-compose`
 
 ---
 
@@ -432,6 +446,18 @@ Tutte le rotte protette richiedono l'header `Authorization: Bearer <token>`.
 
 ---
 
+## 🧑‍💻 Contribuire
+
+Segnalazioni di bug, richieste di funzionalità e proposte sono benvenute.
+
+- **Issue**: apri una [segnalazione](https://github.com/paki81/fami-integra/issues) descrivendo il problema o la proposta
+- **Pull request**: fai un fork della repo, crea un branch descrittivo (`feat/...`, `fix/...`) e apri una PR verso `main`
+- Per modifiche sostanziali, apri prima una issue per discuterne l'approccio
+
+Contribuendo accetti che il tuo codice sia distribuito con licenza **AGPL-3.0-or-later**.
+
+---
+
 ## 🤝 Crediti
 
 - **Intuizione**: Giovanni Campese, ex sindaco di Monteleone di Puglia
@@ -439,7 +465,7 @@ Tutte le rotte protette richiedono l'header `Authorization: Bearer <token>`.
 
 <div align="center">
 
-**Realizzato nell'ambito del Fondo Asilo Migrazione e Integrazione (FAMI) 2021-2027**
+**L'attività è stata realizzata nell'ambito della collaborazione con il Fondo Asilo, Migrazione e Integrazione (FAMI) 2021–2027, a titolo integralmente gratuito. Per la medesima attività non è stato richiesto, né sarà richiesto in futuro, alcun corrispettivo, compenso, rimborso o altra forma di remunerazione, diretta o indiretta, a qualsiasi titolo.**
 
 ---
 
