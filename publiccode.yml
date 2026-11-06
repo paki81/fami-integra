@@ -3,7 +3,6 @@ name: FAMI INTEGRA
 applicationSuite: FAMI INTEGRA
 url: 'https://github.com/paki81/fami-integra'
 landingURL: 'https://github.com/paki81/fami-integra'
-isBasedOn: ''
 softwareVersion: '1.0.0'
 releaseDate: '2026-09-05'
 logo: 'backend/src/assets/logo.png'
@@ -11,9 +10,9 @@ platforms:
   - linux
   - web
 categories:
-  - welfare
-  - job-placement
-  - housing
+  - hr
+  - data-collection
+  - other
 developmentStatus: stable
 softwareType: standalone/other
 description:
@@ -56,16 +55,14 @@ intendedAudience:
     - it
   scope:
     - welfare
+    - employment
+    - local-authorities
 localisation:
   localisationReady: false
   availableLanguages:
     - it
 it:
+  countryExtensionVersion: '1.0'
   conforme:
     gdpr: true
-    lineeGuidaDesign: false
     misureMinimeSicurezza: true
-    modelloInteroperabilita: false
-  pa:
-    pointOfConnection:
-      - https://github.com/paki81
