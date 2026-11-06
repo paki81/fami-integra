@@ -41,6 +41,31 @@ description:
       - Personalizzazione branding senza codice
     screenshots: []
     videos: []
+  en:
+    localisedName: FAMI INTEGRA
+    genericName: Help desk centre platform
+    shortDescription: >-
+      Smart database matching beneficiaries leaving SAI asylum projects with housing and job opportunities.
+    longDescription: >-
+      FAMI INTEGRA is a web platform for help desk centres (Centri Sportello): beneficiary
+      registry, automatic matching with available housing and job opportunities, welfare
+      services with PDF generation, and co-design of individual socio-economic integration
+      plans. Developed by paki81 from an idea by Giovanni Campese, former mayor of
+      Monteleone di Puglia.
+    features:
+      - Housing matching with 0-100 score
+      - Company matching on skills and territory
+      - Beneficiary registry with family unit
+      - Leaflet map geolocation
+      - Housing photo gallery
+      - Notes log for beneficiaries, housing and companies
+      - Welfare consultations with custom PDF
+      - Real-time statistics dashboard
+      - Excel import / XLSX and CSV export
+      - RBAC with 5 roles and audit log
+      - No-code branding customization
+    screenshots: []
+    videos: []
 legal:
   license: AGPL-3.0-or-later
   mainCopyrightOwner: paki81
