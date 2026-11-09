@@ -1,4 +1,4 @@
-publiccodeYmlVersion: '0.2'
+publiccodeYmlVersion: '0'
 name: FAMI INTEGRA
 applicationSuite: FAMI INTEGRA
 url: 'https://github.com/paki81/fami-integra'
@@ -18,7 +18,6 @@ softwareType: standalone/other
 description:
   it:
     localisedName: FAMI INTEGRA
-    genericName: Piattaforma per Centri Sportello
     shortDescription: >-
       Banca dati intelligente per matching di beneficiari in uscita da progetti SAI con alloggi e opportunità lavorative.
     longDescription: >-
@@ -43,7 +42,6 @@ description:
     videos: []
   en:
     localisedName: FAMI INTEGRA
-    genericName: Help desk centre platform
     shortDescription: >-
       Smart database matching beneficiaries leaving SAI asylum projects with housing and job opportunities.
     longDescription: >-
@@ -69,15 +67,13 @@ description:
 legal:
   license: AGPL-3.0-or-later
   mainCopyrightOwner: paki81
-  repoOwner: paki81
 maintenance:
   type: internal
   contacts:
     - name: paki81
-      url: 'https://github.com/paki81'
 intendedAudience:
   countries:
-    - it
+    - IT
   scope:
     - welfare
     - employment
@@ -86,8 +82,5 @@ localisation:
   localisationReady: false
   availableLanguages:
     - it
-it:
+IT:
   countryExtensionVersion: '1.0'
-  conforme:
-    gdpr: true
-    misureMinimeSicurezza: true
